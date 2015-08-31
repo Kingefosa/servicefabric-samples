@@ -1,4 +1,4 @@
-# Azure Service Fabric Samples [**PREVIEW Branch**]
+# Azure Service Fabric Samples (*PREVIEW Branch*)
 
 This branch contains version of the Service Fabric samples that have been updated to work with the latest private preview release of the Service Fabric SDK. If you are using the public SDK (linked from http://aka.ms/servicefabricsdk), please use the master branch. 
 
