@@ -8,11 +8,14 @@ This script deploys a Service Fabric application type to a cluster.  It is invok
 .NOTES
 WARNING: This script file is invoked by Visual Studio.  Its parameters must not be altered but its logic can be customized as necessary.
 
+.PARAMETER PublishProfileFile
+Path to the file containing the publish profile.
+
 .PARAMETER ApplicationPackagePath
 Path to the folder of the packaged Service Fabric application.
 
-.PARAMETER DoNotCreateApplication
-Indicates that the Service Fabric application should not be created after registering the application type.
+.PARAMETER DeloyOnly
+Indicates that the Service Fabric application should not be created or upgrade after registering the application type.
 
 .PARAMETER ApplicationParameter
 Hashtable of the Service Fabric application parameters to be used for the application.
@@ -36,44 +39,94 @@ Deploy the application by providing values for parameters that are defined in th
 Param
 (
     [String]
+    $PublishProfileFile,
+
+    [String]
     $ApplicationPackagePath,
 
     [Switch]
-    $DoNotCreateApplication,
+    $DeployOnly,
 
     [Hashtable]
     $ApplicationParameter
 )
 
+function Read-XmlElementAsHashtable
+{
+    Param (
+        [System.Xml.XmlElement]
+        $Element
+    )
+
+    $hashtable = @{}
+    if ($Element.Attributes)
+    {
+        $Element.Attributes | 
+            ForEach-Object {
+                $boolVal = $null
+                if ([bool]::TryParse($_.Value, [ref]$boolVal)) {
+                    $hashtable[$_.Name] = $boolVal
+                }
+                else {
+                    $hashtable[$_.Name] = $_.Value
+                }
+            }
+    }
+
+    return $hashtable
+}
+
+function Read-PublishProfile
+{
+    Param (
+        [ValidateScript({Test-Path $_ -PathType Leaf})]
+        [String]
+        $PublishProfileFile
+    )
+
+    $publishProfileXml = [Xml] (Get-Content $PublishProfileFile)
+    $publishProfile = @{}
+
+    $publishProfile.ClusterConnectionParameters = Read-XmlElementAsHashtable $publishProfileXml.PublishProfile.Item("ClusterConnectionParameters")
+    $publishProfile.UpgradeDeployment = Read-XmlElementAsHashtable $publishProfileXml.PublishProfile.Item("UpgradeDeployment")
+
+    if ($publishProfileXml.PublishProfile.Item("UpgradeDeployment"))
+    {
+        $publishProfile.UpgradeDeployment.Parameters = Read-XmlElementAsHashtable $publishProfileXml.PublishProfile.Item("UpgradeDeployment").Item("Parameters")
+        if ($publishProfile.UpgradeDeployment["Mode"])
+        {
+            $publishProfile.UpgradeDeployment.Parameters[$publishProfile.UpgradeDeployment["Mode"]] = $true
+        }
+    }
+
+    $publishProfileFolder = (Split-Path $PublishProfileFile)
+    $publishProfile.ApplicationInstanceDefinitionPath = [System.IO.Path]::Combine($PublishProfileFolder, $publishProfileXml.PublishProfile.ApplicationInstanceDefinition.Path)
+
+    return $publishProfile
+}
+
 $LocalFolder = (Split-Path $MyInvocation.MyCommand.Path)
 
-$UtilitiesModulePath = "$LocalFolder\Utilities.psm1"
-Import-Module $UtilitiesModulePath
+if (!$PublishProfileFile)
+{
+    $PublishProfileFile = "$LocalFolder\..\PublishProfiles\Local.xml"
+}
 
 if (!$ApplicationPackagePath)
 {
     $ApplicationPackagePath = "$LocalFolder\..\pkg\Release"
 }
 
-$ApplicationManifestPath = "$ApplicationPackagePath\ApplicationManifest.xml"
+$ApplicationPackagePath = Resolve-Path $ApplicationPackagePath
 
-if (!(Test-Path $ApplicationManifestPath))
-{
-    throw "$ApplicationManifestPath is not found. You may need to create a package by running the 'Package' command in Visual Studio for the desired build configuration (Debug or Release)."
-}
+# Get the path to the application instance definition file
+$publishProfile = Read-PublishProfile $PublishProfileFile
 
-$packageValidationSuccess = (Test-ServiceFabricApplicationPackage $ApplicationPackagePath)
-if (!$packageValidationSuccess)
-{
-    throw "Validation failed for package: $ApplicationPackagePath"
-}
-
-Write-Host 'Deploying application...'
+$ClusterConnectionParameters = $publishProfile.ClusterConnectionParameters
 
 try
 {
-    Write-Host 'Connecting to the cluster...'
-    [void](Connect-ServiceFabricCluster)
+    [void](Connect-ServiceFabricCluster @ClusterConnectionParameters)
 }
 catch [System.Fabric.FabricObjectClosedException]
 {
@@ -81,47 +134,30 @@ catch [System.Fabric.FabricObjectClosedException]
     throw
 }
 
-# Get image store connection string
-$clusterManifestText = Get-ServiceFabricClusterManifest
-$imageStoreConnectionString = Get-ImageStoreConnectionString ([xml] $clusterManifestText)
+$RegKey = "HKLM:\SOFTWARE\Microsoft\Service Fabric SDK"
+$ScriptFolderPath = (Get-ItemProperty -Path $RegKey -Name FabricSDKInstallPath).FabricSDKInstallPath + "Tools\Scripts"
 
-$names = Get-Names -ApplicationManifestPath $ApplicationManifestPath
-if (!$names)
+if ($publishProfile.UpgradeDeployment -and $publishProfile.UpgradeDeployment.Enabled)
 {
-    return
+    $Action = "DeployAndUpgrade"
+    if ($DeployOnly)
+    {
+        $Action = "DeployOnly"
+    }
+    
+    $UpgradeScriptPath = "$ScriptFolderPath\Upgrade-FabricApplication.ps1"
+
+    . $UpgradeScriptPath -ApplicationPackagePath $ApplicationPackagePath -ApplicationDefinitionFilePath $publishProfile.ApplicationInstanceDefinitionPath -Action $Action -UpgradeParameters $publishProfile.UpgradeDeployment.Parameters -ApplicationParameter $ApplicationParameter -ErrorAction Stop
 }
-
-$tmpPackagePath = Copy-Temp $ApplicationPackagePath $names.ApplicationTypeName
-$applicationPackagePathInImageStore = $names.ApplicationTypeName
-
-$app = Get-ServiceFabricApplication -ApplicationName $names.ApplicationName
-if ($app)
+else
 {
-    Write-Host 'Removing application instance...'
-    $app | Remove-ServiceFabricApplication -Force
-}
+    $Action = "DeployAndCreate"
+    if ($DeployOnly)
+    {
+        $Action = "DeployOnly"
+    }
+    
+    $DeployScriptPath = "$ScriptFolderPath\DeployCreate-FabricApplication.ps1"
 
-foreach ($node in Get-ServiceFabricNode)
-{
-    [void](Get-ServiceFabricDeployedReplica -NodeName $node.NodeName -ApplicationName $names.ApplicationName | Remove-ServiceFabricReplica -NodeName $node.NodeName -ForceRemove)
-}
-
-$reg = Get-ServiceFabricApplicationType -ApplicationTypeName $names.ApplicationTypeName
-if ($reg)
-{
-    Write-Host 'Unregistering application type...'
-    $reg | Unregister-ServiceFabricApplicationType -Force
-}
-
-Write-Host 'Copying application package...'
-Copy-ServiceFabricApplicationPackage -ApplicationPackagePath $tmpPackagePath -ImageStoreConnectionString $imageStoreConnectionString -ApplicationPackagePathInImageStore $applicationPackagePathInImageStore
-
-Write-Host 'Registering application type...'
-Register-ServiceFabricApplicationType -ApplicationPathInImageStore $applicationPackagePathInImageStore
-
-if (!$DoNotCreateApplication)
-{
-    Write-Host 'Creating application...'
-    [void](New-ServiceFabricApplication -ApplicationName $names.ApplicationName -ApplicationTypeName $names.ApplicationTypeName -ApplicationTypeVersion $names.ApplicationTypeVersion -ApplicationParameter $ApplicationParameter)
-    Write-Host 'Create application succeeded'
+    . $DeployScriptPath -ApplicationPackagePath $ApplicationPackagePath -ApplicationDefinitionFilePath $publishProfile.ApplicationInstanceDefinitionPath -Action $Action -ErrorAction Stop
 }
