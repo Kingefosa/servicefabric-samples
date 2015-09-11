@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="CalculatorServiceApplication" ApplicationTypeVersion="1.0.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+   <ServiceManifestImport>
+      <ServiceManifestRef ServiceManifestName="CalculatorServicePkg" ServiceManifestVersion="1.0.0.0" />
+      <ConfigOverrides />
+   </ServiceManifestImport>
+   <ServiceManifestImport>
+      <ServiceManifestRef ServiceManifestName="CalculatorWebServicePkg" ServiceManifestVersion="1.0.0.0" />
+      <ConfigOverrides />
+   </ServiceManifestImport>
+   <DefaultServices>
+      <Service Name="CalculatorService">
+         <StatelessService ServiceTypeName="CalculatorServiceType">
+            <SingletonPartition />
+         </StatelessService>
+      </Service>
+      <Service Name="CalculatorWebService">
+         <StatelessService ServiceTypeName="CalculatorWebServiceType">
+            <SingletonPartition />
+         </StatelessService>
+      </Service>
+   </DefaultServices>
+</ApplicationManifest>
