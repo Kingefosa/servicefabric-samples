@@ -11,7 +11,7 @@ namespace Web.Service
     using Microsoft.Owin.StaticFiles;
     using Owin;
 
-    public class Startup : IOwinAppBuilder
+    internal class Startup : IOwinAppBuilder
     {
         public void Configuration(IAppBuilder appBuilder)
         {

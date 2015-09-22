@@ -7,7 +7,7 @@ namespace Web.Service
 {
     using Microsoft.ServiceFabric.Services;
 
-    public class Web_UI : StatelessService
+    internal class WebService : StatelessService
     {
         protected override ICommunicationListener CreateCommunicationListener()
         {

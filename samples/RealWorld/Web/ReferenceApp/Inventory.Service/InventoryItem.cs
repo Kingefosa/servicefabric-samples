@@ -14,44 +14,45 @@ namespace Inventory.Service
     using RestockRequestManager.Domain;
 
     [Serializable]
-    public sealed class InventoryItem
+    internal sealed class InventoryItem
     {
         private const string RestockRequestManagerServiceName = "RestockRequestManager";
 
         //private member variables
-        private readonly Guid m_Id; //Unique identifier for each item style
-        private int m_availableStock; //Quantity in stock
-        private decimal m_price; //Price 
-        private string m_description; //Brief description of product for display on website
-        private int m_restockThreshold; //Available stock at which we should reorder
-        private int m_maxStockThreshold; //Maximum number of units that can be in-stock at any time (due to physicial/logistical constraints in warehouses)
-        private bool m_onReorder; //True if item is on reorder
+        private readonly Guid id; //Unique identifier for each item style
+        private int availableStock; //Quantity in stock
+        private decimal price; //Price 
+        private string description; //Brief description of product for display on website
+        private int restockThreshold; //Available stock at which we should reorder
+        private int maxStockThreshold; //Maximum number of units that can be in-stock at any time (due to physicial/logistical constraints in warehouses)
+        private bool onReorder; //True if item is on reorder
 
         //constructor
-        public InventoryItem(Guid id, string Description, decimal Price, int AvailableStock, int RestockThreshold, int MaxStockThreshold, bool onReorder)
+        public InventoryItem(Guid id, string description, decimal price, int availableStock, int restockThreshold, int maxStockThreshold, bool onReorder)
         {
-            this.m_Id = id;
-            this.m_description = Description;
-            this.m_price = Price;
-            this.m_availableStock = AvailableStock;
-            this.m_restockThreshold = RestockThreshold;
-            this.m_maxStockThreshold = MaxStockThreshold;
-            this.m_onReorder = false;
+            this.id = id;
+            this.description = description;
+            this.price = price;
+            this.availableStock = availableStock;
+            this.restockThreshold = restockThreshold;
+            this.maxStockThreshold = maxStockThreshold;
+            this.onReorder = false;
         }
 
         /// <summary>
         /// Returns an InventoryItemView object, which contains only external, customer-facing data about an item in inventory.
         /// </summary>
         /// <param name="item"></param>
-        public static implicit operator InventoryItemView(InventoryItem item) =>
-            new InventoryItemView
+        public static implicit operator InventoryItemView(InventoryItem item)
+        {
+            return new InventoryItemView
             {
-                Id = item.m_Id,
-                Price = item.m_price,
-                Description = item.m_description,
-                CustomerAvailableStock = item.m_availableStock - item.m_restockThreshold //Business logic: constraint to reduce overordering.
+                Id = item.id,
+                Price = item.price,
+                Description = item.description,
+                CustomerAvailableStock = item.availableStock - item.restockThreshold //Business logic: constraint to reduce overordering.
             };
-
+        }
 
         //TEST METHOD
         public Task<string> PrintInventoryItem()
@@ -59,12 +60,12 @@ namespace Inventory.Service
             string result =
                 string.Format(
                     "For Guid {0}: {1} at a price of {2} with {3} available items at a restock threshold of {4} and with max stocking threshold of {5}.",
-                    this.m_Id,
-                    this.m_description,
-                    this.m_price.ToString(),
-                    this.m_availableStock.ToString(),
-                    this.m_restockThreshold.ToString(),
-                    this.m_maxStockThreshold.ToString());
+                    this.id,
+                    this.description,
+                    this.price,
+                    this.availableStock.ToString(),
+                    this.restockThreshold.ToString(),
+                    this.maxStockThreshold.ToString());
             return Task.FromResult(result);
         }
 
@@ -75,30 +76,31 @@ namespace Inventory.Service
         /// Increments the quantity of a particular item in inventory.
         /// <param name="quantity"></param>
         /// <returns>int: Returns the quantity that has been added to stock</returns>
+        /// </summary>
         public Task<int> AddStock(int quantity)
         {
             ServiceEventSource.Current.Message(
-                "AddStock method for inventory item being executed. m_availableStock before increment is {0}, amt requested to add is {1}.",
-                this.m_availableStock,
+                "AddStock method for inventory item being executed. availableStock before increment is {0}, amt requested to add is {1}.",
+                this.availableStock,
                 quantity); //TEST MSG
 
-            if ((this.m_availableStock + quantity) > this.m_maxStockThreshold)
+            if ((this.availableStock + quantity) > this.maxStockThreshold)
                 //Business Logic: The quantity that the client is trying to add to stock is greater than what can be physically accommodated in a Fabrikam Warehouse
             {
                 ServiceEventSource.Current.Message(
                     "YOU HAVE EXCEEDED THE MAXIMUM QUANTITY TO RESTOCK FOR THIS REORDER REQUEST. Please override the max quantity for this item or consider holding in overstock.");
                 //TEST MSG
 
-                this.m_availableStock += (this.m_maxStockThreshold - this.m_availableStock);
+                this.availableStock += (this.maxStockThreshold - this.availableStock);
                 //Business logic: For now, this method only adds new units up maximum stock threshold. In an expanded version of this application, we
                 //could include tracking for the remaining units and store information about overstock elsewhere. 
             }
             else
             {
-                this.m_availableStock += quantity; //Add stock to inventory
+                this.availableStock += quantity; //Add stock to inventory
             }
-            this.m_onReorder = false;
-            ServiceEventSource.Current.Message("After increment, m_availableStock is {0}.", this.m_availableStock); //TEST MSG
+            this.onReorder = false;
+            ServiceEventSource.Current.Message("After increment, availableStock is {0}.", this.availableStock); //TEST MSG
             return Task.FromResult(quantity);
         }
 
@@ -118,15 +120,15 @@ namespace Inventory.Service
         public async Task<int> RemoveStock(int quantityDesired)
         {
             ServiceEventSource.Current.Message(
-                "RemoveStock method for inventory item being executed. m_availableStock before decrement is {0}, with {1} items requested to remove.",
-                this.m_availableStock,
+                "RemoveStock method for inventory item being executed. availableStock before decrement is {0}, with {1} items requested to remove.",
+                this.availableStock,
                 quantityDesired); //TEST MESSAGE
 
-            int removed = Math.Min(quantityDesired, this.m_availableStock); //Assumes quantityDesired is a positive integer
+            int removed = Math.Min(quantityDesired, this.availableStock); //Assumes quantityDesired is a positive integer
 
             ServiceEventSource.Current.Message("The number of items that will be removed is {0}.", removed); //TEST MSG
 
-            this.m_availableStock -= removed;
+            this.availableStock -= removed;
             ServiceEventSource.Current.Message("Checking restock threshold now..."); //TEST MSG
 
             await this.CheckThreshold(); //check for reorder
@@ -145,11 +147,11 @@ namespace Inventory.Service
             ServiceEventSource.Current.Message("Checking threshold for reorder now..."); //TEST MSG
             ServiceEventSource.Current.Message(
                 "Available Stock: {0}. Reorder Threshold: {1}. Reorder Status? {2}.",
-                this.m_availableStock,
-                this.m_restockThreshold,
-                this.m_onReorder.ToString()); //TEST MSG
+                this.availableStock,
+                this.restockThreshold,
+                this.onReorder.ToString()); //TEST MSG
 
-            if ((this.m_availableStock <= this.m_restockThreshold) && !this.m_onReorder)
+            if ((this.availableStock <= this.restockThreshold) && !this.onReorder)
                 //Check if stock is below restockThreshold and if the item is not already on reorder
             {
                 ServiceEventSource.Current.Message("Placing order through restock request manager..."); //TEST MSG
@@ -162,7 +164,7 @@ namespace Inventory.Service
 
                 ServiceEventSource.Current.Message("executed ServiceProxy Create method"); //TEST MSG
 
-                RestockRequest newRequest = new RestockRequest(this.m_Id, (this.m_maxStockThreshold - this.m_availableStock));
+                RestockRequest newRequest = new RestockRequest(this.id, (this.maxStockThreshold - this.availableStock));
                 //Business Logic: we reduce the quantity passed in to RestockRequest
                 //to ensure we don't overorder
 
@@ -177,8 +179,8 @@ namespace Inventory.Service
                     ServiceEventSource.Current.Message(e.ToString());
                 }
 
-                this.m_onReorder = true; //InventoryItem marked as on-reorder.
-                ServiceEventSource.Current.Message("Order placed. m_onReorder is {0}.", this.m_onReorder.ToString()); //TEST MSG
+                this.onReorder = true; //InventoryItem marked as on-reorder.
+                ServiceEventSource.Current.Message("Order placed. onReorder is {0}.", this.onReorder.ToString()); //TEST MSG
             }
             else
             {

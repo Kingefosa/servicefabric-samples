@@ -10,7 +10,7 @@ namespace Web.Service
     using System.Fabric;
     using Microsoft.ServiceFabric.Services;
 
-    [EventSource(Name = "MyCompany-Web_UIApplication-Web_UI")]
+    [EventSource(Name = "MyCompany-Web_UIApplication-WebService")]
     internal sealed class ServiceEventSource : EventSource
     {
         public static ServiceEventSource Current = new ServiceEventSource();

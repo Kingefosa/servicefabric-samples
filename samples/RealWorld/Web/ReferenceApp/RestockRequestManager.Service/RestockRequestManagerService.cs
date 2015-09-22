@@ -10,7 +10,7 @@ namespace RestockRequestManager.Service
     using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
-    using global::RestockRequestManager.Domain;
+    using RestockRequestManager.Domain;
     using Inventory.Domain;
     using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Data;
@@ -18,7 +18,7 @@ namespace RestockRequestManager.Service
     using Microsoft.ServiceFabric.Services;
     using RestockRequest.Domain;
 
-    public class RestockRequestManager : StatefulService, IRestockRequestManager, IRestockRequestEvents
+    internal class RestockRequestManagerService : StatefulService, IRestockRequestManager, IRestockRequestEvents
     {
         //TODO: Look@ use of these variables.
         private const string ItemIdToActorIdMapName = "actorIdToMapName"; //Name of ItemId-ActorId IReliableDictionary
@@ -89,12 +89,12 @@ namespace RestockRequestManager.Service
             }
             catch (InvalidOperationException ex)
             {
-                ServiceEventSource.Current.Message(string.Format("RestockRequestManager: Actor rejected {0}: {1}", request, ex));
+                ServiceEventSource.Current.Message(string.Format("RestockRequestManagerService: Actor rejected {0}: {1}", request, ex));
                 throw;
             }
             catch (Exception ex)
             {
-                ServiceEventSource.Current.Message(string.Format("RestockRequestManager: Exception {0}: {1}", request, ex));
+                ServiceEventSource.Current.Message(string.Format("RestockRequestManagerService: Exception {0}: {1}", request, ex));
                 throw;
             }
         }
@@ -146,7 +146,7 @@ namespace RestockRequestManager.Service
 
                     if (batch.Count > 0)
                     {
-                        ServiceEventSource.Current.Message(string.Format("RestockRequestManager: Batch {0} completed requests", batch.Count));
+                        ServiceEventSource.Current.Message(string.Format("RestockRequestManagerService: Batch {0} completed requests", batch.Count));
 
                         // TODO: need to go to correct partition
                         // For now, the inventory is not partitioned, so always go to first partition

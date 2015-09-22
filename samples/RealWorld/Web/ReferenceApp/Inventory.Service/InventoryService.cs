@@ -16,10 +16,10 @@ namespace Inventory.Service
     using Microsoft.ServiceFabric.Services;
     using RestockRequest.Domain;
 
-    public class InventoryService : StatefulService, IInventoryService
+    internal class InventoryService : StatefulService, IInventoryService
     {
         //TEST FUNCTION: Prints the Customer View of the Store to the Service Event Source. 
-        public async Task CheckCustomerView(IEnumerable<InventoryItemView> custView)
+        public Task CheckCustomerView(IEnumerable<InventoryItemView> custView)
         {
             ServiceEventSource.Current.Message("checking the customer view of objects now");
             foreach (InventoryItemView item in custView)
@@ -29,9 +29,11 @@ namespace Inventory.Service
                         "For Guid {0} we sell item {1} at price {2} with customer available stock of {3}",
                         item.Id.ToString(),
                         item.Description,
-                        item.Price.ToString(),
+                        item.Price,
                         item.CustomerAvailableStock.ToString()));
             }
+
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -63,7 +65,7 @@ namespace Inventory.Service
                         "Created inventory item {0}: {1} at a price of {2} with {3} available items at a restock threshold of {4} with max production of {5}.",
                         itemId.ToString(),
                         description,
-                        price.ToString(),
+                        price,
                         availableStock.ToString(),
                         restockThreshold.ToString(),
                         maxProductionThreshold.ToString()));
@@ -96,7 +98,9 @@ namespace Inventory.Service
         /// <param name="quantity"></param>
         /// <returns>int: Returns the quantity removed from stock.</returns>
         public Task<int> RemoveStock(Guid itemId, int quantity)
-            => this.UpdateQuantityOpAsync(itemId, ii => ii.RemoveStock(quantity));
+        {
+            return this.UpdateQuantityOpAsync(itemId, ii => ii.RemoveStock(quantity));
+        }
 
         public async Task<bool> IsItemInInventoryAsync(Guid itemId)
         {
@@ -104,6 +108,7 @@ namespace Inventory.Service
 
             IReliableDictionary<Guid, InventoryItem> inventoryItems =
                 await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>("inventoryItems");
+
             using (ITransaction tx = this.StateManager.CreateTransaction())
             {
                 ConditionalResult<InventoryItem> item = await inventoryItems.TryGetValueAsync(tx, itemId);
@@ -126,6 +131,7 @@ namespace Inventory.Service
         {
             IReliableDictionary<Guid, InventoryItem> inventoryItems =
                 await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>("inventoryItems");
+
             ServiceEventSource.Current.Message("Called GetCustomerInventory to return InventoryItemView");
             return inventoryItems.Select(kvp => (InventoryItemView) kvp.Value).Where(x => x.CustomerAvailableStock > 0);
         }
@@ -266,7 +272,9 @@ namespace Inventory.Service
         /// <param name="request"></param>
         /// <returns>Returns the quantity to be added per the restock request. </returns>
         private Task<int> AddStock(RestockRequest request)
-            => this.UpdateQuantityOpAsync(request.ItemId, ii => ii.AddStock(request.Quantity));
+        {
+            return this.UpdateQuantityOpAsync(request.ItemId, ii => ii.AddStock(request.Quantity));
+        }
 
         /// <summary>
         /// This is a generic function accepting a Guid to access an inventory item and and a callback function

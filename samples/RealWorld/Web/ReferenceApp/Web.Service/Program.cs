@@ -21,9 +21,9 @@ namespace Web.Service
                     // This is the name of the ServiceType that is registered with FabricRuntime. 
                     // This name must match the name defined in the ServiceManifest. If you change
                     // this name, please change the name of the ServiceType in the ServiceManifest.
-                    fabricRuntime.RegisterServiceType("WebServiceType", typeof(Web_UI));
+                    fabricRuntime.RegisterServiceType("WebServiceType", typeof(WebService));
 
-                    ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(Web_UI).Name);
+                    ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(WebService).Name);
 
                     Thread.Sleep(Timeout.Infinite);
                 }

@@ -10,7 +10,7 @@ namespace RestockRequestManager.Service
     using System.Fabric;
     using Microsoft.ServiceFabric.Services;
 
-    [EventSource(Name = "MyCompany-Web_UIApplication-RestockRequestManager")]
+    [EventSource(Name = "MyCompany-Web_UIApplication-RestockRequestManagerService")]
     internal sealed class ServiceEventSource : EventSource
     {
         public static ServiceEventSource Current = new ServiceEventSource();

@@ -21,9 +21,9 @@ namespace RestockRequestManager.Service
                     // This is the name of the ServiceType that is registered with FabricRuntime. 
                     // This name must match the name defined in the ServiceManifest. If you change
                     // this name, please change the name of the ServiceType in the ServiceManifest.
-                    fabricRuntime.RegisterServiceType("RestockRequestManagerServiceType", typeof(RestockRequestManager));
+                    fabricRuntime.RegisterServiceType("RestockRequestManagerServiceType", typeof(RestockRequestManagerService));
 
-                    ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(RestockRequestManager).Name);
+                    ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(RestockRequestManagerService).Name);
 
                     Thread.Sleep(Timeout.Infinite);
                 }
