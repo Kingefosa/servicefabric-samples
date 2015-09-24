@@ -16,5 +16,5 @@
                                     StoreName="My" />
   -->
   <ClusterConnectionParameters ConnectionEndpoint="seanmck-cluster.westus.cloudapp.azure.com:19000" />
-  <ApplicationInstanceDefinition Path="..\AppInstanceDefinition.Cloud.xml" />
+  <ApplicationParameterFile Path="..\ApplicationParameters\Cloud.xml" />
 </PublishProfile>
