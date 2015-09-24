@@ -2,20 +2,16 @@
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Service Fabric Tools\Microsoft.VisualStudio.Azure.Fabric.ApplicationProject.props" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>0ee37b65-fccb-44ae-b4f7-aed85fdeb072</ProjectGuid>
+    <ProjectGuid>21f98d47-c3d0-43cf-ae56-83e74ae8a600</ProjectGuid>
     <ProjectVersion>0.9</ProjectVersion>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Include="ApplicationManifest.xml" />
     <None Include="Scripts\Deploy-FabricApplication.ps1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CustomerOrder.Actor\CustomerOrder.Actor.csproj" />
-    <ProjectReference Include="..\Inventory.Service\Inventory.Service.csproj" />
-    <ProjectReference Include="..\RestockRequest.Actor\RestockRequest.Actor.csproj" />
-    <ProjectReference Include="..\RestockRequestManager.Service\RestockRequestManager.Service.csproj" />
-    <ProjectReference Include="..\Web.Service\Web.Service.csproj" />
+    <ProjectReference Include="..\ClusterMonitor\ClusterMonitor.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ApplicationParameters\Cloud.xml" />
