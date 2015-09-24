@@ -100,7 +100,7 @@ function Read-PublishProfile
     }
 
     $publishProfileFolder = (Split-Path $PublishProfileFile)
-    $publishProfile.ApplicationInstanceDefinitionPath = [System.IO.Path]::Combine($PublishProfileFolder, $publishProfileXml.PublishProfile.ApplicationInstanceDefinition.Path)
+    $publishProfile.ApplicationParameterFile = [System.IO.Path]::Combine($PublishProfileFolder, $publishProfileXml.PublishProfile.ApplicationParameterFile.Path)
 
     return $publishProfile
 }
@@ -147,7 +147,7 @@ if ($publishProfile.UpgradeDeployment -and $publishProfile.UpgradeDeployment.Ena
     
     $UpgradeScriptPath = "$ScriptFolderPath\Upgrade-FabricApplication.ps1"
 
-    . $UpgradeScriptPath -ApplicationPackagePath $ApplicationPackagePath -ApplicationDefinitionFilePath $publishProfile.ApplicationInstanceDefinitionPath -Action $Action -UpgradeParameters $publishProfile.UpgradeDeployment.Parameters -ApplicationParameter $ApplicationParameter -ErrorAction Stop
+    . $UpgradeScriptPath -ApplicationPackagePath $ApplicationPackagePath -ApplicationDefinitionFilePath $publishProfile.ApplicationParameterFile -Action $Action -UpgradeParameters $publishProfile.UpgradeDeployment.Parameters -ApplicationParameter $ApplicationParameter -ErrorAction Stop
 }
 else
 {
@@ -159,5 +159,5 @@ else
     
     $DeployScriptPath = "$ScriptFolderPath\DeployCreate-FabricApplication.ps1"
 
-    . $DeployScriptPath -ApplicationPackagePath $ApplicationPackagePath -ApplicationDefinitionFilePath $publishProfile.ApplicationInstanceDefinitionPath -Action $Action -ErrorAction Stop
+    . $DeployScriptPath -ApplicationPackagePath $ApplicationPackagePath -ApplicationDefinitionFilePath $publishProfile.ApplicationParameterFile -Action $Action -ApplicationParameter $ApplicationParameter -ErrorAction Stop
 }
