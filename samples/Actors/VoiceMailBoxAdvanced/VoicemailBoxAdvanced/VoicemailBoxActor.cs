@@ -134,6 +134,11 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
 
         public override Task OnActivateAsync()
         {
+            if(this.State == null)
+            {
+                this.State = new VoicemailBox();
+            }
+
             if (this.State.MessageList.Count > 0)
             {
                 // If we have at least one message, then start the timer that enforces
