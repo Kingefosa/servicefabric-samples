@@ -92,6 +92,12 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
         public override async Task OnDeactivateAsync()
         {
             ServiceEventSource.Current.ActorDeactivatedStart(this);
+
+            if(this.State == null)
+            {
+                this.State = new VoicemailBox();
+            }
+
             await base.OnDeactivateAsync();
             ServiceEventSource.Current.ActorDeactivatedStop(this);
         }
