@@ -1,5 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="VoicemailBoxAdvancedApplication" ApplicationTypeVersion="1.0.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+   <Parameters>
+      <Parameter Name="VoicemailBoxActorService_PartitionCount" DefaultValue="9" />
+      <Parameter Name="VoicemailBoxActorService_MinReplicaSetSize" DefaultValue="2" />
+      <Parameter Name="VoicemailBoxActorService_TargetReplicaSetSize" DefaultValue="3" />
+   </Parameters>
    <ServiceManifestImport>
       <ServiceManifestRef ServiceManifestName="VoicemailBoxAdvancedPkg" ServiceManifestVersion="1.0.0.0" />
    </ServiceManifestImport>
