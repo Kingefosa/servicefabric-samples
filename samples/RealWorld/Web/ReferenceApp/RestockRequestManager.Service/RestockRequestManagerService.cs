@@ -17,13 +17,14 @@ namespace RestockRequestManager.Service
     using Microsoft.ServiceFabric.Data.Collections;
     using Microsoft.ServiceFabric.Services;
     using RestockRequest.Domain;
+    using Common;
 
     internal class RestockRequestManagerService : StatefulService, IRestockRequestManager, IRestockRequestEvents
     {
         //TODO: Look@ use of these variables.
         private const string ItemIdToActorIdMapName = "actorIdToMapName"; //Name of ItemId-ActorId IReliableDictionary
         private const string CompletedRequestsQueueName = "completedRequests"; //Name of CompletedRequests IReliableQueue
-        private const string InventoryServiceName = "/InventoryService";
+        private const string InventoryServiceName = "InventoryService";
 
         private static TimeSpan CompletedRequestsBatchInterval = TimeSpan.FromSeconds(5);
         private static TimeSpan TxTimeout = TimeSpan.FromSeconds(4);
@@ -121,15 +122,12 @@ namespace RestockRequestManager.Service
                 using (ITransaction tx = this.StateManager.CreateTransaction())
                 {
                     IList<RestockRequest> batch = new List<RestockRequest>();
+
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
                     while (stopWatch.Elapsed < CompletedRequestsBatchInterval && !cancellationToken.IsCancellationRequested)
                     {
                         // Create a list of batched requests that need to be sent to the Inventory service.
-                        // NOTE: since this list is in memory, if the primary crashes before send or the send fails, 
-                        // the information is lost and restock request manager can't retry.
-                        // To solve this problem, we can either persist the data until after ACK from the Inventory service is received
-                        // Or the inventory service can poll for results for the requests that took a long time.
                         ConditionalResult<RestockRequest> result = await completedRequests.TryDequeueAsync(tx, TxTimeout, cancellationToken);
                         if (!result.HasValue)
                         {
@@ -141,31 +139,30 @@ namespace RestockRequestManager.Service
                             batch.Add(result.Value);
                         }
                     }
-
-                    await tx.CommitAsync();
-
+                    
                     if (batch.Count > 0)
                     {
                         ServiceEventSource.Current.Message(string.Format("RestockRequestManagerService: Batch {0} completed requests", batch.Count));
 
                         // TODO: need to go to correct partition
                         // For now, the inventory is not partitioned, so always go to first partition
-
-
-                        Uri serviceName = new Uri(this.GetAppServiceName(InventoryServiceName));
-                        IInventoryService inventoryService = ServiceProxy.Create<IInventoryService>(0, serviceName);
-                        await inventoryService.RestockRequestsCompleted(batch);
+                        ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
+                            
+                        IInventoryService inventoryService = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
+                        await inventoryService.AddStockAsync(batch);
                     }
+
+                    // This commits the dequeue operations.
+                    // If the request to add the stock to the inventory service throws, this commit will not execute
+                    // and the items will remain on the queue, so we can be sure that we didn't dequeue items
+                    // that didn't get saved successfully in the inventory service.
+                    // However there is a very small chance that the stock was added to the inventory service successfully,
+                    // but service execution stopped before reaching this commit (machine crash, for example).
+                    await tx.CommitAsync();
                 }
 
                 await Task.Delay(CompletedRequestsBatchInterval, cancellationToken);
             }
-        }
-
-        //TODO: Should we call in this manner?
-        private string GetAppServiceName(string serviceName)
-        {
-            return this.ServiceInitializationParameters.CodePackageActivationContext.ApplicationName.TrimEnd('/') + serviceName;
         }
     }
 }

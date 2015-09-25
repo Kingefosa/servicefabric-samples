@@ -23,6 +23,9 @@ namespace RestockRequest.Domain
         [DataMember]
         public int Quantity { get; private set; }
 
-        public override string ToString() => $"{this.ItemId}[Quantity = {this.Quantity}]";
+        public override string ToString()
+        {
+            return String.Format("ItemId: {0}, Quantity: {1}", this.ItemId, this.Quantity);
+        }
     }
 }

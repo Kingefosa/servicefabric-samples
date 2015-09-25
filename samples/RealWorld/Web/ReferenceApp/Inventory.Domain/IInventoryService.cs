@@ -13,22 +13,15 @@ namespace Inventory.Domain
 
     public interface IInventoryService : IService
     {
-        Task RestockRequestsCompleted(IList<RestockRequest> requests);
-
-        //Called by Customer Order Actor to remove stock when it is cycling through. 
-
-        Task<int> RemoveStock(Guid itemId, int quantity);
+        Task<int> AddStockAsync(IEnumerable<RestockRequest> requests);
+        
+        Task<int> RemoveStockAsync(Guid itemId, int quantity);
 
         Task<bool> IsItemInInventoryAsync(Guid itemId);
-
-        //Called by Customer Storeview to get the customer view of inventory.
+        
         Task<IEnumerable<InventoryItemView>> GetCustomerInventoryAsync();
+        
+        Task CreateInventoryItemAsync(InventoryItem item);
 
-        // TODO: should this exposed through proxy?
-        // Or can we create the inventory items through a config file?
-        Task CreateInventoryItemAsync(Guid itemId, string description, decimal price, int availableStock, int restockThreshold, int maxProductionThreshold);
-
-        //Used in testing
-        Task CheckCustomerView(IEnumerable<InventoryItemView> custView);
     }
 }
