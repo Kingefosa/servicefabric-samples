@@ -86,6 +86,12 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
         {
             ServiceEventSource.Current.ActorActivatedStart(this);
             await base.OnActivateAsync();
+
+            if(this.State == null)
+            {
+                this.State = new VoicemailBox();
+            }
+
             ServiceEventSource.Current.ActorActivatedStop(this);
         }
 
