@@ -15,8 +15,8 @@
     <ProjectReference Include="..\WordCount.WebService\WordCount.WebService.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="AppInstanceDefinition.Cloud.xml" />
-    <Content Include="AppInstanceDefinition.Local.xml" />
+    <Content Include="ApplicationParameters\Cloud.xml" />
+    <Content Include="ApplicationParameters\Local.xml" />
     <Content Include="PublishProfiles\Cloud.xml" />
     <Content Include="PublishProfiles\Local.xml" />
   </ItemGroup>

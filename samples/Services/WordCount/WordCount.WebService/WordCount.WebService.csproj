@@ -47,6 +47,18 @@
       <HintPath>$(SolutionDir)packages\Microsoft.Owin.Hosting.2.0.2\lib\net45\Microsoft.Owin.Hosting.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.ServiceFabric.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
+      <HintPath>..\packages\Microsoft.ServiceFabric.Data.1.2.99-preview\lib\net45\Microsoft.ServiceFabric.Data.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.ServiceFabric.Replicator, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.ServiceFabric.Data.1.2.99-preview\lib\net45\Microsoft.ServiceFabric.Replicator.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.ServiceFabric.Services, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
+      <HintPath>..\packages\Microsoft.ServiceFabric.Services.1.2.99-preview\lib\net45\Microsoft.ServiceFabric.Services.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -57,11 +69,21 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Fabric.Common.Internal, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
+      <HintPath>..\packages\Microsoft.ServiceFabric.4.2.99-preview\lib\net45\System.Fabric.Common.Internal.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Fabric.Common.Internal.Strings, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.ServiceFabric.4.2.99-preview\lib\net45\System.Fabric.Common.Internal.Strings.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
       <Private>True</Private>
@@ -71,21 +93,6 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Fabric" />
-    <Reference Include="Microsoft.ServiceFabric.Services">
-      <HintPath>$(SolutionDir)packages\Microsoft.ServiceFabric.Services.1.0.328-preview1\lib\net45\Microsoft.ServiceFabric.Services.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.ServiceFabric.Data">
-      <HintPath>$(SolutionDir)packages\Microsoft.ServiceFabric.Data.1.0.328-preview1\lib\net45\Microsoft.ServiceFabric.Data.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.ServiceFabric.Collections">
-      <HintPath>$(SolutionDir)packages\Microsoft.ServiceFabric.Data.1.0.328-preview1\lib\net45\Microsoft.ServiceFabric.Collections.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Fabric.Common.Internal">
-      <HintPath>$(SolutionDir)packages\Microsoft.ServiceFabric.4.0.1427-preview1\lib\net45\System.Fabric.Common.Internal.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Fabric.Common.Internal.Strings">
-      <HintPath>$(SolutionDir)packages\Microsoft.ServiceFabric.4.0.1427-preview1\lib\net45\System.Fabric.Common.Internal.Strings.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\FormatterConfig.cs" />
