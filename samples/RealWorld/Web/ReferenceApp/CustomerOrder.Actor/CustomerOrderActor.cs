@@ -124,7 +124,7 @@ namespace CustomerOrder.Actor
             //For every item that cannot be fulfilled, we add to backordered. 
             foreach (CustomerOrderItem item in orderList)
             {
-                int numberItemsRemoved = await inventoryServiceClient.RemoveStock(item.ItemId, item.Quantity);
+                int numberItemsRemoved = await inventoryServiceClient.RemoveStockAsync(item.ItemId, item.Quantity);
                 this.State.FulfilledItems.Add(item.ItemId, numberItemsRemoved);
                 if (numberItemsRemoved < item.Quantity)
                 {
@@ -171,7 +171,7 @@ namespace CustomerOrder.Actor
             {
                 //Try to fulfill backorder
                 CustomerOrderItem itemToFulfill = this.State.OrderedItems.Single(item => item.ItemId == itemId);
-                int numberItemsRemoved = await inventoryServiceClient.RemoveStock(itemId, itemToFulfill.Quantity - this.State.FulfilledItems[itemId]);
+                int numberItemsRemoved = await inventoryServiceClient.RemoveStockAsync(itemId, itemToFulfill.Quantity - this.State.FulfilledItems[itemId]);
 
                 //Update fulfilled status and remove backorderitem if needed.
                 this.State.FulfilledItems[itemId] += numberItemsRemoved;
