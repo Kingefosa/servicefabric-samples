@@ -1,6 +1,5 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace RestockRequest.Actor
@@ -14,13 +13,10 @@ namespace RestockRequest.Actor
     internal class RestockRequestActor : Actor<RestockRequestActorState>, IRestockRequestActor, IRemindable
     {
         private const string RestockPipelineChangeReminderName = "RestockPipelineChange";
-
         // The duration the verification at beginning of each pipeline step takes
         private static TimeSpan PipelineStageVerificationDelay = TimeSpan.FromSeconds(5);
-
         // The duration each step of the pipeline takes
         private static TimeSpan PipelineStageProcessingDuration = TimeSpan.FromSeconds(10);
-
 
         public Task ReceiveReminderAsync(string reminderName, byte[] context, TimeSpan dueTime, TimeSpan period)
         {
@@ -51,7 +47,6 @@ namespace RestockRequest.Actor
 
             return Task.FromResult(true);
         }
-
 
         /// <summary>
         /// Accepts a restock request and changes the Actor's state accordingly. The request is processed
@@ -98,7 +93,7 @@ namespace RestockRequest.Actor
         private void SignalRequestStatusChange()
         {
             ActorEventSource.Current.ActorMessage(this, "RestockRequestActor: {0}: Raise event for state change", this.State);
-            IRestockRequestEvents events = this.GetEvent<IRestockRequestEvents>();
+            var events = this.GetEvent<IRestockRequestEvents>();
             events.RestockRequestCompleted(this.Id, this.State.Request);
         }
 

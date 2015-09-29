@@ -1,6 +1,5 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace CustomerOrder.Actor
@@ -10,15 +9,19 @@ namespace CustomerOrder.Actor
     using System.Linq;
     using System.Threading.Tasks;
     using Common;
+    using Common.Wrappers;
     using CustomerOrder.Domain;
     using Inventory.Domain;
     using Microsoft.ServiceFabric.Actors;
-    using Microsoft.ServiceFabric.Services;
 
     internal class CustomerOrderActor : Actor<CustomerOrderActorState>, ICustomerOrderActor, IRemindable
     {
         private const string InventoryServiceName = "InventoryService";
 
+        /// <summary>
+        /// TODO: Temporary property-injection for an IServiceProxyWrapper until constructor injection is available.
+        /// </summary>
+        public IServiceProxyWrapper ServiceProxy { private get; set; }
 
         /// <summary>
         /// This method accepts a list of CustomerOrderItems, representing a customer order, and sets the actor's state
@@ -37,11 +40,11 @@ namespace CustomerOrder.Actor
             ActorEventSource.Current.ActorMessage(this, this.State.ToString());
 
             return this.RegisterReminder(
-                    CustomerOrderReminderNames.FulfillOrderReminder,
-                    null,
-                    TimeSpan.FromSeconds(10),
-                    TimeSpan.FromSeconds(10),
-                    ActorReminderAttributes.None);
+                CustomerOrderReminderNames.FulfillOrderReminder,
+                null,
+                TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(10),
+                ActorReminderAttributes.None);
         }
 
         /// <summary>
@@ -53,19 +56,40 @@ namespace CustomerOrder.Actor
             return Task.FromResult(this.State.Status.ToString());
         }
 
-        public Task ReceiveReminderAsync(string reminderName, byte[] context, TimeSpan dueTime, TimeSpan period)
+        public async Task ReceiveReminderAsync(string reminderName, byte[] context, TimeSpan dueTime, TimeSpan period)
         {
-            
             switch (reminderName)
             {
                 case CustomerOrderReminderNames.FulfillOrderReminder:
-                    return this.FulfillOrder();
+
+                    var backorder = await this.FulfillOrder();
+                    if (backorder > 0)
+                    {
+                        await this.RegisterReminder(
+                            CustomerOrderReminderNames.BackorderReminder,
+                            null,
+                            TimeSpan.FromSeconds(5),
+                            TimeSpan.FromMinutes(1),
+                            ActorReminderAttributes.None);
+                    }
+
+                    //Remove fulfill order reminder so Actor can be gargabe collected.
+                    var orderReminder = this.GetReminder(CustomerOrderReminderNames.FulfillOrderReminder);
+                    await this.UnregisterReminder(orderReminder);
+
+                    break;
 
                 case CustomerOrderReminderNames.BackorderReminder:
-                    return this.FulfillBackorder();
 
-                default:
-                    return null;
+                    var remaining = await this.FulfillBackorder();
+                    if (remaining == 0)
+                    {
+                        //now that we're done processing the backorder, remove the reminder
+                        var backorderReminder = this.GetReminder(CustomerOrderReminderNames.BackorderReminder);
+                        await this.UnregisterReminder(backorderReminder);
+                    }
+
+                    break;
             }
         }
 
@@ -99,32 +123,32 @@ namespace CustomerOrder.Actor
         /// 
         /// TODO: Figure out behavior for a crash in the middle of this function. 
         /// </summary>
-        /// <returns></returns>
-        private async Task FulfillOrder()
+        /// <returns>The number of items put on backorder after fulfilling the order.</returns>
+        internal async Task<int> FulfillOrder()
         {
-            ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
-            IInventoryService inventoryService = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
+            var builder = new ServiceUriBuilder(InventoryServiceName);
+            var inventoryService = this.ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
 
             this.State.Status = CustomerOrderStatus.InProcess;
 
-            IList<CustomerOrderItem> orderList = this.State.OrderedItems;
+            var orderList = this.State.OrderedItems;
 
             //First, check all items are listed in inventory.  
             //This will avoid infinite backorder status.
-            foreach (CustomerOrderItem item in orderList)
+            foreach (var item in orderList)
             {
                 if ((await inventoryService.IsItemInInventoryAsync(item.ItemId)) == false)
                 {
                     this.State.Status = CustomerOrderStatus.Canceled;
-                    return;
+                    return 0;
                 }
             }
 
             //We loop through the customer order list. 
             //For every item that cannot be fulfilled, we add to backordered. 
-            foreach (CustomerOrderItem item in orderList)
+            foreach (var item in orderList)
             {
-                int numberItemsRemoved = await inventoryService.RemoveStockAsync(item.ItemId, item.Quantity);
+                var numberItemsRemoved = await inventoryService.RemoveStockAsync(item.ItemId, item.Quantity);
 
                 this.State.FulfilledItems[item.ItemId] = numberItemsRemoved;
 
@@ -134,26 +158,12 @@ namespace CustomerOrder.Actor
                 }
             }
 
-            //Process any backordered item
-            if (this.State.BackorderedItems.Count > 0)
-            {
-                this.State.Status = CustomerOrderStatus.Backordered;
-                await
-                    this.RegisterReminder(
-                        CustomerOrderReminderNames.BackorderReminder,
-                        null,
-                        TimeSpan.FromSeconds(5),
-                        TimeSpan.FromMinutes(1),
-                        ActorReminderAttributes.None);
-            }
-            else
-            {
-                this.State.Status = CustomerOrderStatus.Shipped;
-            }
+            // Set the status appropriately
+            this.State.Status = this.State.BackorderedItems.Count > 0
+                ? this.State.Status = CustomerOrderStatus.Backordered
+                : this.State.Status = CustomerOrderStatus.Shipped;
 
-            //Remove fulfill order reminder so Actor can be gargabe collected.
-            IActorReminder orderReminder = this.GetReminder(CustomerOrderReminderNames.FulfillOrderReminder);
-            await this.UnregisterReminder(orderReminder);
+            return this.State.BackorderedItems.Count;
         }
 
         /// <summary>
@@ -161,19 +171,24 @@ namespace CustomerOrder.Actor
         /// of inventory can be removed for each item on the list. There is a time to separate each cycle to anticipate inventory restock. 
         /// </summary>
         /// <param name="backorderList"></param>
-        /// <returns></returns>
-        private async Task FulfillBackorder()
+        /// <returns>The number of backorder items remaining</returns>
+        internal async Task<int> FulfillBackorder()
         {
-            ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
-            IInventoryService inventoryService = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
+            if (this.State.Status == CustomerOrderStatus.Shipped)
+            {
+                return 0;
+            }
 
-            List<Guid> backorderItemsFulfilled = new List<Guid>();
+            var builder = new ServiceUriBuilder(InventoryServiceName);
+            var inventoryService = this.ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
 
-            foreach (Guid itemId in this.State.BackorderedItems)
+            var backorderItemsFulfilled = new List<Guid>();
+
+            foreach (var itemId in this.State.BackorderedItems)
             {
                 //Try to fulfill backorder
-                CustomerOrderItem itemToFulfill = this.State.OrderedItems.Single(item => item.ItemId == itemId);
-                int numberItemsRemoved = await inventoryService.RemoveStockAsync(itemId, itemToFulfill.Quantity - this.State.FulfilledItems[itemId]);
+                var itemToFulfill = this.State.OrderedItems.Single(item => item.ItemId == itemId);
+                var numberItemsRemoved = await inventoryService.RemoveStockAsync(itemId, itemToFulfill.Quantity - this.State.FulfilledItems[itemId]);
 
                 //Update fulfilled status and remove backorderitem if needed.
                 this.State.FulfilledItems[itemId] += numberItemsRemoved;
@@ -189,11 +204,9 @@ namespace CustomerOrder.Actor
             if (this.State.BackorderedItems.Count == 0)
             {
                 this.State.Status = CustomerOrderStatus.Shipped;
-
-                //now that we're done processing the backorder, remove the reminder
-                IActorReminder backorderReminder = this.GetReminder(CustomerOrderReminderNames.BackorderReminder);
-                await this.UnregisterReminder(backorderReminder);
             }
+
+            return this.State.BackorderedItems.Count;
         }
     }
 }

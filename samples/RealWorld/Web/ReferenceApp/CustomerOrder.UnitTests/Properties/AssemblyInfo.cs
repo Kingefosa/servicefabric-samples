@@ -9,11 +9,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 
-[assembly: AssemblyTitle("InventoryService")]
+[assembly: AssemblyTitle("CustomerOrder.UnitTests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("InventoryService")]
+[assembly: AssemblyProduct("CustomerOrder.UnitTests")]
 [assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -26,7 +26,7 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 
-[assembly: Guid("714b1c61-ffa8-4a5e-8dd2-d0a290677293")]
+[assembly: Guid("226b8d34-99cf-4172-87dc-e20b39030cc0")]
 
 // Version information for an assembly consists of the following four values:
 //

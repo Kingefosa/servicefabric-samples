@@ -4,33 +4,32 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9EC0063F-489E-43FE-94B5-BF5F89977CD3}</ProjectGuid>
+    <ProjectGuid>{00E00484-BD00-40CD-B2CC-1CFA8E893972}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Common</RootNamespace>
-    <AssemblyName>Common</AssemblyName>
+    <RootNamespace>Mocks</RootNamespace>
+    <AssemblyName>Mocks</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.ServiceFabric.Actors, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
@@ -66,13 +65,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MockableActor.cs" />
-    <Compile Include="Wrappers\IServiceProxyWrapper.cs" />
-    <Compile Include="Wrappers\IStatefulActorHostWrapper.cs" />
+    <Compile Include="MockInventoryService.cs" />
+    <Compile Include="MockServiceProxy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Wrappers\ServiceProxyWrapper.cs" />
-    <Compile Include="ServiceUriBuilder.cs" />
-    <Compile Include="Wrappers\StatefulActorHostWrapper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{9ec0063f-489e-43fe-94b5-bf5f89977cd3}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CustomerOrder.Domain\CustomerOrder.Domain.csproj">
+      <Project>{1e7e813f-43d3-4d0b-8546-5e1023873f28}</Project>
+      <Name>CustomerOrder.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Inventory.Domain\Inventory.Domain.csproj">
+      <Project>{7e9c2dfd-71a5-496d-aa4d-5ec53eaeb9ae}</Project>
+      <Name>Inventory.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RestockRequest.Domain\RestockRequest.Domain.csproj">
+      <Project>{a44fc2c5-6781-447e-80f5-7265b960b36a}</Project>
+      <Name>RestockRequest.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RestockRequestManager.Domain\RestockRequestManager.Domain.csproj">
+      <Project>{4162f266-d657-4143-aa62-626c10d23561}</Project>
+      <Name>RestockRequestManager.Domain</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

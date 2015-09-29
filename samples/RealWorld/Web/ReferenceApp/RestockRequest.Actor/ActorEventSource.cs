@@ -1,6 +1,5 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace RestockRequest.Actor
@@ -20,7 +19,7 @@ namespace RestockRequest.Actor
         {
             if (this.IsEnabled())
             {
-                string finalMessage = string.Format(message, args);
+                var finalMessage = string.Format(message, args);
                 this.Message(finalMessage);
             }
         }
@@ -39,7 +38,7 @@ namespace RestockRequest.Actor
         {
             if (this.IsEnabled())
             {
-                string finalMessage = string.Format(message, args);
+                var finalMessage = string.Format(message, args);
                 this.ActorMessage(
                     actor.GetType().ToString(),
                     actor.Id.ToString(),
@@ -59,7 +58,7 @@ namespace RestockRequest.Actor
         {
             if (this.IsEnabled())
             {
-                string finalMessage = string.Format(message, args);
+                var finalMessage = string.Format(message, args);
                 this.ActorMessage(
                     actor.GetType().ToString(),
                     actor.Id.ToString(),

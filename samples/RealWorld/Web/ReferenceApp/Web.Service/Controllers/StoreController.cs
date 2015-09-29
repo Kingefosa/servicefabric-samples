@@ -1,6 +1,5 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace Web.Service.Controllers
@@ -27,9 +26,9 @@ namespace Web.Service.Controllers
         [Route("api/store")]
         public Task<IEnumerable<InventoryItemView>> GetStore()
         {
-            ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
+            var builder = new ServiceUriBuilder(InventoryServiceName);
 
-            IInventoryService inventoryServiceClient = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
+            var inventoryServiceClient = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
             //Right now, even if your service has no partitions, you should specify a partion key as 0 in your Create call to a Service Proxy interface.
             return inventoryServiceClient.GetCustomerInventoryAsync();
         }

@@ -1,6 +1,5 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace Web.Service.Controllers
@@ -39,17 +38,17 @@ namespace Web.Service.Controllers
         public async Task<Guid> PostCheckout(List<CustomerOrderItem> cart)
         {
             ServiceEventSource.Current.Message("Now printing cart for POSTCHECKOUT...");
-            foreach (CustomerOrderItem item in cart)
+            foreach (var item in cart)
             {
                 ServiceEventSource.Current.Message("Guid {0}, quantity {1}", item.ItemId.ToString(), item.Quantity.ToString());
             }
 
-            Guid orderId = Guid.NewGuid();
+            var orderId = Guid.NewGuid();
 
-            ServiceUriBuilder builder = new ServiceUriBuilder(CustomerOrderServiceName);
+            var builder = new ServiceUriBuilder(CustomerOrderServiceName);
 
             //We create a unique Guid that is associated with a customer order, as well as with the actor that represents that order's state.
-            ICustomerOrderActor customerOrder = ActorProxy.Create<ICustomerOrderActor>(new ActorId(orderId), builder.ToUri());
+            var customerOrder = ActorProxy.Create<ICustomerOrderActor>(new ActorId(orderId), builder.ToUri());
 
             ServiceEventSource.Current.Message("Guid for order Id in Post Checkout: {0}", orderId.ToString());
             ServiceEventSource.Current.Message("Guid for order Id without To String call: {0}", orderId);
@@ -75,7 +74,6 @@ namespace Web.Service.Controllers
             return orderId;
         }
 
-
         /// <summary>
         /// Looks up a customer order based on its Guid identifier and by using an ActorProxy, retrieves the order's status and returns it to the client. 
         /// </summary>
@@ -87,7 +85,7 @@ namespace Web.Service.Controllers
         {
             try
             {
-                ICustomerOrderActor customerOrder = ActorProxy.Create<ICustomerOrderActor>(
+                var customerOrder = ActorProxy.Create<ICustomerOrderActor>(
                     actorId: new ActorId(customerOrderId),
                     serviceName: CustomerOrderServiceName);
                 return await customerOrder.GetStatusAsync();

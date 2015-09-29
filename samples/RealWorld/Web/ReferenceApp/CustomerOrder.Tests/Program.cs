@@ -1,6 +1,5 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace CustomerOrder.Tests
@@ -21,8 +20,8 @@ namespace CustomerOrder.Tests
         public static async Task<Guid> CheckoutTest(List<CustomerOrderItem> cart)
         {
             // you may want to create a guid and an actor from that guid
-            Guid orderId = new Guid();
-            ICustomerOrderActor customerOrder = ActorProxy.Create<ICustomerOrderActor>(new ActorId(orderId), applicationName);
+            var orderId = new Guid();
+            var customerOrder = ActorProxy.Create<ICustomerOrderActor>(new ActorId(orderId), applicationName);
 
             Console.WriteLine("Trying to get initial status of actor...");
             await GetOrderStatus(orderId);
@@ -50,8 +49,8 @@ namespace CustomerOrder.Tests
 
         public static async Task GetOrderStatus(Guid customerOrderId)
         {
-            ICustomerOrderActor customerOrder = ActorProxy.Create<ICustomerOrderActor>(new ActorId(customerOrderId), applicationName);
-            string status = await customerOrder.GetStatusAsync();
+            var customerOrder = ActorProxy.Create<ICustomerOrderActor>(new ActorId(customerOrderId), applicationName);
+            var status = await customerOrder.GetStatusAsync();
             Console.WriteLine("Order status is: " + status);
             return;
         }
@@ -60,9 +59,9 @@ namespace CustomerOrder.Tests
         {
             if (args.Length > 0)
             {
-                string endpoint = args[0];
+                var endpoint = args[0];
                 Console.WriteLine("Conencting to cluster: " + endpoint);
-                ServicePartitionResolver resolver = new ServicePartitionResolver(endpoint);
+                var resolver = new ServicePartitionResolver(endpoint);
                 ServicePartitionResolver.SetDefault(resolver);
             }
 
@@ -78,10 +77,10 @@ namespace CustomerOrder.Tests
             //Tests both of these functionalities at once. 
 
 
-            IInventoryService inventoryServiceClient = ServiceProxy.Create<IInventoryService>(0, InventoryServiceName);
-            IEnumerable<InventoryItemView> storeview = await inventoryServiceClient.GetCustomerInventoryAsync();
+            var inventoryServiceClient = ServiceProxy.Create<IInventoryService>(0, InventoryServiceName);
+            var storeview = await inventoryServiceClient.GetCustomerInventoryAsync();
             Console.WriteLine("We are printing the storeview from the GetCustomerInventory call through the InventoryService proxy");
-            foreach (InventoryItemView view in storeview)
+            foreach (var view in storeview)
             {
                 Console.WriteLine(
                     "This is item {0} with price {1}, description {2}, and customer available stock of {3} ",
@@ -92,11 +91,11 @@ namespace CustomerOrder.Tests
             }
 
 
-            List<CustomerOrderItem> order = createTestOrder(storeview);
+            var order = createTestOrder(storeview);
 
             //Part II: Now we test order fulfillment. 
             Console.WriteLine("Now beginning test of customer checkout order");
-            Guid x = await CheckoutTest(order);
+            var x = await CheckoutTest(order);
             //Try a loop with sleep here
 
             await GetOrderStatus(x);
@@ -111,18 +110,18 @@ namespace CustomerOrder.Tests
         private static List<CustomerOrderItem> createTestOrder(IEnumerable<InventoryItemView> store)
         {
             Console.WriteLine("We are creating a test order for the customer now...");
-            List<CustomerOrderItem> order = new List<CustomerOrderItem>();
-            foreach (InventoryItemView item in store)
+            var order = new List<CustomerOrderItem>();
+            foreach (var item in store)
             {
-                int quantityToAdd = item.CustomerAvailableStock/10;
+                var quantityToAdd = item.CustomerAvailableStock/10;
                 Console.WriteLine(string.Format("We are adding {0} items of item no {1} to customer's order", quantityToAdd.ToString(), item.Id.ToString()));
 
-                CustomerOrderItem toAdd = new CustomerOrderItem(item.Id, quantityToAdd);
+                var toAdd = new CustomerOrderItem(item.Id, quantityToAdd);
                 order.Add(toAdd);
             }
             //Printing contents of list to console
             Console.WriteLine("Printing contents of order list...");
-            foreach (CustomerOrderItem item in order)
+            foreach (var item in order)
             {
                 Console.WriteLine(string.Format("Ordering {0} items of type {1}", item.Quantity.ToString(), item.ItemId.ToString()));
             }

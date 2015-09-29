@@ -1,15 +1,14 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace CustomerOrder.Actor
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Runtime.Serialization;
     using System.Text;
-    using System.Linq;
     using CustomerOrder.Domain;
 
     [DataContract]
@@ -29,7 +28,7 @@ namespace CustomerOrder.Actor
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             sb.AppendLine("Status: " + this.Status + ".");
             if (this.OrderedItems != null)
@@ -41,7 +40,7 @@ namespace CustomerOrder.Actor
             if (this.FulfilledItems != null)
             {
                 sb.Append("Fulfilled Items: ");
-                foreach (KeyValuePair<Guid, int> kvp in this.FulfilledItems)
+                foreach (var kvp in this.FulfilledItems)
                 {
                     sb.Append("Item Id" + kvp.Key + ", Quantity: " + kvp.Value + ',');
                 }
