@@ -27,43 +27,43 @@ namespace CustomerOrder.Actor
         /// </summary>
         /// <param name="orderList"></param>
         /// <returns></returns>
-        async Task<bool> ICustomerOrderActor.SubmitOrderAsync(List<CustomerOrderItem> orderList)
+        public Task SubmitOrderAsync(IEnumerable<CustomerOrderItem> orderList)
         {
-            this.State.OrderedItems = orderList;
+            this.State.OrderedItems = new List<CustomerOrderItem>(orderList);
             this.State.FulfilledItems = new Dictionary<Guid, int>();
             this.State.BackorderedItems = new List<Guid>();
             this.State.Status = CustomerOrderStatus.Submitted;
 
             ActorEventSource.Current.ActorMessage(this, this.State.ToString());
 
-            await
-                this.RegisterReminder(
+            return this.RegisterReminder(
                     CustomerOrderReminderNames.FulfillOrderReminder,
                     null,
                     TimeSpan.FromSeconds(10),
                     TimeSpan.FromSeconds(10),
                     ActorReminderAttributes.None);
-
-            return true;
         }
 
         /// <summary>
         /// Returns the status of the Customer Order. 
         /// </summary>
         /// <returns></returns>
-        Task<string> ICustomerOrderActor.GetStatusAsync()
+        public Task<string> GetStatusAsync()
         {
             return Task.FromResult(this.State.Status.ToString());
         }
 
-        Task IRemindable.ReceiveReminderAsync(string reminderName, byte[] context, TimeSpan dueTime, TimeSpan period)
+        public Task ReceiveReminderAsync(string reminderName, byte[] context, TimeSpan dueTime, TimeSpan period)
         {
+            
             switch (reminderName)
             {
                 case CustomerOrderReminderNames.FulfillOrderReminder:
                     return this.FulfillOrder();
+
                 case CustomerOrderReminderNames.BackorderReminder:
                     return this.FulfillBackorder();
+
                 default:
                     return null;
             }
@@ -102,18 +102,18 @@ namespace CustomerOrder.Actor
         /// <returns></returns>
         private async Task FulfillOrder()
         {
+            ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
+            IInventoryService inventoryService = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
+
             this.State.Status = CustomerOrderStatus.InProcess;
 
-            ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
-
-            List<CustomerOrderItem> orderList = this.State.OrderedItems;
-            IInventoryService inventoryServiceClient = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
+            IList<CustomerOrderItem> orderList = this.State.OrderedItems;
 
             //First, check all items are listed in inventory.  
             //This will avoid infinite backorder status.
             foreach (CustomerOrderItem item in orderList)
             {
-                if ((await inventoryServiceClient.IsItemInInventoryAsync(item.ItemId)) == false)
+                if ((await inventoryService.IsItemInInventoryAsync(item.ItemId)) == false)
                 {
                     this.State.Status = CustomerOrderStatus.Canceled;
                     return;
@@ -124,8 +124,10 @@ namespace CustomerOrder.Actor
             //For every item that cannot be fulfilled, we add to backordered. 
             foreach (CustomerOrderItem item in orderList)
             {
-                int numberItemsRemoved = await inventoryServiceClient.RemoveStockAsync(item.ItemId, item.Quantity);
-                this.State.FulfilledItems.Add(item.ItemId, numberItemsRemoved);
+                int numberItemsRemoved = await inventoryService.RemoveStockAsync(item.ItemId, item.Quantity);
+
+                this.State.FulfilledItems[item.ItemId] = numberItemsRemoved;
+
                 if (numberItemsRemoved < item.Quantity)
                 {
                     this.State.BackorderedItems.Add(item.ItemId);
@@ -163,15 +165,15 @@ namespace CustomerOrder.Actor
         private async Task FulfillBackorder()
         {
             ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
+            IInventoryService inventoryService = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
 
-            IInventoryService inventoryServiceClient = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
             List<Guid> backorderItemsFulfilled = new List<Guid>();
 
             foreach (Guid itemId in this.State.BackorderedItems)
             {
                 //Try to fulfill backorder
                 CustomerOrderItem itemToFulfill = this.State.OrderedItems.Single(item => item.ItemId == itemId);
-                int numberItemsRemoved = await inventoryServiceClient.RemoveStockAsync(itemId, itemToFulfill.Quantity - this.State.FulfilledItems[itemId]);
+                int numberItemsRemoved = await inventoryService.RemoveStockAsync(itemId, itemToFulfill.Quantity - this.State.FulfilledItems[itemId]);
 
                 //Update fulfilled status and remove backorderitem if needed.
                 this.State.FulfilledItems[itemId] += numberItemsRemoved;
