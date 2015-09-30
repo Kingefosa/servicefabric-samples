@@ -17,48 +17,129 @@ namespace CustomerOrder.UnitTests
     [TestClass]
     public class CustomerOrderActorTests
     {
+        /// <summary>
+        /// Tests FulfillOrder ships an order when all items are available from the InventoryService.
+        /// </summary>
+        /// <returns></returns>
         [TestMethod]
         public async Task TestFulfillOrderSimple()
         {
+            // The default mock inventory service behavior is to always complete an order.
+            MockInventoryService inventoryService = new MockInventoryService();
+
             MockServiceProxy serviceProxy = new MockServiceProxy();
-            serviceProxy.Supports<IInventoryService>(serviceUri => new MockInventoryService());
+            serviceProxy.Supports<IInventoryService>(serviceUri => inventoryService);
 
             CustomerOrderActor target = new CustomerOrderActor();
-            target.ServiceProxy = new MockServiceProxy();
+            target.ServiceProxy = serviceProxy;
+            target.State = new CustomerOrderActorState();
             target.State.Status = CustomerOrderStatus.Submitted;
             target.State.OrderedItems = new List<CustomerOrderItem>()
             {
                 new CustomerOrderItem(Guid.NewGuid(), 4)
             };
 
-            int onBackorder = await target.FulfillOrder();
+            await target.FulfillOrder();
 
             Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Shipped, target.State.Status);
-            Assert.AreEqual<int>(0, onBackorder);
         }
 
+        /// <summary>
+        /// Tests FulfillOrder does not ship when not all items could be fulfilled by InventoryService.
+        /// </summary>
+        /// <returns></returns>
         [TestMethod]
         public async Task TestFulfillOrderWithBackorder()
         {
+            // instruct the mock inventory service to always return less quantity than requested 
+            // so that FulfillOrder always ends up in backordered status.
+            MockInventoryService inventoryService = new MockInventoryService()
+            {
+                RemoveStockAsyncFunc = (itemId, quantity) => Task.FromResult(quantity - 1)
+            };
+            
             MockServiceProxy serviceProxy = new MockServiceProxy();
-            serviceProxy.Supports<IInventoryService>(
-                serviceUri => new MockInventoryService()
-                {
-                    RemoveStockAsyncFunc = (itemId, quantity) => Task.FromResult(quantity - 1)
-                });
+            serviceProxy.Supports<IInventoryService>(serviceUri => inventoryService);
 
             CustomerOrderActor target = new CustomerOrderActor();
-            target.ServiceProxy = new MockServiceProxy();
+            target.ServiceProxy = serviceProxy;
+            target.State = new CustomerOrderActorState();
             target.State.Status = CustomerOrderStatus.Submitted;
             target.State.OrderedItems = new List<CustomerOrderItem>()
             {
                 new CustomerOrderItem(Guid.NewGuid(), 4)
             };
 
-            int onBackorder = await target.FulfillOrder();
+            await target.FulfillOrder();
 
+            Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Backordered, target.State.Status);
+        }
+
+        /// <summary>
+        /// Tests FulfillOrder completes a shipment after multiple iterations when a limited quantity is available from InventoryService.
+        /// </summary>
+        /// <returns></returns>
+        [TestMethod]
+        public async Task TestFulfillOrderToCompletion()
+        {
+            int itemCount = 5;
+
+            // instruct the mock inventory service to only fulfill one item each time
+            // so that FulfillOrder has to make multiple iterations to complete an order
+            MockInventoryService inventoryService = new MockInventoryService()
+            {
+                RemoveStockAsyncFunc = (itemId, quantity) => Task.FromResult(1)
+            };
+
+            MockServiceProxy serviceProxy = new MockServiceProxy();
+            serviceProxy.Supports<IInventoryService>(serviceUri => inventoryService);
+
+            CustomerOrderActor target = new CustomerOrderActor();
+            target.ServiceProxy = serviceProxy;
+            target.State = new CustomerOrderActorState();
+            target.State.Status = CustomerOrderStatus.Submitted;
+            target.State.OrderedItems = new List<CustomerOrderItem>()
+            {
+                new CustomerOrderItem(Guid.NewGuid(), itemCount)
+            };
+            
+            for (int i = 0; i < itemCount - 1; ++i)
+            {
+                await target.FulfillOrder();
+                Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Backordered, target.State.Status);
+            }
+
+            await target.FulfillOrder();
             Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Shipped, target.State.Status);
-            Assert.AreEqual<int>(0, onBackorder);
+        }
+
+        [TestMethod]
+        public async Task TestFulfillOrderCancelled()
+        {
+            // instruct the mock inventory service to return 0 for all items to simulate items that don't exist.
+            // and have it return false when asked if an item exists to make sure FulfillOrder doesn't get into
+            // an infinite backorder loop.
+            MockInventoryService inventoryService = new MockInventoryService()
+            {
+                IsItemInInventoryAsyncFunc = itemId => Task.FromResult(false),
+                RemoveStockAsyncFunc = (itemId, quantity) => Task.FromResult(0)
+            };
+
+            MockServiceProxy serviceProxy = new MockServiceProxy();
+            serviceProxy.Supports<IInventoryService>(serviceUri => inventoryService);
+
+            CustomerOrderActor target = new CustomerOrderActor();
+            target.ServiceProxy = serviceProxy;
+            target.State = new CustomerOrderActorState();
+            target.State.Status = CustomerOrderStatus.Submitted;
+            target.State.OrderedItems = new List<CustomerOrderItem>()
+            {
+                new CustomerOrderItem(Guid.NewGuid(), 5)
+            };
+
+            await target.FulfillOrder();
+            
+            Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Canceled, target.State.Status);
         }
     }
 }

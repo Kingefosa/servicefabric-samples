@@ -17,13 +17,7 @@ namespace CustomerOrder.Actor
     {
         [DataMember]
         public IList<CustomerOrderItem> OrderedItems { get; set; }
-
-        [DataMember]
-        public IDictionary<Guid, int> FulfilledItems { get; set; }
-
-        [DataMember]
-        public IList<Guid> BackorderedItems { get; set; }
-
+        
         [DataMember]
         public CustomerOrderStatus Status { get; set; }
 
@@ -37,20 +31,6 @@ namespace CustomerOrder.Actor
                 sb.Append("Ordered Items: ");
                 sb.Append(String.Join(",", this.OrderedItems.Select<CustomerOrderItem, string>(item => item.ItemId + "-" + item.Quantity)));
                 sb.AppendLine();
-            }
-            if (this.FulfilledItems != null)
-            {
-                sb.Append("Fulfilled Items: ");
-                foreach (KeyValuePair<Guid, int> kvp in this.FulfilledItems)
-                {
-                    sb.Append("Item Id" + kvp.Key + ", Quantity: " + kvp.Value + ',');
-                }
-                sb.AppendLine();
-            }
-            if (this.BackorderedItems != null)
-            {
-                sb.Append("Backordered Items: ");
-                sb.Append(String.Join(",", this.BackorderedItems));
             }
 
             return sb.ToString();
