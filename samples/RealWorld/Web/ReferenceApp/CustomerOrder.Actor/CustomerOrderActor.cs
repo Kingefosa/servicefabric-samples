@@ -63,7 +63,7 @@ namespace CustomerOrder.Actor
             {
                 case CustomerOrderReminderNames.FulfillOrderReminder:
 
-                    await this.FulfillOrder();
+                    await this.FulfillOrderAsync();
 
                     if (this.State.Status == CustomerOrderStatus.Shipped ||
                         this.State.Status == CustomerOrderStatus.Canceled)
@@ -112,7 +112,7 @@ namespace CustomerOrder.Actor
         /// 
         /// </summary>
         /// <returns>The number of items put on backorder after fulfilling the order.</returns>
-        internal async Task FulfillOrder()
+        internal async Task FulfillOrderAsync()
         {
             ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
 

@@ -39,7 +39,7 @@ namespace CustomerOrder.UnitTests
                 new CustomerOrderItem(Guid.NewGuid(), 4)
             };
 
-            await target.FulfillOrder();
+            await target.FulfillOrderAsync();
 
             Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Shipped, target.State.Status);
         }
@@ -70,7 +70,7 @@ namespace CustomerOrder.UnitTests
                 new CustomerOrderItem(Guid.NewGuid(), 4)
             };
 
-            await target.FulfillOrder();
+            await target.FulfillOrderAsync();
 
             Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Backordered, target.State.Status);
         }
@@ -105,11 +105,11 @@ namespace CustomerOrder.UnitTests
             
             for (int i = 0; i < itemCount - 1; ++i)
             {
-                await target.FulfillOrder();
+                await target.FulfillOrderAsync();
                 Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Backordered, target.State.Status);
             }
 
-            await target.FulfillOrder();
+            await target.FulfillOrderAsync();
             Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Shipped, target.State.Status);
         }
 
@@ -137,7 +137,7 @@ namespace CustomerOrder.UnitTests
                 new CustomerOrderItem(Guid.NewGuid(), 5)
             };
 
-            await target.FulfillOrder();
+            await target.FulfillOrderAsync();
             
             Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Canceled, target.State.Status);
         }
