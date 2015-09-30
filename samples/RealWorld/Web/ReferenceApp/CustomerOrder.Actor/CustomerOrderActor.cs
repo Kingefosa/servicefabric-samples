@@ -74,6 +74,11 @@ namespace CustomerOrder.Actor
                     }
                     
                     break;
+
+                default:
+                    // We should never arrive here normally. The system won't call reminders that don't exist. 
+                    // But for our own sake in case we add a new reminder somewhere and forget to handle it, this will remind us.
+                    throw new InvalidOperationException("Unknown reminder: " + reminderName);
             }
         }
 
