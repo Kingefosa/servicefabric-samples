@@ -93,7 +93,7 @@ namespace CustomerOrder.Actor
             if (this.State == null)
             {
                 this.State = new CustomerOrderActorState();
-                this.State.Status = CustomerOrderStatus.Confirmed;
+                this.State.Status = CustomerOrderStatus.New;
             }
             return Task.FromResult(true);
         }
