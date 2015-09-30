@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace Inventory.Service
@@ -15,7 +16,7 @@ namespace Inventory.Service
         {
             try
             {
-                using (var fabricRuntime = FabricRuntime.Create())
+                using (FabricRuntime fabricRuntime = FabricRuntime.Create())
                 {
                     // This is the name of the ServiceType that is registered with FabricRuntime. 
                     // This name must match the name defined in the ServiceManifest. If you change

@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace CustomerOrder.UnitTests
@@ -19,10 +20,10 @@ namespace CustomerOrder.UnitTests
         [TestMethod]
         public async Task TestFulfillOrderSimple()
         {
-            var serviceProxy = new MockServiceProxy();
+            MockServiceProxy serviceProxy = new MockServiceProxy();
             serviceProxy.Supports<IInventoryService>(serviceUri => new MockInventoryService());
 
-            var target = new CustomerOrderActor();
+            CustomerOrderActor target = new CustomerOrderActor();
             target.ServiceProxy = new MockServiceProxy();
             target.State.Status = CustomerOrderStatus.Submitted;
             target.State.OrderedItems = new List<CustomerOrderItem>()
@@ -30,7 +31,7 @@ namespace CustomerOrder.UnitTests
                 new CustomerOrderItem(Guid.NewGuid(), 4)
             };
 
-            var onBackorder = await target.FulfillOrder();
+            int onBackorder = await target.FulfillOrder();
 
             Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Shipped, target.State.Status);
             Assert.AreEqual<int>(0, onBackorder);
@@ -39,14 +40,14 @@ namespace CustomerOrder.UnitTests
         [TestMethod]
         public async Task TestFulfillOrderWithBackorder()
         {
-            var serviceProxy = new MockServiceProxy();
+            MockServiceProxy serviceProxy = new MockServiceProxy();
             serviceProxy.Supports<IInventoryService>(
                 serviceUri => new MockInventoryService()
                 {
                     RemoveStockAsyncFunc = (itemId, quantity) => Task.FromResult(quantity - 1)
                 });
 
-            var target = new CustomerOrderActor();
+            CustomerOrderActor target = new CustomerOrderActor();
             target.ServiceProxy = new MockServiceProxy();
             target.State.Status = CustomerOrderStatus.Submitted;
             target.State.OrderedItems = new List<CustomerOrderItem>()
@@ -54,7 +55,7 @@ namespace CustomerOrder.UnitTests
                 new CustomerOrderItem(Guid.NewGuid(), 4)
             };
 
-            var onBackorder = await target.FulfillOrder();
+            int onBackorder = await target.FulfillOrder();
 
             Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Shipped, target.State.Status);
             Assert.AreEqual<int>(0, onBackorder);

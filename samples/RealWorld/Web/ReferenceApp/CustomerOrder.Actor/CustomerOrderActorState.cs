@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace CustomerOrder.Actor
@@ -28,7 +29,7 @@ namespace CustomerOrder.Actor
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
             sb.AppendLine("Status: " + this.Status + ".");
             if (this.OrderedItems != null)
@@ -40,7 +41,7 @@ namespace CustomerOrder.Actor
             if (this.FulfilledItems != null)
             {
                 sb.Append("Fulfilled Items: ");
-                foreach (var kvp in this.FulfilledItems)
+                foreach (KeyValuePair<Guid, int> kvp in this.FulfilledItems)
                 {
                     sb.Append("Item Id" + kvp.Key + ", Quantity: " + kvp.Value + ',');
                 }

@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace RestockRequestManager.Service
@@ -19,7 +20,7 @@ namespace RestockRequestManager.Service
         {
             if (this.IsEnabled())
             {
-                var finalMessage = string.Format(message, args);
+                string finalMessage = string.Format(message, args);
                 this.Message(finalMessage);
             }
         }
@@ -38,7 +39,7 @@ namespace RestockRequestManager.Service
         {
             if (this.IsEnabled())
             {
-                var finalMessage = string.Format(message, args);
+                string finalMessage = string.Format(message, args);
                 this.ServiceMessage(
                     service.ServiceInitializationParameters.ServiceName.ToString(),
                     service.ServiceInitializationParameters.ServiceTypeName,
@@ -56,7 +57,7 @@ namespace RestockRequestManager.Service
         {
             if (this.IsEnabled())
             {
-                var finalMessage = string.Format(message, args);
+                string finalMessage = string.Format(message, args);
                 this.ServiceMessage(
                     service.ServiceInitializationParameters.ServiceName.ToString(),
                     service.ServiceInitializationParameters.ServiceTypeName,

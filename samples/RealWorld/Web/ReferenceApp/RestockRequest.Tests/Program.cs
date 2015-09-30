@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace RestockRequest.Tests
@@ -25,19 +26,19 @@ namespace RestockRequest.Tests
         {
             if (args.Length > 0)
             {
-                var endpoint = args[0];
+                string endpoint = args[0];
                 Console.WriteLine("Conencting to cluster: " + endpoint);
-                var resolver = new ServicePartitionResolver(endpoint);
+                ServicePartitionResolver resolver = new ServicePartitionResolver(endpoint);
                 ServicePartitionResolver.SetDefault(resolver);
             }
 
             Items = new List<Guid>();
-            for (var i = 0; i < MaxNumberOfItems; i++)
+            for (int i = 0; i < MaxNumberOfItems; i++)
             {
                 Items.Add(Guid.NewGuid());
             }
 
-            var timer = new Timer(new TimerCallback(GenerateData), null, 0, GenerateDataIntervalInMsec);
+            Timer timer = new Timer(new TimerCallback(GenerateData), null, 0, GenerateDataIntervalInMsec);
             Console.ReadLine();
             timer.Dispose();
         }
@@ -51,12 +52,12 @@ namespace RestockRequest.Tests
         {
             // TODO: need to go to correct partition
             // For now, the inventory is not partitioned, so always go to first partition
-            var restockRequestService = ServiceProxy.Create<IRestockRequestManager>(0, RestockRequestManagerServiceName);
+            IRestockRequestManager restockRequestService = ServiceProxy.Create<IRestockRequestManager>(0, RestockRequestManagerServiceName);
 
             IList<Task> tasks = new List<Task>();
-            for (var i = 0; i < ParallelRequests; i++)
+            for (int i = 0; i < ParallelRequests; i++)
             {
-                var request = GenerateRandomRequest();
+                RestockRequest request = GenerateRandomRequest();
                 Console.WriteLine("Add request {0}", request);
 
                 tasks.Add(restockRequestService.AddRestockRequestAsync(request));
@@ -67,7 +68,7 @@ namespace RestockRequest.Tests
 
         private static RestockRequest GenerateRandomRequest()
         {
-            var index = random.Next(0, MaxNumberOfItems);
+            int index = random.Next(0, MaxNumberOfItems);
             return new RestockRequest(Items[index], random.Next(10, 100000));
         }
     }

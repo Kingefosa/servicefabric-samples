@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace Common
@@ -33,7 +34,7 @@ namespace Common
 
         public Uri ToUri()
         {
-            var result = String.Format(
+            string result = String.Format(
                 CultureInfo.InvariantCulture,
                 "{0}/{1}",
                 String.IsNullOrEmpty(this.ApplicationInstance)

@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace RestockRequest.Actor
@@ -15,7 +16,7 @@ namespace RestockRequest.Actor
         {
             try
             {
-                using (var fabricRuntime = FabricRuntime.Create())
+                using (FabricRuntime fabricRuntime = FabricRuntime.Create())
                 {
                     fabricRuntime.RegisterActor(typeof(RestockRequestActor));
 

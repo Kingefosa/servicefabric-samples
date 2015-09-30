@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace Web.Service.Controllers
@@ -38,17 +39,17 @@ namespace Web.Service.Controllers
         public async Task<Guid> PostCheckout(List<CustomerOrderItem> cart)
         {
             ServiceEventSource.Current.Message("Now printing cart for POSTCHECKOUT...");
-            foreach (var item in cart)
+            foreach (CustomerOrderItem item in cart)
             {
                 ServiceEventSource.Current.Message("Guid {0}, quantity {1}", item.ItemId.ToString(), item.Quantity.ToString());
             }
 
-            var orderId = Guid.NewGuid();
+            Guid orderId = Guid.NewGuid();
 
-            var builder = new ServiceUriBuilder(CustomerOrderServiceName);
+            ServiceUriBuilder builder = new ServiceUriBuilder(CustomerOrderServiceName);
 
             //We create a unique Guid that is associated with a customer order, as well as with the actor that represents that order's state.
-            var customerOrder = ActorProxy.Create<ICustomerOrderActor>(new ActorId(orderId), builder.ToUri());
+            ICustomerOrderActor customerOrder = ActorProxy.Create<ICustomerOrderActor>(new ActorId(orderId), builder.ToUri());
 
             ServiceEventSource.Current.Message("Guid for order Id in Post Checkout: {0}", orderId.ToString());
             ServiceEventSource.Current.Message("Guid for order Id without To String call: {0}", orderId);
@@ -85,7 +86,7 @@ namespace Web.Service.Controllers
         {
             try
             {
-                var customerOrder = ActorProxy.Create<ICustomerOrderActor>(
+                ICustomerOrderActor customerOrder = ActorProxy.Create<ICustomerOrderActor>(
                     actorId: new ActorId(customerOrderId),
                     serviceName: CustomerOrderServiceName);
                 return await customerOrder.GetStatusAsync();

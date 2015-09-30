@@ -1,11 +1,13 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace Web.Service
 {
     using System;
     using System.Fabric;
+    using System.Fabric.Description;
     using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
@@ -27,8 +29,8 @@ namespace Web.Service
 
         public void Initialize(ServiceInitializationParameters serviceInitializationParameters)
         {
-            var serviceEndpoint = serviceInitializationParameters.CodePackageActivationContext.GetEndpoint("ServiceEndpoint");
-            var port = serviceEndpoint.Port;
+            EndpointResourceDescription serviceEndpoint = serviceInitializationParameters.CodePackageActivationContext.GetEndpoint("ServiceEndpoint");
+            int port = serviceEndpoint.Port;
 
             this.listeningAddress = String.Format(
                 CultureInfo.InvariantCulture,
@@ -43,7 +45,7 @@ namespace Web.Service
         {
             this.serverHandle = WebApp.Start(this.listeningAddress, appBuilder => this.startup.Configuration(appBuilder));
 
-            var resultAddress = this.listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);
+            string resultAddress = this.listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);
 
             ServiceEventSource.Current.Message("Listening on {0}", resultAddress);
 

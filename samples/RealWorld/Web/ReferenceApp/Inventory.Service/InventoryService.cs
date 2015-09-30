@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace Inventory.Service
@@ -11,6 +12,7 @@ namespace Inventory.Service
     using System.Threading.Tasks;
     using Common;
     using Inventory.Domain;
+    using Microsoft.ServiceFabric.Data;
     using Microsoft.ServiceFabric.Data.Collections;
     using Microsoft.ServiceFabric.Services;
     using RestockRequest.Domain;
@@ -28,10 +30,10 @@ namespace Inventory.Service
         /// <returns></returns>
         public async Task CreateInventoryItemAsync(InventoryItem item)
         {
-            var inventoryItems =
+            IReliableDictionary<Guid, InventoryItem> inventoryItems =
                 await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
-            using (var tx = this.StateManager.CreateTransaction())
+            using (ITransaction tx = this.StateManager.CreateTransaction())
             {
                 await inventoryItems.AddAsync(tx, item.Id, item);
                 await tx.CommitAsync();
@@ -47,17 +49,17 @@ namespace Inventory.Service
         /// <returns></returns>
         public async Task<int> AddStockAsync(IEnumerable<RestockRequest> requests)
         {
-            var inventoryItems =
+            IReliableDictionary<Guid, InventoryItem> inventoryItems =
                 await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
-            var quantity = 0;
+            int quantity = 0;
 
-            using (var tx = this.StateManager.CreateTransaction())
+            using (ITransaction tx = this.StateManager.CreateTransaction())
             {
-                foreach (var request in requests)
+                foreach (RestockRequest request in requests)
                 {
                     // Try to get the InventoryItem for the ID in the request.
-                    var item = await inventoryItems.TryGetValueAsync(tx, request.ItemId);
+                    ConditionalResult<InventoryItem> item = await inventoryItems.TryGetValueAsync(tx, request.ItemId);
 
                     // We can only update the stock for InventoryItems in the system - we are not adding new items here.
                     if (item.HasValue)
@@ -90,15 +92,15 @@ namespace Inventory.Service
         /// <returns>int: Returns the quantity removed from stock.</returns>
         public async Task<int> RemoveStockAsync(Guid itemId, int quantity)
         {
-            var inventoryItems =
+            IReliableDictionary<Guid, InventoryItem> inventoryItems =
                 await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
-            var removed = 0;
+            int removed = 0;
 
-            using (var tx = this.StateManager.CreateTransaction())
+            using (ITransaction tx = this.StateManager.CreateTransaction())
             {
                 // Try to get the InventoryItem for the ID in the request.
-                var item = await inventoryItems.TryGetValueAsync(tx, itemId);
+                ConditionalResult<InventoryItem> item = await inventoryItems.TryGetValueAsync(tx, itemId);
 
                 // We can only remove stock for InventoryItems in the system.
                 if (item.HasValue)
@@ -126,12 +128,12 @@ namespace Inventory.Service
 
         public async Task<bool> IsItemInInventoryAsync(Guid itemId)
         {
-            var inventoryItems =
+            IReliableDictionary<Guid, InventoryItem> inventoryItems =
                 await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
-            using (var tx = this.StateManager.CreateTransaction())
+            using (ITransaction tx = this.StateManager.CreateTransaction())
             {
-                var item = await inventoryItems.TryGetValueAsync(tx, itemId);
+                ConditionalResult<InventoryItem> item = await inventoryItems.TryGetValueAsync(tx, itemId);
                 return item.HasValue;
             }
         }
@@ -144,7 +146,7 @@ namespace Inventory.Service
         /// <returns>IEnumerable of InventoryItemView</returns>
         public async Task<IEnumerable<InventoryItemView>> GetCustomerInventoryAsync()
         {
-            var inventoryItems =
+            IReliableDictionary<Guid, InventoryItem> inventoryItems =
                 await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
             ServiceEventSource.Current.Message("Called GetCustomerInventory to return InventoryItemView");
@@ -160,10 +162,10 @@ namespace Inventory.Service
         /// <returns></returns>
         public async Task DeleteInventoryItemAsync(Guid itemId)
         {
-            var inventoryItems =
+            IReliableDictionary<Guid, InventoryItem> inventoryItems =
                 await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
-            using (var tx = this.StateManager.CreateTransaction())
+            using (ITransaction tx = this.StateManager.CreateTransaction())
             {
                 await inventoryItems.TryRemoveAsync(tx, itemId);
                 await tx.CommitAsync();
@@ -194,12 +196,12 @@ namespace Inventory.Service
                 this.CreateInventoryItemAsync(new InventoryItem("Electrifying Lightning Skirt", 29.99M, 1500, 150, 1500)),
                 this.CreateInventoryItemAsync(new InventoryItem("Blacklight Striped Trousers", 34.99M, 3000, 300, 3000)));
 
-            var inventoryItems =
+            IReliableDictionary<Guid, InventoryItem> inventoryItems =
                 await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                foreach (var item in inventoryItems.Select(x => x.Value))
+                foreach (InventoryItem item in inventoryItems.Select(x => x.Value))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -212,13 +214,13 @@ namespace Inventory.Service
                     //Check if stock is below restockThreshold and if the item is not already on reorder
                     if ((item.AvailableStock <= item.RestockThreshold) && !item.OnReorder)
                     {
-                        var builder = new ServiceUriBuilder(RestockRequestManagerServiceName);
+                        ServiceUriBuilder builder = new ServiceUriBuilder(RestockRequestManagerServiceName);
 
-                        var restockRequestManagerClient = ServiceProxy.Create<IRestockRequestManager>(0, builder.ToUri());
+                        IRestockRequestManager restockRequestManagerClient = ServiceProxy.Create<IRestockRequestManager>(0, builder.ToUri());
 
                         // we reduce the quantity passed in to RestockRequest
                         // to ensure we don't overorder                
-                        var newRequest = new RestockRequest(item.Id, (item.MaxStockThreshold - item.AvailableStock));
+                        RestockRequest newRequest = new RestockRequest(item.Id, (item.MaxStockThreshold - item.AvailableStock));
 
                         ServiceEventSource.Current.Message(newRequest.ToString()); //TEST MSG
 

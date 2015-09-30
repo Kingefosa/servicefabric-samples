@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace RestockRequest.Actor
@@ -93,7 +94,7 @@ namespace RestockRequest.Actor
         private void SignalRequestStatusChange()
         {
             ActorEventSource.Current.ActorMessage(this, "RestockRequestActor: {0}: Raise event for state change", this.State);
-            var events = this.GetEvent<IRestockRequestEvents>();
+            IRestockRequestEvents events = this.GetEvent<IRestockRequestEvents>();
             events.RestockRequestCompleted(this.Id, this.State.Request);
         }
 

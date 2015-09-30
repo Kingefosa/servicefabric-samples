@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace Inventory.Domain
@@ -89,7 +90,7 @@ namespace Inventory.Domain
         /// </summary>
         public int AddStock(int quantity)
         {
-            var original = this.AvailableStock;
+            int original = this.AvailableStock;
 
             // The quantity that the client is trying to add to stock is greater than what can be physically accommodated in a Fabrikam Warehouse
             if ((this.AvailableStock + quantity) > this.MaxStockThreshold)
@@ -122,7 +123,7 @@ namespace Inventory.Domain
         /// 
         public int RemoveStock(int quantityDesired)
         {
-            var removed = Math.Min(quantityDesired, this.AvailableStock); //Assumes quantityDesired is a positive integer
+            int removed = Math.Min(quantityDesired, this.AvailableStock); //Assumes quantityDesired is a positive integer
 
             this.AvailableStock -= removed;
 

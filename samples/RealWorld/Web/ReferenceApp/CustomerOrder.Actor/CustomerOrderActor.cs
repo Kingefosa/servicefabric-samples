@@ -1,5 +1,6 @@
 ﻿// ------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
 namespace CustomerOrder.Actor
@@ -62,7 +63,7 @@ namespace CustomerOrder.Actor
             {
                 case CustomerOrderReminderNames.FulfillOrderReminder:
 
-                    var backorder = await this.FulfillOrder();
+                    int backorder = await this.FulfillOrder();
                     if (backorder > 0)
                     {
                         await this.RegisterReminder(
@@ -74,18 +75,18 @@ namespace CustomerOrder.Actor
                     }
 
                     //Remove fulfill order reminder so Actor can be gargabe collected.
-                    var orderReminder = this.GetReminder(CustomerOrderReminderNames.FulfillOrderReminder);
+                    IActorReminder orderReminder = this.GetReminder(CustomerOrderReminderNames.FulfillOrderReminder);
                     await this.UnregisterReminder(orderReminder);
 
                     break;
 
                 case CustomerOrderReminderNames.BackorderReminder:
 
-                    var remaining = await this.FulfillBackorder();
+                    int remaining = await this.FulfillBackorder();
                     if (remaining == 0)
                     {
                         //now that we're done processing the backorder, remove the reminder
-                        var backorderReminder = this.GetReminder(CustomerOrderReminderNames.BackorderReminder);
+                        IActorReminder backorderReminder = this.GetReminder(CustomerOrderReminderNames.BackorderReminder);
                         await this.UnregisterReminder(backorderReminder);
                     }
 
@@ -126,16 +127,16 @@ namespace CustomerOrder.Actor
         /// <returns>The number of items put on backorder after fulfilling the order.</returns>
         internal async Task<int> FulfillOrder()
         {
-            var builder = new ServiceUriBuilder(InventoryServiceName);
-            var inventoryService = this.ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
+            ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
+            IInventoryService inventoryService = this.ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
 
             this.State.Status = CustomerOrderStatus.InProcess;
 
-            var orderList = this.State.OrderedItems;
+            IList<CustomerOrderItem> orderList = this.State.OrderedItems;
 
             //First, check all items are listed in inventory.  
             //This will avoid infinite backorder status.
-            foreach (var item in orderList)
+            foreach (CustomerOrderItem item in orderList)
             {
                 if ((await inventoryService.IsItemInInventoryAsync(item.ItemId)) == false)
                 {
@@ -146,9 +147,9 @@ namespace CustomerOrder.Actor
 
             //We loop through the customer order list. 
             //For every item that cannot be fulfilled, we add to backordered. 
-            foreach (var item in orderList)
+            foreach (CustomerOrderItem item in orderList)
             {
-                var numberItemsRemoved = await inventoryService.RemoveStockAsync(item.ItemId, item.Quantity);
+                int numberItemsRemoved = await inventoryService.RemoveStockAsync(item.ItemId, item.Quantity);
 
                 this.State.FulfilledItems[item.ItemId] = numberItemsRemoved;
 
@@ -179,16 +180,16 @@ namespace CustomerOrder.Actor
                 return 0;
             }
 
-            var builder = new ServiceUriBuilder(InventoryServiceName);
-            var inventoryService = this.ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
+            ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
+            IInventoryService inventoryService = this.ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
 
-            var backorderItemsFulfilled = new List<Guid>();
+            List<Guid> backorderItemsFulfilled = new List<Guid>();
 
-            foreach (var itemId in this.State.BackorderedItems)
+            foreach (Guid itemId in this.State.BackorderedItems)
             {
                 //Try to fulfill backorder
-                var itemToFulfill = this.State.OrderedItems.Single(item => item.ItemId == itemId);
-                var numberItemsRemoved = await inventoryService.RemoveStockAsync(itemId, itemToFulfill.Quantity - this.State.FulfilledItems[itemId]);
+                CustomerOrderItem itemToFulfill = this.State.OrderedItems.Single(item => item.ItemId == itemId);
+                int numberItemsRemoved = await inventoryService.RemoveStockAsync(itemId, itemToFulfill.Quantity - this.State.FulfilledItems[itemId]);
 
                 //Update fulfilled status and remove backorderitem if needed.
                 this.State.FulfilledItems[itemId] += numberItemsRemoved;
