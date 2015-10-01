@@ -7,8 +7,7 @@ namespace CustomerOrder.Domain
 {
     public enum CustomerOrderStatus
     {
-        NA,
-        Confirmed,
+        New,
         Submitted,
         InProcess,
         Backordered,

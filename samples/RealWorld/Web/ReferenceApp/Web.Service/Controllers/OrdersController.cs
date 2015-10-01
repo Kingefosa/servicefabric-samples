@@ -75,7 +75,6 @@ namespace Web.Service.Controllers
             return orderId;
         }
 
-
         /// <summary>
         /// Looks up a customer order based on its Guid identifier and by using an ActorProxy, retrieves the order's status and returns it to the client. 
         /// </summary>

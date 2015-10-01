@@ -7,6 +7,7 @@ namespace CustomerOrder.Actor
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Runtime.Serialization;
     using System.Text;
     using CustomerOrder.Domain;
@@ -15,14 +16,8 @@ namespace CustomerOrder.Actor
     internal sealed class CustomerOrderActorState
     {
         [DataMember]
-        public List<CustomerOrderItem> OrderedItems { get; set; }
-
-        [DataMember]
-        public Dictionary<Guid, int> FulfilledItems { get; set; }
-
-        [DataMember]
-        public List<Guid> BackorderedItems { get; set; }
-
+        public IList<CustomerOrderItem> OrderedItems { get; set; }
+        
         [DataMember]
         public CustomerOrderStatus Status { get; set; }
 
@@ -34,22 +29,8 @@ namespace CustomerOrder.Actor
             if (this.OrderedItems != null)
             {
                 sb.Append("Ordered Items: ");
-                this.OrderedItems.ForEach(item => sb.Append(item.ItemId + "-" + item.Quantity));
+                sb.Append(String.Join(",", this.OrderedItems.Select<CustomerOrderItem, string>(item => item.ItemId + "-" + item.Quantity)));
                 sb.AppendLine();
-            }
-            if (this.FulfilledItems != null)
-            {
-                sb.Append("Fulfilled Items: ");
-                foreach (KeyValuePair<Guid, int> kvp in this.FulfilledItems)
-                {
-                    sb.Append("Item Id" + kvp.Key + ", Quantity: " + kvp.Value + ',');
-                }
-                sb.AppendLine();
-            }
-            if (this.BackorderedItems != null)
-            {
-                sb.Append("Backordered Items: ");
-                this.BackorderedItems.ForEach(itemId => sb.Append(itemId + ","));
             }
 
             return sb.ToString();

@@ -6,51 +6,10 @@
 namespace Inventory.Domain
 {
     using System;
-    using System.Threading.Tasks;
-    using Inventory.Domain;
-    using Microsoft.ServiceFabric.Services;
-    using RestockRequest.Domain;
 
     [Serializable]
     public sealed class InventoryItem
     {
-
-        /// <summary>
-        /// Unique identifier for each item style
-        /// </summary>
-        public Guid Id { get; private set; }
-
-        /// <summary>
-        /// Quantity in stock
-        /// </summary>
-        public int AvailableStock { get; private set; }
-
-        /// <summary>
-        /// Price
-        /// </summary>
-        public decimal Price { get; private set; }
-
-        /// <summary>
-        /// Brief description of product for display on website
-        /// </summary>
-        public string Description { get; private set; }
-
-        /// <summary>
-        /// Available stock at which we should reorder
-        /// </summary>
-        public int RestockThreshold { get; private set; }
-
-        /// <summary>
-        /// Maximum number of units that can be in-stock at any time (due to physicial/logistical constraints in warehouses)
-        /// </summary>
-        public int MaxStockThreshold { get; private set; }
-
-        /// <summary>
-        /// True if item is on reorder
-        /// </summary>
-        public bool OnReorder { get; set; }
-
-        
         public InventoryItem(string description, decimal price, int availableStock, int restockThreshold, int maxStockThreshold)
         {
             this.Id = Guid.NewGuid();
@@ -61,6 +20,41 @@ namespace Inventory.Domain
             this.MaxStockThreshold = maxStockThreshold;
             this.OnReorder = false;
         }
+
+        /// <summary>
+        /// Unique identifier for each item style
+        /// </summary>
+        public Guid Id { get; }
+
+        /// <summary>
+        /// Quantity in stock
+        /// </summary>
+        public int AvailableStock { get; private set; }
+
+        /// <summary>
+        /// Price
+        /// </summary>
+        public decimal Price { get; }
+
+        /// <summary>
+        /// Brief description of product for display on website
+        /// </summary>
+        public string Description { get; }
+
+        /// <summary>
+        /// Available stock at which we should reorder
+        /// </summary>
+        public int RestockThreshold { get; }
+
+        /// <summary>
+        /// Maximum number of units that can be in-stock at any time (due to physicial/logistical constraints in warehouses)
+        /// </summary>
+        public int MaxStockThreshold { get; }
+
+        /// <summary>
+        /// True if item is on reorder
+        /// </summary>
+        public bool OnReorder { get; set; }
 
         /// <summary>
         /// Returns an InventoryItemView object, which contains only external, customer-facing data about an item in inventory.
@@ -76,20 +70,19 @@ namespace Inventory.Domain
                 CustomerAvailableStock = item.AvailableStock - item.RestockThreshold //Business logic: constraint to reduce overordering.
             };
         }
-        
+
         public override string ToString()
         {
             return string.Format(
-                    "Item {0}: {1} at a price of {2} with {3} available items at a restock threshold of {4} and with max stocking threshold of {5}.",
-                    this.Id,
-                    this.Description,
-                    this.Price,
-                    this.AvailableStock.ToString(),
-                    this.RestockThreshold.ToString(),
-                    this.MaxStockThreshold.ToString());
+                "Item {0}: {1} at a price of {2} with {3} available items at a restock threshold of {4} and with max stocking threshold of {5}.",
+                this.Id,
+                this.Description,
+                this.Price,
+                this.AvailableStock.ToString(),
+                this.RestockThreshold.ToString(),
+                this.MaxStockThreshold.ToString());
         }
 
-        
         /// <summary>
         /// Increments the quantity of a particular item in inventory.
         /// <param name="quantity"></param>
@@ -97,8 +90,8 @@ namespace Inventory.Domain
         /// </summary>
         public int AddStock(int quantity)
         {
-            int original = this.AvailableStock;                
-            
+            int original = this.AvailableStock;
+
             // The quantity that the client is trying to add to stock is greater than what can be physically accommodated in a Fabrikam Warehouse
             if ((this.AvailableStock + quantity) > this.MaxStockThreshold)
             {
@@ -115,7 +108,6 @@ namespace Inventory.Domain
 
             return this.AvailableStock - original;
         }
-
 
         /// <summary>
         /// Decrements the quantity of a particular item in inventory and ensures the restockThreshold hasn't
@@ -134,7 +126,7 @@ namespace Inventory.Domain
             int removed = Math.Min(quantityDesired, this.AvailableStock); //Assumes quantityDesired is a positive integer
 
             this.AvailableStock -= removed;
-            
+
             return removed;
         }
     }

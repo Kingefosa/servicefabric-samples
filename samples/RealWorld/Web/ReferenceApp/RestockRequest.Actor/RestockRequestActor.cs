@@ -14,13 +14,10 @@ namespace RestockRequest.Actor
     internal class RestockRequestActor : Actor<RestockRequestActorState>, IRestockRequestActor, IRemindable
     {
         private const string RestockPipelineChangeReminderName = "RestockPipelineChange";
-
         // The duration the verification at beginning of each pipeline step takes
         private static TimeSpan PipelineStageVerificationDelay = TimeSpan.FromSeconds(5);
-
         // The duration each step of the pipeline takes
         private static TimeSpan PipelineStageProcessingDuration = TimeSpan.FromSeconds(10);
-
 
         public Task ReceiveReminderAsync(string reminderName, byte[] context, TimeSpan dueTime, TimeSpan period)
         {
@@ -51,7 +48,6 @@ namespace RestockRequest.Actor
 
             return Task.FromResult(true);
         }
-
 
         /// <summary>
         /// Accepts a restock request and changes the Actor's state accordingly. The request is processed

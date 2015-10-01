@@ -14,6 +14,6 @@ namespace CustomerOrder.Domain
         [Readonly]
         Task<string> GetStatusAsync();
 
-        Task<bool> SubmitOrderAsync(List<CustomerOrderItem> orderList);
+        Task SubmitOrderAsync(IEnumerable<CustomerOrderItem> orderList);
     }
 }

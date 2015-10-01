@@ -34,15 +34,23 @@ namespace Common
 
         public Uri ToUri()
         {
-            string result = String.Format(
-                CultureInfo.InvariantCulture,
-                "{0}/{1}",
-                String.IsNullOrEmpty(this.ApplicationInstance)
-                    ? FabricRuntime.GetActivationContext().ApplicationName // the ApplicationName property here automatically prepends "fabric:/" for us
-                    : "fabric:/" + this.ApplicationInstance,
-                this.ServiceInstance);
+            string applicationInstance = this.ApplicationInstance;
 
-            return new Uri(result);
+            if (String.IsNullOrEmpty(applicationInstance))
+            {
+                try
+                {
+                    // the ApplicationName property here automatically prepends "fabric:/" for us
+                    applicationInstance = FabricRuntime.GetActivationContext().ApplicationName.Replace("fabric:/", String.Empty);
+                }
+                catch (InvalidOperationException)
+                {
+                    // FabricRuntime is not available. 
+                    // This indicates that this is being called from somewhere outside the Service Fabric cluster.
+                }
+            }
+
+            return new Uri("fabric:/" + applicationInstance + "/" + this.ServiceInstance);
         }
     }
 }

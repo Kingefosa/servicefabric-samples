@@ -15,6 +15,7 @@ namespace CustomerOrder.Domain
         {
             this.ItemId = itemId;
             this.Quantity = quantity;
+            this.FulfillmentRemaining = quantity;
         }
 
         [DataMember]
@@ -22,5 +23,8 @@ namespace CustomerOrder.Domain
 
         [DataMember]
         public int Quantity { get; set; }
+
+        [DataMember]
+        public int FulfillmentRemaining { get; set; }
     }
 }

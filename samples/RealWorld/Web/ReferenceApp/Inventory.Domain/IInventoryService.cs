@@ -14,14 +14,9 @@ namespace Inventory.Domain
     public interface IInventoryService : IService
     {
         Task<int> AddStockAsync(IEnumerable<RestockRequest> requests);
-        
         Task<int> RemoveStockAsync(Guid itemId, int quantity);
-
         Task<bool> IsItemInInventoryAsync(Guid itemId);
-        
         Task<IEnumerable<InventoryItemView>> GetCustomerInventoryAsync();
-        
         Task CreateInventoryItemAsync(InventoryItem item);
-
     }
 }

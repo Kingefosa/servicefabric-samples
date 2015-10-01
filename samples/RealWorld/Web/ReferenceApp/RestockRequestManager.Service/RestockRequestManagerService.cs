@@ -10,14 +10,14 @@ namespace RestockRequestManager.Service
     using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
-    using RestockRequestManager.Domain;
+    using Common;
     using Inventory.Domain;
     using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Data;
     using Microsoft.ServiceFabric.Data.Collections;
     using Microsoft.ServiceFabric.Services;
     using RestockRequest.Domain;
-    using Common;
+    using RestockRequestManager.Domain;
 
     internal class RestockRequestManagerService : StatefulService, IRestockRequestManager, IRestockRequestEvents
     {
@@ -25,7 +25,6 @@ namespace RestockRequestManager.Service
         private const string ItemIdToActorIdMapName = "actorIdToMapName"; //Name of ItemId-ActorId IReliableDictionary
         private const string CompletedRequestsQueueName = "completedRequests"; //Name of CompletedRequests IReliableQueue
         private const string InventoryServiceName = "InventoryService";
-
         private static TimeSpan CompletedRequestsBatchInterval = TimeSpan.FromSeconds(5);
         private static TimeSpan TxTimeout = TimeSpan.FromSeconds(4);
 
@@ -54,7 +53,6 @@ namespace RestockRequestManager.Service
             IRestockRequestActor restockRequestActor = ActorProxy.Create<IRestockRequestActor>(actorId, this.ApplicationName);
             await restockRequestActor.UnsubscribeAsync<IRestockRequestEvents>(this); //QUESTION:What does this method do?
         }
-
 
         /// <summary>
         /// This method activates an actor to fulfill the RestockRequest.
@@ -139,7 +137,7 @@ namespace RestockRequestManager.Service
                             batch.Add(result.Value);
                         }
                     }
-                    
+
                     if (batch.Count > 0)
                     {
                         ServiceEventSource.Current.Message(string.Format("RestockRequestManagerService: Batch {0} completed requests", batch.Count));
@@ -147,7 +145,7 @@ namespace RestockRequestManager.Service
                         // TODO: need to go to correct partition
                         // For now, the inventory is not partitioned, so always go to first partition
                         ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
-                            
+
                         IInventoryService inventoryService = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
                         await inventoryService.AddStockAsync(batch);
                     }
