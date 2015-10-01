@@ -11,7 +11,7 @@ namespace Web.Service
     {
         protected override ICommunicationListener CreateCommunicationListener()
         {
-            return new OwinCommunicationListener("fabrikam", new Startup()); //We can rename to whatever 
+            return new OwinCommunicationListener("fabrikam", new Startup());
         }
     }
 }

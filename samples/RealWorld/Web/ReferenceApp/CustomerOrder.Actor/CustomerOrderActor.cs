@@ -24,6 +24,25 @@ namespace CustomerOrder.Actor
         /// TODO: Temporary property-injection for an IServiceProxyWrapper until constructor injection is available.
         /// </summary>
         public IServiceProxyWrapper ServiceProxy { private get; set; }
+       
+        /// <summary>
+        /// Initializes CustomerOrderActor state. Because an order actor will only be activated
+        /// once in this scenario and never used again, when we initiate the actor's state we
+        /// change the order's status to "Confirmed," and do not need to check if the actor's 
+        /// state was already set to this. 
+        /// </summary>
+        public override Task OnActivateAsync()
+        {
+            if (this.State == null)
+            {
+                this.State = new CustomerOrderActorState();
+                this.State.Status = CustomerOrderStatus.New;
+            }
+
+            this.ServiceProxy = new ServiceProxyWrapper();
+
+            return Task.FromResult(true);
+        }
 
         /// <summary>
         /// This method accepts a list of CustomerOrderItems, representing a customer order, and sets the actor's state
@@ -80,22 +99,6 @@ namespace CustomerOrder.Actor
                     // But for our own sake in case we add a new reminder somewhere and forget to handle it, this will remind us.
                     throw new InvalidOperationException("Unknown reminder: " + reminderName);
             }
-        }
-
-        /// <summary>
-        /// Initializes CustomerOrderActor state. Because an order actor will only be activated
-        /// once in this scenario and never used again, when we initiate the actor's state we
-        /// change the order's status to "Confirmed," and do not need to check if the actor's 
-        /// state was already set to this. 
-        /// </summary>
-        public override Task OnActivateAsync()
-        {
-            if (this.State == null)
-            {
-                this.State = new CustomerOrderActorState();
-                this.State.Status = CustomerOrderStatus.New;
-            }
-            return Task.FromResult(true);
         }
 
         /// <summary>
