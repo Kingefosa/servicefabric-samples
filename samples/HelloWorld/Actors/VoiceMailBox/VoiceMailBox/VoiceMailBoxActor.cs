@@ -85,19 +85,19 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
         public override async Task OnActivateAsync()
         {
             ServiceEventSource.Current.ActorActivatedStart(this);
+
+            if (this.State == null)
+            {
+                this.State = new VoicemailBox();
+            }
+
             await base.OnActivateAsync();
             ServiceEventSource.Current.ActorActivatedStop(this);
         }
 
         public override async Task OnDeactivateAsync()
         {
-            ServiceEventSource.Current.ActorDeactivatedStart(this);
-
-            if(this.State == null)
-            {
-                this.State = new VoicemailBox();
-            }
-
+            ServiceEventSource.Current.ActorDeactivatedStart(this);                     
             await base.OnDeactivateAsync();
             ServiceEventSource.Current.ActorDeactivatedStop(this);
         }
