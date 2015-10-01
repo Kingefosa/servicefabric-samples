@@ -23,6 +23,36 @@ namespace Inventory.Service
         private const string InventoryItemDictionaryName = "inventoryItems";
         private const string RestockRequestManagerServiceName = "RestockRequestManager";
 
+        private IReliableStateManager stateManager;
+
+        /// <summary>
+        /// Poor-man's dependency injection for now until the API supports proper injection of IReliableStateManager.
+        /// This is the constructor called by the FabricRuntime.
+        /// </summary>
+        public InventoryService()
+        {
+        }
+
+        /// <summary>
+        /// Poor-man's dependency injection for now until the API supports proper injection of IReliableStateManager.
+        /// This constructor is used in unit tests to inject a different state manager.
+        /// </summary>
+        /// <param name="stateManager"></param>
+        public InventoryService (IReliableStateManager stateManager)
+        {
+            this.stateManager = stateManager;
+        }
+
+        protected override IReliableStateManager CreateReliableStateManager()
+        {
+            if (this.stateManager == null)
+            {
+                this.stateManager = base.CreateReliableStateManager();
+            }
+
+            return this.stateManager;
+        }
+
         /// <summary>
         /// Used internally to generate inventory items and adds them to the ReliableDict we have.
         /// </summary>
@@ -31,9 +61,9 @@ namespace Inventory.Service
         public async Task CreateInventoryItemAsync(InventoryItem item)
         {
             IReliableDictionary<Guid, InventoryItem> inventoryItems =
-                await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
+                await this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
-            using (ITransaction tx = this.StateManager.CreateTransaction())
+            using (ITransaction tx = this.stateManager.CreateTransaction())
             {
                 await inventoryItems.AddAsync(tx, item.Id, item);
                 await tx.CommitAsync();
@@ -50,11 +80,11 @@ namespace Inventory.Service
         public async Task<int> AddStockAsync(IEnumerable<RestockRequest> requests)
         {
             IReliableDictionary<Guid, InventoryItem> inventoryItems =
-                await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
+                await this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
             int quantity = 0;
 
-            using (ITransaction tx = this.StateManager.CreateTransaction())
+            using (ITransaction tx = this.stateManager.CreateTransaction())
             {
                 foreach (RestockRequest request in requests)
                 {
@@ -93,11 +123,11 @@ namespace Inventory.Service
         public async Task<int> RemoveStockAsync(Guid itemId, int quantity)
         {
             IReliableDictionary<Guid, InventoryItem> inventoryItems =
-                await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
+                await this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
             int removed = 0;
 
-            using (ITransaction tx = this.StateManager.CreateTransaction())
+            using (ITransaction tx = this.stateManager.CreateTransaction())
             {
                 // Try to get the InventoryItem for the ID in the request.
                 ConditionalResult<InventoryItem> item = await inventoryItems.TryGetValueAsync(tx, itemId);
@@ -129,9 +159,9 @@ namespace Inventory.Service
         public async Task<bool> IsItemInInventoryAsync(Guid itemId)
         {
             IReliableDictionary<Guid, InventoryItem> inventoryItems =
-                await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
+                await this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
-            using (ITransaction tx = this.StateManager.CreateTransaction())
+            using (ITransaction tx = this.stateManager.CreateTransaction())
             {
                 ConditionalResult<InventoryItem> item = await inventoryItems.TryGetValueAsync(tx, itemId);
                 return item.HasValue;
@@ -147,7 +177,7 @@ namespace Inventory.Service
         public async Task<IEnumerable<InventoryItemView>> GetCustomerInventoryAsync()
         {
             IReliableDictionary<Guid, InventoryItem> inventoryItems =
-                await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
+                await this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
             ServiceEventSource.Current.Message("Called GetCustomerInventory to return InventoryItemView");
 
@@ -163,9 +193,9 @@ namespace Inventory.Service
         public async Task DeleteInventoryItemAsync(Guid itemId)
         {
             IReliableDictionary<Guid, InventoryItem> inventoryItems =
-                await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
+                await this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
-            using (ITransaction tx = this.StateManager.CreateTransaction())
+            using (ITransaction tx = this.stateManager.CreateTransaction())
             {
                 await inventoryItems.TryRemoveAsync(tx, itemId);
                 await tx.CommitAsync();
@@ -197,7 +227,7 @@ namespace Inventory.Service
                 this.CreateInventoryItemAsync(new InventoryItem("Blacklight Striped Trousers", 34.99M, 3000, 300, 3000)));
 
             IReliableDictionary<Guid, InventoryItem> inventoryItems =
-                await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
+                await this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, InventoryItem>>(InventoryItemDictionaryName);
 
             while (!cancellationToken.IsCancellationRequested)
             {
