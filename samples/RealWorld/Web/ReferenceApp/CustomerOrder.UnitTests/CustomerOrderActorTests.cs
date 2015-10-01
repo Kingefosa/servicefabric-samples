@@ -57,7 +57,7 @@ namespace CustomerOrder.UnitTests
             {
                 RemoveStockAsyncFunc = (itemId, quantity) => Task.FromResult(quantity - 1)
             };
-            
+
             MockServiceProxy serviceProxy = new MockServiceProxy();
             serviceProxy.Supports<IInventoryService>(serviceUri => inventoryService);
 
@@ -102,7 +102,7 @@ namespace CustomerOrder.UnitTests
             {
                 new CustomerOrderItem(Guid.NewGuid(), itemCount)
             };
-            
+
             for (int i = 0; i < itemCount - 1; ++i)
             {
                 await target.FulfillOrderAsync();
@@ -138,7 +138,7 @@ namespace CustomerOrder.UnitTests
             };
 
             await target.FulfillOrderAsync();
-            
+
             Assert.AreEqual<CustomerOrderStatus>(CustomerOrderStatus.Canceled, target.State.Status);
         }
     }

@@ -7,7 +7,6 @@ namespace CustomerOrder.Actor
 {
     using System;
     using System.Collections.Generic;
-    using System.Fabric;
     using System.Linq;
     using System.Threading.Tasks;
     using Common;
@@ -45,7 +44,6 @@ namespace CustomerOrder.Actor
                 TimeSpan.FromSeconds(10),
                 TimeSpan.FromSeconds(10),
                 ActorReminderAttributes.None);
-            
         }
 
         /// <summary>
@@ -72,7 +70,7 @@ namespace CustomerOrder.Actor
                         IActorReminder orderReminder = this.GetReminder(CustomerOrderReminderNames.FulfillOrderReminder);
                         await this.UnregisterReminder(orderReminder);
                     }
-                    
+
                     break;
 
                 default:
@@ -117,7 +115,7 @@ namespace CustomerOrder.Actor
             ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
 
             this.State.Status = CustomerOrderStatus.InProcess;
-            
+
             //We loop through the customer order list. 
             //For every item that cannot be fulfilled, we add to backordered. 
             foreach (CustomerOrderItem item in this.State.OrderedItems.Where(x => x.FulfillmentRemaining > 0))

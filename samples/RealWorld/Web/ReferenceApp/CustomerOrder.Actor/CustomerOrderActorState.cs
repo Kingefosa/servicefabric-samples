@@ -17,7 +17,7 @@ namespace CustomerOrder.Actor
     {
         [DataMember]
         public IList<CustomerOrderItem> OrderedItems { get; set; }
-        
+
         [DataMember]
         public CustomerOrderStatus Status { get; set; }
 

@@ -22,7 +22,6 @@ namespace Inventory.Service
     {
         private const string InventoryItemDictionaryName = "inventoryItems";
         private const string RestockRequestManagerServiceName = "RestockRequestManager";
-
         private IReliableStateManager stateManager;
 
         /// <summary>
@@ -38,19 +37,9 @@ namespace Inventory.Service
         /// This constructor is used in unit tests to inject a different state manager.
         /// </summary>
         /// <param name="stateManager"></param>
-        public InventoryService (IReliableStateManager stateManager)
+        public InventoryService(IReliableStateManager stateManager)
         {
             this.stateManager = stateManager;
-        }
-
-        protected override IReliableStateManager CreateReliableStateManager()
-        {
-            if (this.stateManager == null)
-            {
-                this.stateManager = base.CreateReliableStateManager();
-            }
-
-            return this.stateManager;
         }
 
         /// <summary>
@@ -200,6 +189,16 @@ namespace Inventory.Service
                 await inventoryItems.TryRemoveAsync(tx, itemId);
                 await tx.CommitAsync();
             }
+        }
+
+        protected override IReliableStateManager CreateReliableStateManager()
+        {
+            if (this.stateManager == null)
+            {
+                this.stateManager = base.CreateReliableStateManager();
+            }
+
+            return this.stateManager;
         }
 
         /// <summary>

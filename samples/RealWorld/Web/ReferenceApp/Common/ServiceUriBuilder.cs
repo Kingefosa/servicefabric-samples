@@ -7,7 +7,6 @@ namespace Common
 {
     using System;
     using System.Fabric;
-    using System.Globalization;
 
     public class ServiceUriBuilder
     {
