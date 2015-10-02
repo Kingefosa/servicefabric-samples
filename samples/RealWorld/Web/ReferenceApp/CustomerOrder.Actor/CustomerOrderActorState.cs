@@ -7,7 +7,6 @@ namespace CustomerOrder.Actor
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Runtime.Serialization;
     using System.Text;
     using CustomerOrder.Domain;
@@ -17,7 +16,7 @@ namespace CustomerOrder.Actor
     {
         [DataMember]
         public IList<CustomerOrderItem> OrderedItems { get; set; }
-        
+
         [DataMember]
         public CustomerOrderStatus Status { get; set; }
 
@@ -29,7 +28,7 @@ namespace CustomerOrder.Actor
             if (this.OrderedItems != null)
             {
                 sb.Append("Ordered Items: ");
-                sb.Append(String.Join(",", this.OrderedItems.Select<CustomerOrderItem, string>(item => item.ItemId + "-" + item.Quantity)));
+                sb.Append(String.Join(";", this.OrderedItems));
                 sb.AppendLine();
             }
 

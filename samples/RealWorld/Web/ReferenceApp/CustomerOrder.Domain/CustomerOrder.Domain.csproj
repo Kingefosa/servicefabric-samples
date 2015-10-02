@@ -70,6 +70,10 @@
       <Project>{9ec0063f-489e-43fe-94b5-bf5f89977cd3}</Project>
       <Name>Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Inventory.Domain\Inventory.Domain.csproj">
+      <Project>{7e9c2dfd-71a5-496d-aa4d-5ec53eaeb9ae}</Project>
+      <Name>Inventory.Domain</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

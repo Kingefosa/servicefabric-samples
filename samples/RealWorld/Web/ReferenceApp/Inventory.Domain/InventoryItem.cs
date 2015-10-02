@@ -10,21 +10,21 @@ namespace Inventory.Domain
     [Serializable]
     public sealed class InventoryItem
     {
-        public InventoryItem(string description, decimal price, int availableStock, int restockThreshold, int maxStockThreshold)
+        public InventoryItem(string description, decimal price, int availableStock, int restockThreshold, int maxStockThreshold, bool onReorder = false)
         {
-            this.Id = Guid.NewGuid();
+            this.Id = new InventoryItemId();
             this.Description = description;
             this.Price = price;
             this.AvailableStock = availableStock;
             this.RestockThreshold = restockThreshold;
             this.MaxStockThreshold = maxStockThreshold;
-            this.OnReorder = false;
+            this.OnReorder = onReorder;
         }
 
         /// <summary>
         /// Unique identifier for each item style
         /// </summary>
-        public Guid Id { get; }
+        public InventoryItemId Id { get; }
 
         /// <summary>
         /// Quantity in stock

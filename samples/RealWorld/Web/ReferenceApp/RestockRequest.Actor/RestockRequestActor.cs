@@ -15,66 +15,20 @@ namespace RestockRequest.Actor
     {
         // The duration the verification at beginning of each pipeline step takes
         private static TimeSpan PipelineStageVerificationDelay = TimeSpan.FromSeconds(5);
-
         // The duration each step of the pipeline takes
         private static TimeSpan PipelineStageProcessingDuration = TimeSpan.FromSeconds(10);
-
-        public override Task OnActivateAsync()
-        {
-            if (this.State == null)
-            {
-                this.State = new RestockRequestActorState();
-            }
-
-            ActorEventSource.Current.ActorMessage(this, "RestockRequestActor: State initialized to {0}", this.State);
-
-            return Task.FromResult(true);
-        }
 
         public Task ReceiveReminderAsync(string reminderName, byte[] context, TimeSpan dueTime, TimeSpan period)
         {
             switch (reminderName)
             {
                 case RestockRequestReminderNames.RestockPipelineChangeReminderName:
-                    return RestockPipeline();
+                    return this.RestockPipeline();
 
                 default:
                     // We should never arrive here normally. The system won't call reminders that don't exist. 
                     // But for our own sake in case we add a new reminder somewhere and forget to handle it, this will remind us.
                     throw new InvalidOperationException("Unknown reminder: " + reminderName);
-            }
-        }
-
-        /// <summary>
-        /// Simulates the processing of a restock request by advancing the processing status each time this method is invoked
-        /// until it reaches the complete stage.
-        /// </summary>
-        /// <returns></returns>
-        internal Task RestockPipeline()
-        {
-            ActorEventSource.Current.ActorMessage(this, "RestockRequestActor: {0}: Pipeline change reminder", this.State);
-            
-            switch (this.State.Status)
-            {
-                case RestockRequestStatus.Accepted:
-
-                    // Change to next step and let it "execute" until the reminder fires again
-                    this.State.Status = RestockRequestStatus.Manufacturing;
-                    return Task.FromResult(true);
-
-                case RestockRequestStatus.Manufacturing:
-
-                    // Changet the step to completed to indicate the "processing" is complete.
-                    this.State.Status = RestockRequestStatus.Completed;
-
-                    // Raise the event to let interested parties (RestockRequestManager) know that the restock is complete
-                    this.SignalRequestStatusChange();
-
-                    // Done, so unregister the reminder
-                    return this.UnregisterRestockPipelineChangeReminderAsync();
-
-                default:
-                    throw new InvalidOperationException(string.Format("{0}: remainder received in invalid status", this.State));
             }
         }
 
@@ -107,6 +61,51 @@ namespace RestockRequest.Actor
                 PipelineStageVerificationDelay,
                 PipelineStageProcessingDuration,
                 ActorReminderAttributes.None);
+        }
+
+        public override Task OnActivateAsync()
+        {
+            if (this.State == null)
+            {
+                this.State = new RestockRequestActorState();
+            }
+
+            ActorEventSource.Current.ActorMessage(this, "RestockRequestActor: State initialized to {0}", this.State);
+
+            return Task.FromResult(true);
+        }
+
+        /// <summary>
+        /// Simulates the processing of a restock request by advancing the processing status each time this method is invoked
+        /// until it reaches the complete stage.
+        /// </summary>
+        /// <returns></returns>
+        internal Task RestockPipeline()
+        {
+            ActorEventSource.Current.ActorMessage(this, "RestockRequestActor: {0}: Pipeline change reminder", this.State);
+
+            switch (this.State.Status)
+            {
+                case RestockRequestStatus.Accepted:
+
+                    // Change to next step and let it "execute" until the reminder fires again
+                    this.State.Status = RestockRequestStatus.Manufacturing;
+                    return Task.FromResult(true);
+
+                case RestockRequestStatus.Manufacturing:
+
+                    // Changet the step to completed to indicate the "processing" is complete.
+                    this.State.Status = RestockRequestStatus.Completed;
+
+                    // Raise the event to let interested parties (RestockRequestManager) know that the restock is complete
+                    this.SignalRequestStatusChange();
+
+                    // Done, so unregister the reminder
+                    return this.UnregisterRestockPipelineChangeReminderAsync();
+
+                default:
+                    throw new InvalidOperationException(string.Format("{0}: remainder received in invalid status", this.State));
+            }
         }
 
         private void SignalRequestStatusChange()

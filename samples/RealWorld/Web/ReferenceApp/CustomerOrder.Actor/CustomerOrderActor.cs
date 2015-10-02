@@ -7,7 +7,6 @@ namespace CustomerOrder.Actor
 {
     using System;
     using System.Collections.Generic;
-    using System.Fabric;
     using System.Linq;
     using System.Threading.Tasks;
     using Common;
@@ -24,25 +23,6 @@ namespace CustomerOrder.Actor
         /// TODO: Temporary property-injection for an IServiceProxyWrapper until constructor injection is available.
         /// </summary>
         public IServiceProxyWrapper ServiceProxy { private get; set; }
-       
-        /// <summary>
-        /// Initializes CustomerOrderActor state. Because an order actor will only be activated
-        /// once in this scenario and never used again, when we initiate the actor's state we
-        /// change the order's status to "Confirmed," and do not need to check if the actor's 
-        /// state was already set to this. 
-        /// </summary>
-        public override Task OnActivateAsync()
-        {
-            if (this.State == null)
-            {
-                this.State = new CustomerOrderActorState();
-                this.State.Status = CustomerOrderStatus.New;
-            }
-
-            this.ServiceProxy = new ServiceProxyWrapper();
-
-            return Task.FromResult(true);
-        }
 
         /// <summary>
         /// This method accepts a list of CustomerOrderItems, representing a customer order, and sets the actor's state
@@ -64,7 +44,6 @@ namespace CustomerOrder.Actor
                 TimeSpan.FromSeconds(10),
                 TimeSpan.FromSeconds(10),
                 ActorReminderAttributes.None);
-            
         }
 
         /// <summary>
@@ -91,7 +70,7 @@ namespace CustomerOrder.Actor
                         IActorReminder orderReminder = this.GetReminder(CustomerOrderReminderNames.FulfillOrderReminder);
                         await this.UnregisterReminder(orderReminder);
                     }
-                    
+
                     break;
 
                 default:
@@ -99,6 +78,25 @@ namespace CustomerOrder.Actor
                     // But for our own sake in case we add a new reminder somewhere and forget to handle it, this will remind us.
                     throw new InvalidOperationException("Unknown reminder: " + reminderName);
             }
+        }
+
+        /// <summary>
+        /// Initializes CustomerOrderActor state. Because an order actor will only be activated
+        /// once in this scenario and never used again, when we initiate the actor's state we
+        /// change the order's status to "Confirmed," and do not need to check if the actor's 
+        /// state was already set to this. 
+        /// </summary>
+        public override Task OnActivateAsync()
+        {
+            if (this.State == null)
+            {
+                this.State = new CustomerOrderActorState();
+                this.State.Status = CustomerOrderStatus.New;
+            }
+
+            this.ServiceProxy = new ServiceProxyWrapper();
+
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -120,12 +118,14 @@ namespace CustomerOrder.Actor
             ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
 
             this.State.Status = CustomerOrderStatus.InProcess;
-            
+
+            ActorEventSource.Current.ActorMessage(this, "Fullfilling customer order. ID: {0}. Items: {1}", this.Id.GetGuidId(), this.State.OrderedItems.Count);
+
             //We loop through the customer order list. 
             //For every item that cannot be fulfilled, we add to backordered. 
             foreach (CustomerOrderItem item in this.State.OrderedItems.Where(x => x.FulfillmentRemaining > 0))
             {
-                IInventoryService inventoryService = this.ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
+                IInventoryService inventoryService = this.ServiceProxy.Create<IInventoryService>(item.ItemId.GetPartitionKey(), builder.ToUri());
 
                 //First, check the item is listed in inventory.  
                 //This will avoid infinite backorder status.
@@ -144,6 +144,13 @@ namespace CustomerOrder.Actor
             this.State.Status = this.State.OrderedItems.Any(x => x.FulfillmentRemaining > 0)
                 ? this.State.Status = CustomerOrderStatus.Backordered
                 : this.State.Status = CustomerOrderStatus.Shipped;
+
+            ActorEventSource.Current.ActorMessage(
+                this,
+                "{0}; Fulfilled: {1}. Backordered: {2}",
+                this.State,
+                this.State.OrderedItems.Count(x => x.FulfillmentRemaining == 0),
+                this.State.OrderedItems.Count(x => x.FulfillmentRemaining > 0));
         }
     }
 }

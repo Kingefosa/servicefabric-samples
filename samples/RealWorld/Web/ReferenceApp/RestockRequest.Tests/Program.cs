@@ -9,6 +9,7 @@ namespace RestockRequest.Tests
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Inventory.Domain;
     using Microsoft.ServiceFabric.Services;
     using RestockRequest.Domain;
     using RestockRequestManager.Domain;
@@ -20,7 +21,7 @@ namespace RestockRequest.Tests
         public static int GenerateDataIntervalInMsec = 30*1000;
         private static Uri RestockRequestManagerServiceName = new Uri("fabric:/FabrikamReferenceApplication/RestockRequestManager");
         private static Random random = new Random((int) DateTime.Now.Ticks);
-        private static List<Guid> Items;
+        private static List<InventoryItemId> Items;
 
         private static void Main(string[] args)
         {
@@ -32,10 +33,10 @@ namespace RestockRequest.Tests
                 ServicePartitionResolver.SetDefault(resolver);
             }
 
-            Items = new List<Guid>();
+            Items = new List<InventoryItemId>();
             for (int i = 0; i < MaxNumberOfItems; i++)
             {
-                Items.Add(Guid.NewGuid());
+                Items.Add(new InventoryItemId());
             }
 
             Timer timer = new Timer(new TimerCallback(GenerateData), null, 0, GenerateDataIntervalInMsec);

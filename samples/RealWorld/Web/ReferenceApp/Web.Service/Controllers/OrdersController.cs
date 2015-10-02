@@ -49,7 +49,7 @@ namespace Web.Service.Controllers
 
             //We create a unique Guid that is associated with a customer order, as well as with the actor that represents that order's state.
             ICustomerOrderActor customerOrder = ActorProxy.Create<ICustomerOrderActor>(new ActorId(orderId), builder.ToUri());
-            
+
             try
             {
                 await customerOrder.SubmitOrderAsync(cart);
