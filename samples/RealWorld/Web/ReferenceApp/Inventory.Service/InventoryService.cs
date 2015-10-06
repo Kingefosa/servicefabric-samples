@@ -265,20 +265,26 @@ namespace Inventory.Service
                                 item.MaxStockThreshold,
                                 true);
 
+                            // TODO: this call needs to be idempotent in case we fail to update the InventoryItem after this completes.
+                            await restockRequestManagerClient.AddRestockRequestAsync(newRequest);
+
+                            // Write operations take an exclusive lock on an item, which means we can't do anything else with that item while the transaction is open.
+                            // If something blocks before the transaction is committed, the open transaction on the item will prevent all operations on it, including reads.
+                            // Once the transaction commits, the lock is released and other operations on the item can proceed.
+                            // Operations on the transaction all have timeouts to prevent deadlocking an item, 
+                            // but we should do as little work inside the transaction as possible that is not related to the transaction itself.
                             using (ITransaction tx = this.stateManager.CreateTransaction())
                             {
                                 await inventoryItems.TryUpdateAsync(tx, item.Id, updatedItem, item);
-
-                                await restockRequestManagerClient.AddRestockRequestAsync(newRequest);
-
+                                
                                 await tx.CommitAsync();
-
-                                ServiceEventSource.Current.ServiceMessage(
-                                    this,
-                                    "Restock order placed. Item ID: {0}. Quantity: {1}",
-                                    newRequest.ItemId,
-                                    newRequest.Quantity);
                             }
+
+                            ServiceEventSource.Current.ServiceMessage(
+                                this,
+                                "Restock order placed. Item ID: {0}. Quantity: {1}",
+                                newRequest.ItemId,
+                                newRequest.Quantity);
                         }
                     }
                     catch (Exception e)
