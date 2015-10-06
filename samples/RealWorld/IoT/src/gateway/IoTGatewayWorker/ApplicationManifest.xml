@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ApplicationManifest ApplicationTypeName="IoTGatewayWorker" ApplicationTypeVersion="1.0.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Parameters>
+    <Parameter Name="WorkerSvc_MinReplicaSetSize" DefaultValue="2" />
+    <Parameter Name="WorkerSvc_TargetReplicaSetSize" DefaultValue="3" />
+  </Parameters>
+  <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
+       should match the Name and Version attributes of the ServiceManifest element defined in the 
+       ServiceManifest.xml file. -->
+  <ServiceManifestImport>
+    <ServiceManifestRef ServiceManifestName="WorkerSvcPkg" ServiceManifestVersion="1.0.0.0" />
+    <ConfigOverrides />
+  </ServiceManifestImport>
+  <!-- 
+  Deployment configuration: the below template will be Instantiated when the ctrl app create
+  a new instance of theworker app
+  -->
+  <ServiceTemplates>
+    <StatefulService ServiceTypeName="WorkerSvc" TargetReplicaSetSize="[WorkerSvc_TargetReplicaSetSize]" MinReplicaSetSize="[WorkerSvc_MinReplicaSetSize]">
+      <SingletonPartition />
+    </StatefulService>
+  </ServiceTemplates>
+  <!--
+  Testing configuration (using VS.NET Deployment): the below will be created automatically 
+  when the application is deployment. When you configure it this way please ensure that 
+  _VS_DEPLOY is #define-ed (for reference check WorkerSvc.cs
+  
+  ***** REMOVE BEFORE THE DEPLOYMENT ***
+  -->
+  <DefaultServices>
+    <Service Name="WorkerSvc">
+      <StatefulService ServiceTypeName="WorkerSvc" TargetReplicaSetSize="[WorkerSvc_TargetReplicaSetSize]" MinReplicaSetSize="[WorkerSvc_MinReplicaSetSize]">
+        <SingletonPartition />
+      </StatefulService>
+    </Service>
+  </DefaultServices>
+</ApplicationManifest>
