@@ -68,6 +68,7 @@
     <Reference Include="System.ServiceModel" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RestockRequestReminderNames.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RestockRequestActor.cs" />
     <Compile Include="RestockRequestActorState.cs" />

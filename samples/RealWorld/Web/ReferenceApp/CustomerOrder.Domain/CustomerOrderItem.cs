@@ -7,11 +7,12 @@ namespace CustomerOrder.Domain
 {
     using System;
     using System.Runtime.Serialization;
+    using Inventory.Domain;
 
     [DataContract]
     public sealed class CustomerOrderItem
     {
-        public CustomerOrderItem(Guid itemId, int quantity)
+        public CustomerOrderItem(InventoryItemId itemId, int quantity)
         {
             this.ItemId = itemId;
             this.Quantity = quantity;
@@ -19,12 +20,17 @@ namespace CustomerOrder.Domain
         }
 
         [DataMember]
-        public Guid ItemId { get; set; }
+        public InventoryItemId ItemId { get; set; }
 
         [DataMember]
         public int Quantity { get; set; }
 
         [DataMember]
         public int FulfillmentRemaining { get; set; }
+
+        public override string ToString()
+        {
+            return String.Format("ID: {0}, Quantity: {1}, Fulfillment Remaing: {2}", this.ItemId, this.Quantity, this.FulfillmentRemaining);
+        }
     }
 }

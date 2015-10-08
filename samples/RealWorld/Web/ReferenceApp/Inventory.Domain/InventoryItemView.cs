@@ -5,7 +5,6 @@
 
 namespace Inventory.Domain
 {
-    using System;
     using System.Runtime.Serialization;
 
     //Guid will always be key to this value pair
@@ -13,7 +12,7 @@ namespace Inventory.Domain
     public sealed class InventoryItemView
     {
         [DataMember]
-        public Guid Id { get; set; }
+        public InventoryItemId Id { get; set; }
 
         [DataMember]
         public string Description { get; set; }

@@ -26,20 +26,22 @@
 
     <p style="height:330px"></p>
 
-    <div class="container below" ng-init="showCart=false">
+    <div class="container below" ng-init="showCart=true">
         <!--<p style="text-align:center; font-size:18px"><b>Clothing</b></p>-->
         <table class="table table-striped" style="width:100%;">
             <thead>
                 <tr>
                     <th>Item</th>
                     <th>Price</th>
+                    <th>Available</th>
                     <th>Quantity</th>
                 </tr>
             </thead>
             <tbody>
                 <tr ng-repeat="row in inventory">
                     <td>{{row.Description}}</td>
-                    <td> ${{row.Price}}</td>
+                    <td>${{row.Price}}</td>
+                    <td>{{row.CustomerAvailableStock}}</td>
                     <td>
                         <input type="number" class="textbox" ng-model="row.Quantity" />
                         <input type="submit" value="Add" ng-click="submit(row)">
@@ -77,12 +79,8 @@
         <br />
         <form name="OrderForm" novalidate>
             <p style="text-align: center; align-content:center">
-                <b>To Order, enter your email and click "Place Order" </b>
-                <br /> <br />
-                <input type="email" class="textbox-small" name="input" ng-model="customerEmail" required />
                 <input type="submit" value="Place Order"
-                       ng-disabled="OrderForm.input.$error.required || OrderForm.input.$invalid"
-                       ng-click="placeOrder(customeremail)" />
+                       ng-click="placeOrder(null)" />
             </p>
         </form>
     </div>
