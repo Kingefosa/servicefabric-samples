@@ -6,6 +6,7 @@
 namespace RestockRequestManager.Service
 {
     using System;
+    using System.Fabric;
     using System.Threading;
     using System.Threading.Tasks;
     using Common;
@@ -65,12 +66,20 @@ namespace RestockRequestManager.Service
                 IReliableDictionary<InventoryItemId, ActorId> requestDictionary =
                     await this.StateManager.GetOrAddAsync<IReliableDictionary<InventoryItemId, ActorId>>(ItemIdToActorIdMapName);
 
-                ActorId actorId;
-
-                using (ITransaction tx = this.StateManager.CreateTransaction())
+                ActorId actorId = ActorId.NewId();
+                
+                try
                 {
-                    actorId = await requestDictionary.GetOrAddAsync(tx, request.ItemId, ActorId.NewId());
-                    await tx.CommitAsync();
+                    using (ITransaction tx = this.StateManager.CreateTransaction())
+                    {
+                        await requestDictionary.AddAsync(tx, request.ItemId, actorId);
+                        await tx.CommitAsync();
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    // restock request already exists
+                    return;
                 }
 
                 // Create actor proxy and send the request
@@ -114,18 +123,20 @@ namespace RestockRequestManager.Service
                 using (ITransaction tx = this.StateManager.CreateTransaction())
                 {
                     ConditionalResult<RestockRequest> result = await completedRequests.TryDequeueAsync(tx, TxTimeout, cancellationToken);
-                    if (!result.HasValue)
+
+                    if (result.HasValue)
                     {
-                        // All accumulated requests are read
-                        continue;
+                        ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
+                        IInventoryService inventoryService = ServiceProxy.Create<IInventoryService>(result.Value.ItemId.GetPartitionKey(), builder.ToUri());
+
+                        await inventoryService.AddStockAsync(result.Value.ItemId, result.Value.Quantity);
+
+                        ServiceEventSource.Current.ServiceMessage(
+                            this,
+                            "Adding stock to inventory service. ID: {0}. Quantity: {1}",
+                            result.Value.ItemId,
+                           result.Value.Quantity);
                     }
-
-                    // TODO: need to go to correct partition
-                    // For now, the inventory is not partitioned, so always go to first partition
-                    ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
-                    IInventoryService inventoryService = ServiceProxy.Create<IInventoryService>(result.Value.ItemId.GetPartitionKey(), builder.ToUri());
-
-                    await inventoryService.AddStockAsync(result.Value.ItemId, result.Value.Quantity);
 
                     // This commits the dequeue operations.
                     // If the request to add the stock to the inventory service throws, this commit will not execute
@@ -134,12 +145,6 @@ namespace RestockRequestManager.Service
                     // However there is a very small chance that the stock was added to the inventory service successfully,
                     // but service execution stopped before reaching this commit (machine crash, for example).
                     await tx.CommitAsync();
-
-                    ServiceEventSource.Current.ServiceMessage(
-                        this,
-                        "Adding stock to inventory service. ID: {0}. Quantity: {1}",
-                        result.Value.ItemId,
-                        result.Value.Quantity);
                 }
 
                 await Task.Delay(CompletedRequestsBatchInterval, cancellationToken);
