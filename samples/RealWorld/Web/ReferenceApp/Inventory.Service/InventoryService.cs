@@ -263,6 +263,7 @@ namespace Inventory.Service
                                 item.AvailableStock,
                                 item.RestockThreshold,
                                 item.MaxStockThreshold,
+                                item.Id, 
                                 true);
 
                             // TODO: this call needs to be idempotent in case we fail to update the InventoryItem after this completes.
