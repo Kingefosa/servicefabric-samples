@@ -5,8 +5,6 @@
 
 namespace Inventory.UnitTests
 {
-    using System;
-    using System.Linq;
     using System.Threading.Tasks;
     using Inventory.Domain;
     using Inventory.Service;
@@ -26,7 +24,7 @@ namespace Inventory.UnitTests
 
             await target.CreateInventoryItemAsync(expected);
             bool resultTrue = await target.IsItemInInventoryAsync(expected.Id);
-            bool resultFalse = await target.IsItemInInventoryAsync(Guid.NewGuid());
+            bool resultFalse = await target.IsItemInInventoryAsync(new InventoryItemId());
 
             Assert.IsTrue(resultTrue);
             Assert.IsFalse(resultFalse);
@@ -45,7 +43,7 @@ namespace Inventory.UnitTests
             RestockRequest.Domain.RestockRequest request = new RestockRequest.Domain.RestockRequest(item.Id, quantityToAdd);
 
             await target.CreateInventoryItemAsync(item);
-            int actualAdded = await target.AddStockAsync(Enumerable.Repeat(request, 1));
+            int actualAdded = await target.AddStockAsync(request.ItemId, quantityToAdd);
 
             Assert.AreEqual(quantityToAdd, actualAdded);
             Assert.AreEqual(item.AvailableStock, expectedQuantity);

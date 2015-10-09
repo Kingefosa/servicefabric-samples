@@ -13,7 +13,6 @@ namespace RestockRequest.Actor
 
     internal class RestockRequestActor : Actor<RestockRequestActorState>, IRestockRequestActor, IRemindable
     {
-        private const string RestockPipelineChangeReminderName = "RestockPipelineChange";
         // The duration the verification at beginning of each pipeline step takes
         private static TimeSpan PipelineStageVerificationDelay = TimeSpan.FromSeconds(5);
         // The duration each step of the pipeline takes
@@ -21,32 +20,16 @@ namespace RestockRequest.Actor
 
         public Task ReceiveReminderAsync(string reminderName, byte[] context, TimeSpan dueTime, TimeSpan period)
         {
-            if (reminderName == RestockPipelineChangeReminderName)
+            switch (reminderName)
             {
-                ActorEventSource.Current.ActorMessage(this, "RestockRequestActor: {0}: Pipeline change reminder", this.State);
-                // Go to next state
-                switch (this.State.Status)
-                {
-                    case RestockRequestStatus.Accepted:
-                        // Change to next step and let it "execute" until the reminder fires again
-                        this.State.Status = RestockRequestStatus.Manufacturing;
-                        break;
+                case RestockRequestReminderNames.RestockPipelineChangeReminderName:
+                    return this.RestockPipeline();
 
-                    case RestockRequestStatus.Manufacturing:
-                        this.State.Status = RestockRequestStatus.Completed;
-
-                        // Raise the event to let interested parties (RestockRequestManager) know that the restock is complete
-                        this.SignalRequestStatusChange();
-
-                        // Done, so unregister the remainder
-                        return this.UnregisterRestockPipelineChangeReminderAsync();
-
-                    default:
-                        throw new InvalidOperationException(string.Format("{0}: remainder received in invalid status", this.State));
-                }
+                default:
+                    // We should never arrive here normally. The system won't call reminders that don't exist. 
+                    // But for our own sake in case we add a new reminder somewhere and forget to handle it, this will remind us.
+                    throw new InvalidOperationException("Unknown reminder: " + reminderName);
             }
-
-            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -55,7 +38,7 @@ namespace RestockRequest.Actor
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task AddRestockRequestAsync(RestockRequest request)
+        public Task AddRestockRequestAsync(RestockRequest request)
         {
             if (this.State.IsStarted()) //Don't accept a request that is already started
             {
@@ -64,15 +47,16 @@ namespace RestockRequest.Actor
             }
 
             // Accept the request
-            ActorEventSource.Current.ActorMessage(this, "RestockRequestActor: Accept update quantity request {0}", request); //TEST MSG
+            ActorEventSource.Current.ActorMessage(this, "RestockRequestActor: Accept update quantity request {0}", request);
+
             this.State.Status = RestockRequestStatus.Accepted;
             this.State.Request = request;
 
             // Start a reminder to go through the processing pipeline.
             // A reminder keeps the actor from being garbage collected due to lack of use, 
-            // so works better in this case than a timer.
-            await this.RegisterReminder(
-                RestockPipelineChangeReminderName,
+            // which works better than a timer in this case.
+            return this.RegisterReminder(
+                RestockRequestReminderNames.RestockPipelineChangeReminderName,
                 null,
                 PipelineStageVerificationDelay,
                 PipelineStageProcessingDuration,
@@ -91,9 +75,43 @@ namespace RestockRequest.Actor
             return Task.FromResult(true);
         }
 
+        /// <summary>
+        /// Simulates the processing of a restock request by advancing the processing status each time this method is invoked
+        /// until it reaches the complete stage.
+        /// </summary>
+        /// <returns></returns>
+        internal Task RestockPipeline()
+        {
+            ActorEventSource.Current.ActorMessage(this, "RestockRequestActor: {0}: Pipeline change reminder", this.State);
+
+            switch (this.State.Status)
+            {
+                case RestockRequestStatus.Accepted:
+
+                    // Change to next step and let it "execute" until the reminder fires again
+                    this.State.Status = RestockRequestStatus.Manufacturing;
+                    return Task.FromResult(true);
+
+                case RestockRequestStatus.Manufacturing:
+
+                    // Changet the step to completed to indicate the "processing" is complete.
+                    this.State.Status = RestockRequestStatus.Completed;
+
+                    // Raise the event to let interested parties (RestockRequestManager) know that the restock is complete
+                    this.SignalRequestStatusChange();
+
+                    // Done, so unregister the reminder
+                    return this.UnregisterRestockPipelineChangeReminderAsync();
+
+                default:
+                    throw new InvalidOperationException(string.Format("{0}: remainder received in invalid status", this.State));
+            }
+        }
+
         private void SignalRequestStatusChange()
         {
             ActorEventSource.Current.ActorMessage(this, "RestockRequestActor: {0}: Raise event for state change", this.State);
+
             IRestockRequestEvents events = this.GetEvent<IRestockRequestEvents>();
             events.RestockRequestCompleted(this.Id, this.State.Request);
         }
@@ -103,7 +121,7 @@ namespace RestockRequest.Actor
             IActorReminder reminder;
             try
             {
-                reminder = this.GetReminder(RestockPipelineChangeReminderName);
+                reminder = this.GetReminder(RestockRequestReminderNames.RestockPipelineChangeReminderName);
             }
             catch (FabricException)
             {

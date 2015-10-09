@@ -3,15 +3,10 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-namespace Web.Service
+namespace RestockRequest.Actor
 {
-    using Microsoft.ServiceFabric.Services;
-
-    internal class WebService : StatelessService
+    internal static class RestockRequestReminderNames
     {
-        protected override ICommunicationListener CreateCommunicationListener()
-        {
-            return new OwinCommunicationListener("fabrikam", new Startup());
-        }
+        public const string RestockPipelineChangeReminderName = "RestockPipelineChange";
     }
 }

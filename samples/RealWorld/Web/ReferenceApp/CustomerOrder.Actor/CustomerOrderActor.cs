@@ -70,7 +70,7 @@ namespace CustomerOrder.Actor
                         IActorReminder orderReminder = this.GetReminder(CustomerOrderReminderNames.FulfillOrderReminder);
                         await this.UnregisterReminder(orderReminder);
                     }
-
+                    
                     break;
 
                 default:
@@ -93,6 +93,9 @@ namespace CustomerOrder.Actor
                 this.State = new CustomerOrderActorState();
                 this.State.Status = CustomerOrderStatus.New;
             }
+
+            this.ServiceProxy = new ServiceProxyWrapper();
+
             return Task.FromResult(true);
         }
 
@@ -115,12 +118,14 @@ namespace CustomerOrder.Actor
             ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
 
             this.State.Status = CustomerOrderStatus.InProcess;
+            
+            ActorEventSource.Current.ActorMessage(this, "Fullfilling customer order. ID: {0}. Items: {1}", this.Id.GetGuidId(), this.State.OrderedItems.Count);
 
             //We loop through the customer order list. 
             //For every item that cannot be fulfilled, we add to backordered. 
             foreach (CustomerOrderItem item in this.State.OrderedItems.Where(x => x.FulfillmentRemaining > 0))
             {
-                IInventoryService inventoryService = this.ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
+                IInventoryService inventoryService = this.ServiceProxy.Create<IInventoryService>(item.ItemId.GetPartitionKey(), builder.ToUri());
 
                 //First, check the item is listed in inventory.  
                 //This will avoid infinite backorder status.
@@ -139,6 +144,13 @@ namespace CustomerOrder.Actor
             this.State.Status = this.State.OrderedItems.Any(x => x.FulfillmentRemaining > 0)
                 ? this.State.Status = CustomerOrderStatus.Backordered
                 : this.State.Status = CustomerOrderStatus.Shipped;
+
+            ActorEventSource.Current.ActorMessage(
+                this,
+                "{0}; Fulfilled: {1}. Backordered: {2}",
+                this.State,
+                this.State.OrderedItems.Count(x => x.FulfillmentRemaining == 0),
+                this.State.OrderedItems.Count(x => x.FulfillmentRemaining > 0));
         }
     }
 }
