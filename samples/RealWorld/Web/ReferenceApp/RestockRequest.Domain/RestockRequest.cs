@@ -7,18 +7,19 @@ namespace RestockRequest.Domain
 {
     using System;
     using System.Runtime.Serialization;
+    using Inventory.Domain;
 
     [DataContract]
     public sealed class RestockRequest
     {
-        public RestockRequest(Guid itemId, int quantity)
+        public RestockRequest(InventoryItemId itemId, int quantity)
         {
             this.ItemId = itemId;
             this.Quantity = quantity;
         }
 
         [DataMember]
-        public Guid ItemId { get; private set; }
+        public InventoryItemId ItemId { get; private set; }
 
         [DataMember]
         public int Quantity { get; private set; }

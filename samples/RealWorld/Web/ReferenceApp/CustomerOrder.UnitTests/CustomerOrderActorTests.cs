@@ -5,7 +5,6 @@
 
 namespace CustomerOrder.UnitTests
 {
-    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using CustomerOrder.Actor;
@@ -36,7 +35,7 @@ namespace CustomerOrder.UnitTests
             target.State.Status = CustomerOrderStatus.Submitted;
             target.State.OrderedItems = new List<CustomerOrderItem>()
             {
-                new CustomerOrderItem(Guid.NewGuid(), 4)
+                new CustomerOrderItem(new InventoryItemId(), 4)
             };
 
             await target.FulfillOrderAsync();
@@ -67,7 +66,7 @@ namespace CustomerOrder.UnitTests
             target.State.Status = CustomerOrderStatus.Submitted;
             target.State.OrderedItems = new List<CustomerOrderItem>()
             {
-                new CustomerOrderItem(Guid.NewGuid(), 4)
+                new CustomerOrderItem(new InventoryItemId(), 4)
             };
 
             await target.FulfillOrderAsync();
@@ -100,7 +99,7 @@ namespace CustomerOrder.UnitTests
             target.State.Status = CustomerOrderStatus.Submitted;
             target.State.OrderedItems = new List<CustomerOrderItem>()
             {
-                new CustomerOrderItem(Guid.NewGuid(), itemCount)
+                new CustomerOrderItem(new InventoryItemId(), itemCount)
             };
 
             for (int i = 0; i < itemCount - 1; ++i)
@@ -134,7 +133,7 @@ namespace CustomerOrder.UnitTests
             target.State.Status = CustomerOrderStatus.Submitted;
             target.State.OrderedItems = new List<CustomerOrderItem>()
             {
-                new CustomerOrderItem(Guid.NewGuid(), 5)
+                new CustomerOrderItem(new InventoryItemId(), 5)
             };
 
             await target.FulfillOrderAsync();

@@ -45,30 +45,24 @@ namespace Web.Service.Controllers
             }
 
             Guid orderId = Guid.NewGuid();
-
             ServiceUriBuilder builder = new ServiceUriBuilder(CustomerOrderServiceName);
 
             //We create a unique Guid that is associated with a customer order, as well as with the actor that represents that order's state.
             ICustomerOrderActor customerOrder = ActorProxy.Create<ICustomerOrderActor>(new ActorId(orderId), builder.ToUri());
 
-            ServiceEventSource.Current.Message("Guid for order Id in Post Checkout: {0}", orderId.ToString());
-            ServiceEventSource.Current.Message("Guid for order Id without To String call: {0}", orderId);
-
             try
             {
-                await customerOrder.SubmitOrderAsync(cart); //Fulfills order
-                ServiceEventSource.Current.Message(string.Format("customerOrder fulfilled"));
+                await customerOrder.SubmitOrderAsync(cart);
+                ServiceEventSource.Current.Message("Customer order submitted successfully. ID: {0} fulfilled", orderId);
             }
-
-                //TODO: Write tests for these exceptions
             catch (InvalidOperationException ex)
             {
-                ServiceEventSource.Current.Message(string.Format("WebUI Service: Actor rejected {0}: {1}", customerOrder, ex));
+                ServiceEventSource.Current.Message("Web Service: Actor rejected {0}: {1}", customerOrder, ex);
                 throw;
             }
             catch (Exception ex)
             {
-                ServiceEventSource.Current.Message(string.Format("WebUI Service: Exception {0}: {1}", customerOrder, ex));
+                ServiceEventSource.Current.Message("Web Service: Exception {0}: {1}", customerOrder, ex);
                 throw;
             }
 
@@ -82,17 +76,19 @@ namespace Web.Service.Controllers
         /// <returns>String</returns>
         [HttpGet]
         [Route("api/orders/{customerOrderId}")]
-        public async Task<string> GetOrderStatus(Guid customerOrderId)
+        public Task<string> GetOrderStatus(Guid customerOrderId)
         {
+            ServiceUriBuilder builder = new ServiceUriBuilder(CustomerOrderServiceName);
+            ICustomerOrderActor customerOrder = ActorProxy.Create<ICustomerOrderActor>(new ActorId(customerOrderId), builder.ToUri());
+
             try
             {
-                ICustomerOrderActor customerOrder = ActorProxy.Create<ICustomerOrderActor>(
-                    actorId: new ActorId(customerOrderId),
-                    serviceName: CustomerOrderServiceName);
-                return await customerOrder.GetStatusAsync();
+                return customerOrder.GetStatusAsync();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                ServiceEventSource.Current.Message("Web Service: Exception {0}: {1}", customerOrder, ex);
+
                 throw;
             }
         }

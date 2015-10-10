@@ -30,7 +30,7 @@ namespace Web.Service.Controllers
             ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
 
             IInventoryService inventoryServiceClient = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
-            //Right now, even if your service has no partitions, you should specify a partion key as 0 in your Create call to a Service Proxy interface.
+
             return inventoryServiceClient.GetCustomerInventoryAsync();
         }
     }

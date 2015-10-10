@@ -6,8 +6,7 @@
 namespace RestockRequestManager.Service
 {
     using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
+    using System.Fabric;
     using System.Threading;
     using System.Threading.Tasks;
     using Common;
@@ -25,7 +24,7 @@ namespace RestockRequestManager.Service
         private const string ItemIdToActorIdMapName = "actorIdToMapName"; //Name of ItemId-ActorId IReliableDictionary
         private const string CompletedRequestsQueueName = "completedRequests"; //Name of CompletedRequests IReliableQueue
         private const string InventoryServiceName = "InventoryService";
-        private static TimeSpan CompletedRequestsBatchInterval = TimeSpan.FromSeconds(5);
+        private static TimeSpan CompletedRequestsBatchInterval = TimeSpan.FromSeconds(1);
         private static TimeSpan TxTimeout = TimeSpan.FromSeconds(4);
 
         public string ApplicationName
@@ -61,30 +60,37 @@ namespace RestockRequestManager.Service
         /// <returns></returns>
         public async Task AddRestockRequestAsync(RestockRequest request)
         {
-            ServiceEventSource.Current.Message("Entered AddRestockRequestAsync call in RRM"); //TEST MESG
-
-            //Get dictionary of Restock Requests
-            IReliableDictionary<Guid, ActorId> requestDictionary =
-                await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, ActorId>>(ItemIdToActorIdMapName);
-
-            ActorId actorId = null; //QUESTION: Why do we always create a new ActorId here?
-
-            using (ITransaction tx = this.StateManager.CreateTransaction())
-            {
-                actorId = await requestDictionary.GetOrAddAsync(tx, request.ItemId, ActorId.NewId());
-                await tx.CommitAsync();
-            }
-
-            // Create actor proxy and send the request
-            IRestockRequestActor restockRequestActor = ActorProxy.Create<IRestockRequestActor>(actorId, this.ApplicationName);
-            ServiceEventSource.Current.Message("Actor proxy created for a new restock request"); //TEST MSG
-
             try
             {
+                //Get dictionary of Restock Requests
+                IReliableDictionary<InventoryItemId, ActorId> requestDictionary =
+                    await this.StateManager.GetOrAddAsync<IReliableDictionary<InventoryItemId, ActorId>>(ItemIdToActorIdMapName);
+
+                ActorId actorId = ActorId.NewId();
+                
+                try
+                {
+                    using (ITransaction tx = this.StateManager.CreateTransaction())
+                    {
+                        await requestDictionary.AddAsync(tx, request.ItemId, actorId);
+                        await tx.CommitAsync();
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    // restock request already exists
+                    return;
+                }
+
+                // Create actor proxy and send the request
+                IRestockRequestActor restockRequestActor = ActorProxy.Create<IRestockRequestActor>(actorId, this.ApplicationName);
+
                 await restockRequestActor.AddRestockRequestAsync(request);
 
                 // Successfully added, register for event notifications for completion
                 await restockRequestActor.SubscribeAsync<IRestockRequestEvents>(this);
+
+                ServiceEventSource.Current.ServiceMessage(this, "Created restock request. Item ID: {0}. Actor ID: {1}", request.ItemId, actorId);
             }
             catch (InvalidOperationException ex)
             {
@@ -104,9 +110,7 @@ namespace RestockRequestManager.Service
         }
 
         /// <summary>
-        /// This method returns completed RestockRequests to the InventoryService by implementing batch processing. 
-        /// Based on a pre-defined batching interval, completed requests are dequeued and passed to InventoryService through
-        /// the creation of a Service Proxy. 
+        /// Drains the queue of completed restock requests sends them to InventoryService.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -116,38 +120,22 @@ namespace RestockRequestManager.Service
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                // Every batching interval, get the completed requests and send them back to inventory service
                 using (ITransaction tx = this.StateManager.CreateTransaction())
                 {
-                    IList<RestockRequest> batch = new List<RestockRequest>();
+                    ConditionalResult<RestockRequest> result = await completedRequests.TryDequeueAsync(tx, TxTimeout, cancellationToken);
 
-                    Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();
-                    while (stopWatch.Elapsed < CompletedRequestsBatchInterval && !cancellationToken.IsCancellationRequested)
+                    if (result.HasValue)
                     {
-                        // Create a list of batched requests that need to be sent to the Inventory service.
-                        ConditionalResult<RestockRequest> result = await completedRequests.TryDequeueAsync(tx, TxTimeout, cancellationToken);
-                        if (!result.HasValue)
-                        {
-                            // All accumulated requests are read
-                            break;
-                        }
-                        else
-                        {
-                            batch.Add(result.Value);
-                        }
-                    }
-
-                    if (batch.Count > 0)
-                    {
-                        ServiceEventSource.Current.Message(string.Format("RestockRequestManagerService: Batch {0} completed requests", batch.Count));
-
-                        // TODO: need to go to correct partition
-                        // For now, the inventory is not partitioned, so always go to first partition
                         ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
+                        IInventoryService inventoryService = ServiceProxy.Create<IInventoryService>(result.Value.ItemId.GetPartitionKey(), builder.ToUri());
 
-                        IInventoryService inventoryService = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
-                        await inventoryService.AddStockAsync(batch);
+                        await inventoryService.AddStockAsync(result.Value.ItemId, result.Value.Quantity);
+
+                        ServiceEventSource.Current.ServiceMessage(
+                            this,
+                            "Adding stock to inventory service. ID: {0}. Quantity: {1}",
+                            result.Value.ItemId,
+                           result.Value.Quantity);
                     }
 
                     // This commits the dequeue operations.
