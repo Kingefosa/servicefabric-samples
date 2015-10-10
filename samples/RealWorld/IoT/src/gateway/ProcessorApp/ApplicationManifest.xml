@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ApplicationManifest ApplicationTypeName="IoTEventHubProcessorApp" ApplicationTypeVersion="1.0.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Parameters>
+    <Parameter Name="EventHubProcessorSvc_MinReplicaSetSize" DefaultValue="2" />
+    <Parameter Name="EventHubProcessorSvc_TargetReplicaSetSize" DefaultValue="3" />
+  </Parameters>
+  <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
+       should match the Name and Version attributes of the ServiceManifest element defined in the 
+       ServiceManifest.xml file. -->
+  <ServiceManifestImport>
+    <ServiceManifestRef ServiceManifestName="EventHubProcessorServicePkg" ServiceManifestVersion="1.0.0.0" />
+    <ConfigOverrides />
+  </ServiceManifestImport>
+  <!-- 
+  [[Deployment configuration]]: the below template will be Instantiated when the ctrl app create
+  a new instance of theworker app
+  
+  Partition Count:
+      in a typical system you will define partition count in form of sizes (smal, medium, large). Handling different types of work load.
+      This sample however uses one size. In all cases Event Hub Listener counts the # of Event Partitions and distribute them on the # of 
+      partitions of the activated service Event hub Listener in this sample use "Distribute Mode" 
+      refer To Event Hub EventHubCommunicationListenerMode for more details. 
+
+      The management application expects UniformInt64Partition  with any numnber of partitions you choose. 
+  Ensure: 
+  1- _VS_DEPLOY is #un-define-ed 
+  2- _WAIT_FOR_DEBUGGER is #un-define-ed
+  -->
+  <ServiceTemplates>
+    <StatefulService ServiceTypeName="EventHubProcessorService" TargetReplicaSetSize="[EventHubProcessorSvc_TargetReplicaSetSize]" MinReplicaSetSize="[EventHubProcessorSvc_MinReplicaSetSize]">
+      <UniformInt64Partition PartitionCount="2" LowKey="0" HighKey="10" />
+    </StatefulService>
+  </ServiceTemplates>
+  
+  <!--
+  [[Dev/Testing configuration]] (using VS.NET Deployment): the below will be created automatically 
+  when the application is deployment. When you configure it this way please ensure that 
+  
+  1- _VS_DEPLOY is #define-ed (for reference check WorkerSvc.cs)
+  2- _WAIT_FOR_DEBUGGER is #un-define-ed, if you are not going to attach a debugger
+  
+  ***** REMOVE BEFORE THE DEPLOYMENT ***
+
+  <DefaultServices>
+    <Service Name="EventHubProcessorService">
+      <StatefulService ServiceTypeName="EventHubProcessorService" TargetReplicaSetSize="[EventHubProcessorSvc_TargetReplicaSetSize]" MinReplicaSetSize="[EventHubProcessorSvc_MinReplicaSetSize]">
+        <UniformInt64Partition PartitionCount="2" LowKey="0" HighKey="10" />
+      </StatefulService>
+    </Service>
+  </DefaultServices>
+
+-->
+</ApplicationManifest>
