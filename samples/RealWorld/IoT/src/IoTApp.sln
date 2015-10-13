@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorActor.Interfaces", "S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorActor", "SensorActor\SensorActor.csproj", "{2112E342-04CF-4BA1-8932-5B2E90F69155}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{2050FED9-512F-4DD6-BE89-64271AF377A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sensors.TestClient", "Tests\Sensors.TestClient\Sensors.TestClient.csproj", "{9346B162-2A1E-4CAE-9987-BE4F772E8349}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,8 +83,17 @@ Global
 		{2112E342-04CF-4BA1-8932-5B2E90F69155}.Release|Any CPU.ActiveCfg = Release|x64
 		{2112E342-04CF-4BA1-8932-5B2E90F69155}.Release|x64.ActiveCfg = Release|x64
 		{2112E342-04CF-4BA1-8932-5B2E90F69155}.Release|x64.Build.0 = Release|x64
+		{9346B162-2A1E-4CAE-9987-BE4F772E8349}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{9346B162-2A1E-4CAE-9987-BE4F772E8349}.Debug|x64.ActiveCfg = Debug|x64
+		{9346B162-2A1E-4CAE-9987-BE4F772E8349}.Debug|x64.Build.0 = Debug|x64
+		{9346B162-2A1E-4CAE-9987-BE4F772E8349}.Release|Any CPU.ActiveCfg = Release|x64
+		{9346B162-2A1E-4CAE-9987-BE4F772E8349}.Release|x64.ActiveCfg = Release|x64
+		{9346B162-2A1E-4CAE-9987-BE4F772E8349}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9346B162-2A1E-4CAE-9987-BE4F772E8349} = {2050FED9-512F-4DD6-BE89-64271AF377A1}
 	EndGlobalSection
 EndGlobal
