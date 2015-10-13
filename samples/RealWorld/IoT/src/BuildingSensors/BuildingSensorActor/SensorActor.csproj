@@ -4,16 +4,21 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
-    <ProjectGuid>{9346B162-2A1E-4CAE-9987-BE4F772E8349}</ProjectGuid>
+    <ProjectGuid>{2112E342-04CF-4BA1-8932-5B2E90F69155}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BuildingSensors.TestClient</RootNamespace>
-    <AssemblyName>BuildingSensors.TestClient</AssemblyName>
+    <RootNamespace>BuildingSensorActor</RootNamespace>
+    <AssemblyName>BuildingSensorActor</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup>
+    <UpdateServiceFabricManifestEnabled>true</UpdateServiceFabricManifestEnabled>
+    <ServicePackagePath>PackageRoot</ServicePackagePath>
+    <ServicePackagePrefix>$(MSBuildProjectName)</ServicePackagePrefix>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DebugSymbols>true</DebugSymbols>
@@ -71,20 +76,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SensorActor.cs" />
+    <Compile Include="SensorActorState.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="ActorEventSource.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="PackageRoot\ServiceManifest.xml" />
+    <None Include="PackageRoot\Config\Settings.xml" />
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BuildingSensorActor.Common\BuildingSensorActor.Common.csproj">
+    <ProjectReference Include="..\BuildingSensorActor.Common\SensorActor.Common.csproj">
       <Project>{8734fb98-c6b6-4533-82ad-7d4711b042bd}</Project>
-      <Name>BuildingSensorActor.Common</Name>
+      <Name>SensorActor.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\BuildingSensorActor.Interfaces\BuildingSensorActor.Interfaces.csproj">
+    <ProjectReference Include="..\BuildingSensorActor.Interfaces\SensorActor.Interfaces.csproj">
       <Project>{EA2B31B4-561C-4FC9-BE45-C2081BCFA552}</Project>
-      <Name>BuildingSensorActor.Interfaces</Name>
+      <Name>SensorActor.Interfaces</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -95,11 +105,4 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.ServiceFabric.Actors.1.2.99-preview\build\Microsoft.ServiceFabric.Actors.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ServiceFabric.Actors.1.2.99-preview\build\Microsoft.ServiceFabric.Actors.targets'))" />
   </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

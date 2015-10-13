@@ -13,7 +13,7 @@ using Microsoft.ServiceFabric.Actors;
 namespace BuildingSensorActor
 {
     [DataContract]
-    public class BuildingSensorActorState
+    public class SensorActorState
     {
 
         [DataMember]

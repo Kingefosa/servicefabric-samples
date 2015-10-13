@@ -19,7 +19,7 @@ namespace BuildingSensors.TestClient
 
         private static async Task TestActor()
         {
-            var proxy = ActorProxy.Create<IBuildingSensorActor>(ActorId.NewId(), "fabric:/BuildingSensors");
+            var proxy = ActorProxy.Create<ISensorActor>(ActorId.NewId(), "fabric:/BuildingSensors");
 
             DateTime t = await proxy.GetLastMessageTimeAsync();
 

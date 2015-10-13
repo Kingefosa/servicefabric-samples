@@ -14,7 +14,7 @@ namespace BuildingSensorActor
             {
                 using (FabricRuntime fabricRuntime = FabricRuntime.Create())
                 {
-                    fabricRuntime.RegisterActor(typeof(BuildingSensorActor));
+                    fabricRuntime.RegisterActor(typeof(SensorActor));
 
                     Thread.Sleep(Timeout.Infinite);
                 }

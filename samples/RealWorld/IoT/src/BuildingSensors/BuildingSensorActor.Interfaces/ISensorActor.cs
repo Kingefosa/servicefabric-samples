@@ -8,7 +8,7 @@ using BuildingSensorActor.Common;
 
 namespace BuildingSensorActor.Interfaces
 {
-    public interface IBuildingSensorActor : IActor
+    public interface ISensorActor : IActor
     {
         Task ReceiveDeviceStateAsync(DateTime timeOfEvent, byte[] messageBody);
         Task<SensorMessage> GetLastMessageAsync();

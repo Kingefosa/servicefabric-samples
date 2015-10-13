@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "BuildingSensors", "BuildingSensors\BuildingSensors.sfproj", "{04349E85-10B1-4AE3-BE29-F538F62EF4D8}"
+Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "Sensors", "BuildingSensors\Sensors.sfproj", "{04349E85-10B1-4AE3-BE29-F538F62EF4D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingSensorActor", "BuildingSensorActor\BuildingSensorActor.csproj", "{2112E342-04CF-4BA1-8932-5B2E90F69155}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorActor", "BuildingSensorActor\SensorActor.csproj", "{2112E342-04CF-4BA1-8932-5B2E90F69155}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingSensorActor.Interfaces", "BuildingSensorActor.Interfaces\BuildingSensorActor.Interfaces.csproj", "{EA2B31B4-561C-4FC9-BE45-C2081BCFA552}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorActor.Interfaces", "BuildingSensorActor.Interfaces\SensorActor.Interfaces.csproj", "{EA2B31B4-561C-4FC9-BE45-C2081BCFA552}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingSensors.TestClient", "BuildingSensors.TestClient\BuildingSensors.TestClient.csproj", "{9346B162-2A1E-4CAE-9987-BE4F772E8349}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sensors.TestClient", "BuildingSensors.TestClient\Sensors.TestClient.csproj", "{9346B162-2A1E-4CAE-9987-BE4F772E8349}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingSensorActor.Common", "BuildingSensorActor.Common\BuildingSensorActor.Common.csproj", "{8734FB98-C6B6-4533-82AD-7D4711B042BD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorActor.Common", "BuildingSensorActor.Common\SensorActor.Common.csproj", "{8734FB98-C6B6-4533-82AD-7D4711B042BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
