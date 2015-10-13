@@ -9,13 +9,13 @@ namespace BuildingSensorActor.Interfaces
 {
     public interface IBuildingSensorActor : IActor
     {
-        Task ReceiveDeviceState(DateTime timeOfEvent, byte[] messageBody);
+        Task ReceiveDeviceStateAsync(DateTime timeOfEvent, byte[] messageBody);
 
-        Task<DateTime> GetLastMessageTime();
-        Task<string> GetDeviceId();
-        Task<string> GetBuildingId();
-        Task<double> GetTemperatureInFahrenheit();
-        Task<double> GetHumityPercentage();
-        Task<bool> GetLightStatus();
+        Task<DateTime> GetLastMessageTimeAsync();
+        Task<string> GetDeviceIdAsync();
+        Task<string> GetBuildingIdAsync();
+        Task<double> GetTemperatureInFahrenheitAsync();
+        Task<double> GetHumityPercentageAsync();
+        Task<bool> GetLightStatusAsync();
     }
 }

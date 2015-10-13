@@ -25,44 +25,45 @@ namespace BuildingSensorActor
             return Task.FromResult(true);
         }
 
-        Task IBuildingSensorActor.ReceiveDeviceState(DateTime timeOfEvent, byte[] messageBody)
+        async Task IBuildingSensorActor.ReceiveDeviceStateAsync(DateTime timeOfEvent, byte[] messageBody)
         {
-            return Task.Run(() =>
+            await Task.Run(() =>
             {
                 this.State.LatestMessageTime = timeOfEvent;
-
                 this.State.LatestMessageProperties = JsonConvert.DeserializeObject<SensorMessage>(Encoding.UTF8.GetString(messageBody));
             });
+
+            return;
         }        
 
-        Task<string> IBuildingSensorActor.GetBuildingId()
+        async Task<string> IBuildingSensorActor.GetBuildingIdAsync()
         {
-            return Task.FromResult(this.State.LatestMessageProperties.BuildingId);
+            return await Task.FromResult(this.State.LatestMessageProperties.BuildingId);
         }
 
-        Task<string> IBuildingSensorActor.GetDeviceId()
+        async Task<string> IBuildingSensorActor.GetDeviceIdAsync()
         {
-            return Task.FromResult(this.State.LatestMessageProperties.DeviceId);
+            return await Task.FromResult(this.State.LatestMessageProperties.DeviceId);
         }
 
-        Task<double> IBuildingSensorActor.GetHumityPercentage()
+        async Task<double> IBuildingSensorActor.GetHumityPercentageAsync()
         {
-            return Task.FromResult(this.State.LatestMessageProperties.Humidity);
+            return await Task.FromResult(this.State.LatestMessageProperties.Humidity);
         }
 
-        Task<bool> IBuildingSensorActor.GetLightStatus()
+        async Task<bool> IBuildingSensorActor.GetLightStatusAsync()
         {
-            return Task.FromResult(this.State.LatestMessageProperties.Light);
+            return await Task.FromResult(this.State.LatestMessageProperties.Light);
         }
 
-        Task<double> IBuildingSensorActor.GetTemperatureInFahrenheit()
+        async Task<double> IBuildingSensorActor.GetTemperatureInFahrenheitAsync()
         {
-            return Task.FromResult(this.State.LatestMessageProperties.TempF);
+            return await Task.FromResult(this.State.LatestMessageProperties.TempF);
         }
 
-        Task<DateTime> IBuildingSensorActor.GetLastMessageTime()
+        async Task<DateTime> IBuildingSensorActor.GetLastMessageTimeAsync()
         {
-            return Task.FromResult(this.State.LatestMessageTime);
+            return await Task.FromResult(this.State.LatestMessageTime);
         }
 
     }

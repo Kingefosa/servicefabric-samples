@@ -14,25 +14,35 @@ namespace BuildingSensors.TestClient
     {
         public static void Main(string[] args)
         {
-           var proxy = ActorProxy.Create<IBuildingSensorActor>(ActorId.NewId(), "fabric:/BuildingSensors");
+            TestActor().Wait();
+        }
 
-            Console.WriteLine("Time:" + proxy.GetLastMessageTime().Result);
-            Console.WriteLine("Device Id:" + proxy.GetDeviceId().Result);
-            Console.WriteLine("Building Id:" + proxy.GetBuildingId().Result);
-            Console.WriteLine("Humity:" + proxy.GetHumityPercentage().Result);
-            Console.WriteLine("Light Status:" + proxy.GetLightStatus().Result);
-            Console.WriteLine("Temp:" + proxy.GetTemperatureInFahrenheit().Result);
+        private static async Task TestActor()
+        {
+       var proxy = ActorProxy.Create<IBuildingSensorActor>(ActorId.NewId(), "fabric:/BuildingSensors");
+
+            DateTime t = await proxy.GetLastMessageTimeAsync();
+
+            Console.WriteLine("Time:" + await proxy.GetLastMessageTimeAsync());
+            Console.WriteLine("Device Id:" +  await proxy.GetDeviceIdAsync());
+            Console.WriteLine("Building Id:" + await proxy.GetBuildingIdAsync());
+            Console.WriteLine("Humity:" + await proxy.GetHumityPercentageAsync());
+            Console.WriteLine("Light Status:" + await proxy.GetLightStatusAsync());
+            Console.WriteLine("Temp:" + await proxy.GetTemperatureInFahrenheitAsync());
 
             SensorMessage m = new SensorMessage() { DeviceId = "DeviceId", BuildingId = "Building1234", Humidity = 32, Light = true, Motion = "false", TempF = 72 };
             string jsonString = JsonConvert.SerializeObject(m);
-            proxy.ReceiveDeviceState(DateTime.Now, Encoding.UTF8.GetBytes(jsonString));
+            await proxy.ReceiveDeviceStateAsync(DateTime.Now, Encoding.UTF8.GetBytes(jsonString));
+
             Console.WriteLine("---");
-            Console.WriteLine("Time:" + proxy.GetLastMessageTime().Result);
-            Console.WriteLine("Device Id:" + proxy.GetDeviceId().Result);
-            Console.WriteLine("Building Id:" + proxy.GetBuildingId().Result);
-            Console.WriteLine("Humity:" + proxy.GetHumityPercentage().Result);
-            Console.WriteLine("Light Status:" + proxy.GetLightStatus().Result);
-            Console.WriteLine("Temp:" + proxy.GetTemperatureInFahrenheit().Result);
+            Console.WriteLine("Time:" + await proxy.GetLastMessageTimeAsync());
+            Console.WriteLine("Device Id:" + await proxy.GetDeviceIdAsync());
+            Console.WriteLine("Building Id:" + await proxy.GetBuildingIdAsync());
+            Console.WriteLine("Humity:" + await proxy.GetHumityPercentageAsync());
+            Console.WriteLine("Light Status:" + await proxy.GetLightStatusAsync());
+            Console.WriteLine("Temp:" + await proxy.GetTemperatureInFahrenheitAsync());
+
+
         }
     }
 }
