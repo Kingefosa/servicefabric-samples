@@ -10,7 +10,7 @@ namespace SensorActor.Interfaces
 {
     public interface ISensorActor : IActor
     {
-        Task ReceiveDeviceStateAsync(DateTime timeOfEvent, byte[] messageBody);
+        Task SendDeviceStateAsync(DateTime timeOfEvent, byte[] messageBody);
         Task<SensorMessage> GetLastMessageAsync();
         Task<DateTime> GetLastMessageTimeAsync();
         Task<string> GetDeviceIdAsync();

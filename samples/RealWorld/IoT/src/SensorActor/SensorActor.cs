@@ -9,6 +9,8 @@ using Microsoft.ServiceFabric;
 using Microsoft.ServiceFabric.Actors;
 using Newtonsoft.Json;
 using System.Text;
+using FloorActor.Interfaces;
+using DataArchiveActor.Interfaces;
 
 namespace SensorActor
 {
@@ -25,13 +27,18 @@ namespace SensorActor
             return Task.FromResult(true);
         }
 
-        Task ISensorActor.ReceiveDeviceStateAsync(DateTime timeOfEvent, byte[] messageBody)
+        Task ISensorActor.SendDeviceStateAsync(DateTime timeOfEvent, byte[] messageBody)
         {
-            return Task.Run(() =>
+            this.State.LatestMessageTime = timeOfEvent;
+            this.State.LatestMessageProperties = JsonConvert.DeserializeObject<SensorMessage>(Encoding.UTF8.GetString(messageBody));
+            if (this.State.LatestMessageProperties != null
+                && !string.IsNullOrEmpty(this.State.LatestMessageProperties.FloorId)
+                && !string.IsNullOrEmpty(this.State.LatestMessageProperties.DeviceId))
             {
-                this.State.LatestMessageTime = timeOfEvent;
-                this.State.LatestMessageProperties = JsonConvert.DeserializeObject<SensorMessage>(Encoding.UTF8.GetString(messageBody));
-            });
+                var floor = ActorProxy.Create<IFloorActor>(new ActorId(State.LatestMessageProperties.FloorId));
+                return floor.SendDeviceStateAsync(this.State.LatestMessageProperties);
+            }
+            return Task.FromResult(true);
         }
 
         Task<SensorMessage> ISensorActor.GetLastMessageAsync()
@@ -41,7 +48,7 @@ namespace SensorActor
 
         Task<string> ISensorActor.GetBuildingIdAsync()
         {
-            return Task.FromResult(this.State.LatestMessageProperties.BuildingId);
+            return Task.FromResult(this.State.LatestMessageProperties.FloorId);
         }
 
         Task<string> ISensorActor.GetDeviceIdAsync()

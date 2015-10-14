@@ -88,6 +88,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DataArchiveActor.Interfaces\DataArchiveActor.Interfaces.csproj">
+      <Project>{da87617e-b91a-4e69-99b0-b0dadd78e140}</Project>
+      <Name>DataArchiveActor.Interfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FloorActor.Interfaces\FloorActor.Interfaces.csproj">
+      <Project>{9732990f-b2ed-4cd2-8794-b6cef2b31546}</Project>
+      <Name>FloorActor.Interfaces</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SensorActor.Common\SensorActor.Common.csproj">
       <Project>{8734fb98-c6b6-4533-82ad-7d4711b042bd}</Project>
       <Name>SensorActor.Common</Name>
@@ -96,6 +104,9 @@
       <Project>{EA2B31B4-561C-4FC9-BE45-C2081BCFA552}</Project>
       <Name>SensorActor.Interfaces</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.ServiceFabric.Actors.1.2.99-preview\build\Microsoft.ServiceFabric.Actors.targets" Condition="Exists('..\packages\Microsoft.ServiceFabric.Actors.1.2.99-preview\build\Microsoft.ServiceFabric.Actors.targets')" />
