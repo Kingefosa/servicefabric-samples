@@ -8,6 +8,7 @@ using System.Runtime.Serialization;
 using DataArchiveActor.Interfaces;
 using Microsoft.ServiceFabric;
 using Microsoft.ServiceFabric.Actors;
+using SensorActor.Common;
 
 namespace DataArchiveActor
 {
@@ -15,11 +16,6 @@ namespace DataArchiveActor
     public class DataArchiveActorState
     {
         [DataMember]
-        public int Count;
-
-        public override string ToString()
-        {
-            return string.Format(CultureInfo.InvariantCulture, "DataArchiveActorState[Count = {0}]", Count);
-        }
+        public List<SensorMessage> SensorMessages;
     }
 }

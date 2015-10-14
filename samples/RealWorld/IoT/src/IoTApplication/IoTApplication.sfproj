@@ -16,7 +16,8 @@
   <ItemGroup>
     <ProjectReference Include="..\DataArchiveActor\DataArchiveActor.csproj" />
     <ProjectReference Include="..\FloorActor\FloorActor.csproj" />
-    <ProjectReference Include="..\PowerBIActor\PowerBIActor.csproj" />
-  </ItemGroup>
+	<ProjectReference Include="..\PowerBIActor\PowerBIActor.csproj" />	
+<ProjectReference Include="..\SensorActor\SensorActor.csproj" />
+</ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Service Fabric Tools\Microsoft.VisualStudio.Azure.Fabric.ApplicationProject.targets" />
 </Project>

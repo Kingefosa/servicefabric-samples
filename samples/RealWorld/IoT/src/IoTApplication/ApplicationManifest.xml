@@ -1,10 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="IoTApplicationType" ApplicationTypeVersion="1.0.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
    <Parameters>
-      <Parameter Name="PowerBIActorService_PartitionCount" DefaultValue="9" />
+   <Parameter Name="PowerBIActorService_PartitionCount" DefaultValue="9" />
       <Parameter Name="PowerBIActorService_MinReplicaSetSize" DefaultValue="2" />
       <Parameter Name="PowerBIActorService_TargetReplicaSetSize" DefaultValue="3" />
-      <Parameter Name="FloorActorService_PartitionCount" DefaultValue="9" />
+<Parameter Name="SensorActorService_PartitionCount" DefaultValue="9" />
+      <Parameter Name="SensorActorService_MinReplicaSetSize" DefaultValue="2" />
+      <Parameter Name="SensorActorService_TargetReplicaSetSize" DefaultValue="3" />
+<Parameter Name="FloorActorService_PartitionCount" DefaultValue="9" />
       <Parameter Name="FloorActorService_MinReplicaSetSize" DefaultValue="2" />
       <Parameter Name="FloorActorService_TargetReplicaSetSize" DefaultValue="3" />
       <Parameter Name="DataArchiveActorService_PartitionCount" DefaultValue="9" />
@@ -12,8 +15,10 @@
       <Parameter Name="DataArchiveActorService_TargetReplicaSetSize" DefaultValue="3" />
    </Parameters>
    <ServiceManifestImport>
-      <ServiceManifestRef ServiceManifestName="PowerBIActorPkg" ServiceManifestVersion="1.0.0.0" />
-   </ServiceManifestImport>
+<ServiceManifestRef ServiceManifestName="PowerBIActorPkg" ServiceManifestVersion="1.0.0.0" />
+<ServiceManifestRef ServiceManifestName="SensorActorPkg" ServiceManifestVersion="1.0.0.0" />
+      <ConfigOverrides />
+</ServiceManifestImport>
    <ServiceManifestImport>
       <ServiceManifestRef ServiceManifestName="FloorActorPkg" ServiceManifestVersion="1.0.0.0" />
    </ServiceManifestImport>
@@ -21,10 +26,13 @@
       <ServiceManifestRef ServiceManifestName="DataArchiveActorPkg" ServiceManifestVersion="1.0.0.0" />
    </ServiceManifestImport>
    <DefaultServices>
-      <Service Name="PowerBIActorService">
+<Service Name="PowerBIActorService">
          <StatefulService ServiceTypeName="PowerBIActorServiceType" TargetReplicaSetSize="3" MinReplicaSetSize="2">
             <UniformInt64Partition PartitionCount="[PowerBIActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
-         </StatefulService>
+<Service Name="SensorActorService">
+         <StatefulService ServiceTypeName="SensorActorServiceType" TargetReplicaSetSize="[SensorActorService_TargetReplicaSetSize]" MinReplicaSetSize="[SensorActorService_MinReplicaSetSize]">
+            <UniformInt64Partition PartitionCount="[SensorActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
+</StatefulService>
       </Service>
       <Service Name="FloorActorService">
          <StatefulService ServiceTypeName="FloorActorServiceType" TargetReplicaSetSize="[FloorActorService_TargetReplicaSetSize]" MinReplicaSetSize="[FloorActorService_MinReplicaSetSize]">
