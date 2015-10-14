@@ -40,11 +40,11 @@
     <Reference Include="System" />
     <Reference Include="System.Fabric, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64" />
     <Reference Include="System.Fabric.Common.Internal, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
-      <HintPath>..\packages\Microsoft.ServiceFabric.4.0.1427-preview1\lib\net45\System.Fabric.Common.Internal.dll</HintPath>
+      <HintPath>..\packages\Microsoft.ServiceFabric.4.2.99-preview\lib\net45\System.Fabric.Common.Internal.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Fabric.Common.Internal.Strings, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.ServiceFabric.4.0.1427-preview1\lib\net45\System.Fabric.Common.Internal.Strings.dll</HintPath>
+      <HintPath>..\packages\Microsoft.ServiceFabric.4.2.99-preview\lib\net45\System.Fabric.Common.Internal.Strings.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Xml.Linq" />
@@ -67,13 +67,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\IoTProcessorManagement.TestLib\IoTProcessorManagement.TestLib.csproj">
       <Project>{20b453e3-7b99-4e0f-b3ee-7066b61424fd}</Project>
       <Name>IoTProcessorManagement.TestLib</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
