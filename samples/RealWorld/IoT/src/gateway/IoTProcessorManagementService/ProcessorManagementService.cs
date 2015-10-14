@@ -97,7 +97,7 @@ namespace IoTProcessorManagementService
                     try
                     {
                         var result = await ProcessorOperationsQueue.TryDequeueAsync(tx,
-                                                                 TimeSpan.FromMilliseconds(100),
+                                                                 TimeSpan.FromMilliseconds(1000),
                                                                  cancellationToken);
                         if (result.HasValue)
                         {
@@ -111,17 +111,19 @@ namespace IoTProcessorManagementService
                     {
                         ServiceEventSource.Current.Message(string.Format("Controller service encountered timeout in a work operations de-queue process {0} and will try again", toe.StackTrace));
                     }
-                    catch (Exception E)
+                    catch (AggregateException ae)
                     {
+                        ae.Flatten();
+
                         string sError = string.Empty;
                         if (null == wo)
-                            sError = string.Format("controller service encountered an error processing Processor-Operation {0} {1} and will terminate replica", E.Message, E.StackTrace);
+                            sError = string.Format("Event Processor Management Service encountered an error processing Processor-Operation {0} {1} and will terminate replica", ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace());
                         else
-                            sError = string.Format("controller service encountered an error processing Processor-opeartion {0} against {1} Error {2} stack trace {3} and will terminate replica",
-                                    wo.OperationType.ToString(), wo.ProcessorName, E.Message, E.StackTrace);
+                            sError = string.Format("Event Processor Management Service encountered an error processing Processor-opeartion {0} against {1} Error {2} stack trace {3} and will terminate replica",
+                                    wo.OperationType.ToString(), wo.ProcessorName, ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace());
 
 
-                        ServiceEventSource.Current.Message(sError);
+                        ServiceEventSource.Current.ServiceMessage(this, sError);
                         throw ;
                     }
                    

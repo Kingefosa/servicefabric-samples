@@ -16,7 +16,11 @@ namespace IoTProcessorManagement.Common
         private CancellationTokenSource m_TokenSource = new CancellationTokenSource();
         private bool m_bAcceptTasks = true;
 
-        public Action<Exception> OnError = (e) => { Trace.WriteLine(string.Format("Deferred task executer encountered error:{0}"), e.Message); };
+        public Action<AggregateException> OnError = (ae) => 
+        {
+            ae.Flatten();
+            Trace.WriteLine(string.Format("Deferred task executer encountered error:{0} stacktrace:{1}", ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace()));
+        };
          
         public uint NoTaskDelayMs { get; set; }
         public DeferredTaskExecuter()
@@ -74,9 +78,9 @@ namespace IoTProcessorManagement.Common
                         m_TokenSource.Cancel();
 
                 }
-                catch (Exception e)
+                catch (AggregateException ae)
                 {
-                    OnError(e);
+                    OnError(ae);
                 }
             }
         }

@@ -61,10 +61,10 @@ namespace IoTProcessorManagement.Common
                 {
                     workLoopAsync().Wait();
                 }
-                catch(Exception e)
+                catch(AggregateException ae)
                 {
-
-                    m_WorkManager.m_TraceWriter.TraceMessage(string.Format("Executer encountered a fatel error and will exit Error:{0} StackTrace{1}", e.Message, e.StackTrace));
+                    ae.Flatten();
+                    m_WorkManager.m_TraceWriter.TraceMessage(string.Format("Executer encountered a fatel error and will exit Error:{0} StackTrace{1}", ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace()));
                     throw;
                 }
         }
@@ -177,7 +177,7 @@ namespace IoTProcessorManagement.Common
 
                     try
                     {
-                        
+
                         while (m_KeepWorking & !m_Pause)
                         {
                             nCurrentMessage++;
@@ -186,11 +186,11 @@ namespace IoTProcessorManagement.Common
                             if (nCurrentMessage > m_WorkManager.YieldQueueAfter)
                                 break; //-> to finally
 
-                            
+
                             using (var tx = m_WorkManager.StateManager.CreateTransaction())
                             {
-                                var cResults = await q.TryDequeueAsync(tx, 
-                                                                       TimeSpan.FromMilliseconds(nDequeueWaitTimeMs), 
+                                var cResults = await q.TryDequeueAsync(tx,
+                                                                       TimeSpan.FromMilliseconds(nDequeueWaitTimeMs),
                                                                        CancellationToken.None);
                                 if (cResults.HasValue)
                                 {
@@ -213,6 +213,13 @@ namespace IoTProcessorManagement.Common
                     catch (TimeoutException to)
                     {
                         m_WorkManager.m_TraceWriter.TraceMessage(string.Format("Executer Dequeue Timeout after {0}: {1}", nDequeueWaitTimeMs, to.Message));
+                    }
+                    catch (AggregateException ae)
+                    {
+                        ae.Flatten();
+                        m_WorkManager.m_TraceWriter.TraceMessage(string.Format("Executer encountered fatel error and will exit E:{0} StackTrace:{1}", ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace()));
+
+                        throw;
                     }
                     catch (Exception E)
                     {

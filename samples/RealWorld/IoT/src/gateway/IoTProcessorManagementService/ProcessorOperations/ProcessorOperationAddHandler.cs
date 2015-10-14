@@ -1,4 +1,5 @@
 ﻿using IoTProcessorManagement.Clients;
+using IoTProcessorManagement.Common;
 using Microsoft.ServiceFabric.Data;
 using System;
 using System.Collections.Generic;
@@ -68,17 +69,18 @@ namespace IoTProcessorManagementService
 
                 ServiceEventSource.Current.Message("Processor creation {0} failed - {1}", processor.Name, processor.ErrorMessage);
             }
-            catch (Exception e)
+            catch (AggregateException ae)
             {
                 // did we try enough?
                 if (!await ReEnqueAsync(tx))
                 {
+                    ae.Flatten();
                     processor.ProcessorStatus |= ProcessorStatus.ProvisionError;
                     processor.ErrorMessage = string.Format("Failed to create service fabric app {0} [{1}-{2}] Error:{3} \n after{4} times",
                                                         processor.ServiceFabricAppInstanceName,
                                                         processor.ServiceFabricAppTypeName,
                                                         processor.ServiceFabricAppTypeVersion,
-                                                        e.Message,
+                                                        ae.GetCombinedExceptionMessage(),
                                                         processorOperation.RetryCount -1);
 
                     ServiceEventSource.Current.Message("Processor creation {0} failed - {1}", processor.Name, processor.ErrorMessage);

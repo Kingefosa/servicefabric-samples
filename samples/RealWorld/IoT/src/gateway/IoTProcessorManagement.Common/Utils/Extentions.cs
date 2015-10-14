@@ -18,5 +18,25 @@ namespace IoTProcessorManagement.Common
 
             return Task.FromResult( bytes );
         }
+
+        public static string GetCombinedExceptionMessage(this AggregateException ae)
+        {
+
+            StringBuilder sb = new StringBuilder();
+            foreach (var e in ae.InnerExceptions)
+                sb.AppendLine(string.Concat("E: ", e.Message));
+
+            return sb.ToString();
+        }
+
+        public static string GetCombinedExceptionStackTrace(this AggregateException ae)
+        {
+
+            StringBuilder sb = new StringBuilder();
+            foreach (var e in ae.InnerExceptions)
+                sb.AppendLine(string.Concat("StackTrace: ", e.StackTrace));
+
+            return sb.ToString();
+        }
     }
 }

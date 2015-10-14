@@ -1,4 +1,5 @@
 ﻿using IoTProcessorManagement.Clients;
+using IoTProcessorManagement.Common;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 using Microsoft.ServiceFabric.Services;
@@ -195,9 +196,9 @@ namespace IoTProcessorManagementService
             {
                 await DeleteServiceAsync(processor);
             }
-            catch(Exception e)
+            catch(AggregateException ae)
             {
-                ServiceEventSource.Current.ServiceMessage(Svc, "Delete Service for processor:{0} service:{1} failed, will keep working normally E:{2} StackTrace:{3}", processor.Name, processor.ServiceFabricServiceName, e.Message, e.StackTrace);
+                ServiceEventSource.Current.ServiceMessage(Svc, "Delete Service for processor:{0} service:{1} failed, will keep working normally E:{2} StackTrace:{3}", processor.Name, processor.ServiceFabricServiceName, ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace());
             }
 
 
@@ -205,9 +206,9 @@ namespace IoTProcessorManagementService
             {
                 await DeleteAppAsync(processor);
             }
-            catch (Exception e)
+            catch (AggregateException ae)
             {
-                ServiceEventSource.Current.ServiceMessage(Svc, "Delete App for processor:{0} app:{1} failed, will keep working normally E:{2} StackTrace:{3}", processor.Name, processor.ServiceFabricAppInstanceName, e.Message, e.StackTrace);
+                ServiceEventSource.Current.ServiceMessage(Svc, "Delete App for processor:{0} app:{1} failed, will keep working normally E:{2} StackTrace:{3}", processor.Name, processor.ServiceFabricAppInstanceName, ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace());
             }
         }
 

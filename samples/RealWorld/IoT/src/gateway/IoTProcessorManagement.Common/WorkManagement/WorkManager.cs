@@ -495,9 +495,11 @@ namespace IoTProcessorManagement.Common
                 IncreaseBufferedWorkItems();
                 m_DeferedTaskExec.AddWork(TryIncreaseExecuters);
             }
-            catch (Exception E)
+            catch (AggregateException ae)
             {
-                Trace.WriteLine("Post:" + E.Message);
+                ae.Flatten();
+
+                m_TraceWriter.TraceMessage(string.Format("Post to work manager failed, caller should retry E:{0} StackTrace:{1}" , ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace()));
                 throw;
             }
 
