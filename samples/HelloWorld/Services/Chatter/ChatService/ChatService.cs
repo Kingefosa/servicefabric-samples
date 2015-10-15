@@ -76,18 +76,16 @@ namespace ChatWeb
                     {
                         // Remove all the messages that are older than 30 seconds keeping the last 3 messages
                         IEnumerable<KeyValuePair<DateTime, Message>> oldMessages = from t in this.messageDictionary
-                            where t.Key < (DateTime.Now - timeSpan)
+                            where t.Key < (DateTime.Now - timeSpan) orderby t.Key ascending 
                             select t;
+
                         using (ITransaction tx = this.StateManager.CreateTransaction())
                         {
-                            if (oldMessages.Count() > MessagesToKeep)
-                            { 
-                                for (int i = 0; i < oldMessages.Count() - MessagesToKeep; i++)
-                                {
-                                    await this.messageDictionary.TryRemoveAsync(tx,oldMessages.ElementAt(i).Key);
-                                }
-                                await tx.CommitAsync();
+                            foreach (KeyValuePair<DateTime, Message> item in oldMessages.Take(this.messageDictionary.Count() - MessagesToKeep))
+                            {
+                                await this.messageDictionary.TryRemoveAsync(tx, item.Key);
                             }
+                            await tx.CommitAsync();
                         }
                     }
                 }
