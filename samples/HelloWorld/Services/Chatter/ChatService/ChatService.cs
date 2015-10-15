@@ -3,8 +3,6 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-//using Chat.Domain;
-
 namespace ChatWeb
 {
     using System;
@@ -68,6 +66,7 @@ namespace ChatWeb
                 "Partition {0} started processing messages.",
                 this.ServicePartition.PartitionInfo.Id);
 
+            //Use this method to periodically clean up messages in the messagesDictionary
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
