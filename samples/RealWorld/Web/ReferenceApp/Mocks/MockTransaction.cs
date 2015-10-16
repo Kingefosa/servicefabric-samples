@@ -29,7 +29,7 @@ namespace Mocks
         {
         }
 
-        public Task<long> GetVisibilitySeqeuenceNumberAsync()
+        public Task<long> GetVisibilitySequenceNumberAsync()
         {
             return Task.FromResult(0L);
         }
