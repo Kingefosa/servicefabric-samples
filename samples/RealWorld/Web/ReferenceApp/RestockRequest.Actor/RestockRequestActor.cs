@@ -11,7 +11,7 @@ namespace RestockRequest.Actor
     using Microsoft.ServiceFabric.Actors;
     using RestockRequest.Domain;
 
-    internal class RestockRequestActor : Actor<RestockRequestActorState>, IRestockRequestActor, IRemindable
+    internal class RestockRequestActor : StatefulActor<RestockRequestActorState>, IRestockRequestActor, IRemindable
     {
         // The duration the verification at beginning of each pipeline step takes
         private static TimeSpan PipelineStageVerificationDelay = TimeSpan.FromSeconds(5);
@@ -55,7 +55,7 @@ namespace RestockRequest.Actor
             // Start a reminder to go through the processing pipeline.
             // A reminder keeps the actor from being garbage collected due to lack of use, 
             // which works better than a timer in this case.
-            return this.RegisterReminder(
+            return this.RegisterReminderAsync(
                 RestockRequestReminderNames.RestockPipelineChangeReminderName,
                 null,
                 PipelineStageVerificationDelay,
@@ -128,7 +128,7 @@ namespace RestockRequest.Actor
                 reminder = null;
             }
 
-            return (reminder == null) ? Task.FromResult(true) : this.UnregisterReminder(reminder);
+            return (reminder == null) ? Task.FromResult(true) : this.UnregisterReminderAsync(reminder);
         }
     }
 }

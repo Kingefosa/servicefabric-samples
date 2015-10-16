@@ -18,7 +18,7 @@ namespace CustomerOrder.Actor
             {
                 using (FabricRuntime fabricRuntime = FabricRuntime.Create())
                 {
-                    fabricRuntime.RegisterActor(typeof(CustomerOrderActor));
+                    fabricRuntime.RegisterActor<CustomerOrderActor>();
 
                     Thread.Sleep(Timeout.Infinite);
                 }

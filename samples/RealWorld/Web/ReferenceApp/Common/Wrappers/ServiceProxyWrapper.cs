@@ -13,17 +13,17 @@ namespace Common.Wrappers
     /// </summary>
     public class ServiceProxyWrapper : IServiceProxyWrapper
     {
-        public TServiceInterface Create<TServiceInterface>(Uri serviceName)
+        public TServiceInterface Create<TServiceInterface>(Uri serviceName) where TServiceInterface : IService
         {
             return ServiceProxy.Create<TServiceInterface>(serviceName);
         }
 
-        public TServiceInterface Create<TServiceInterface>(long partitionKey, Uri serviceName)
+        public TServiceInterface Create<TServiceInterface>(long partitionKey, Uri serviceName) where TServiceInterface : IService
         {
             return ServiceProxy.Create<TServiceInterface>(partitionKey, serviceName);
         }
 
-        public TServiceInterface Create<TServiceInterface>(string partitionKey, Uri serviceName)
+        public TServiceInterface Create<TServiceInterface>(string partitionKey, Uri serviceName) where TServiceInterface : IService
         {
             return ServiceProxy.Create<TServiceInterface>(partitionKey, serviceName);
         }

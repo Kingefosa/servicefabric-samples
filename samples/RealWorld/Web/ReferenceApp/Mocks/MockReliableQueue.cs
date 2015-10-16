@@ -36,7 +36,9 @@ namespace Mocks
             T item;
             bool result = this.queue.TryDequeue(out item);
 
-            return Task.FromResult(new ConditionalResult<T>(result, item));
+            return Task.FromResult(ConditionalResultActivator.Create<T>(result, item));
+
+            //return Task.FromResult(new ConditionalResult<T>(result, item));
         }
 
         public Task<ConditionalResult<T>> TryDequeueAsync(ITransaction tx)
@@ -44,7 +46,9 @@ namespace Mocks
             T item;
             bool result = this.queue.TryDequeue(out item);
 
-            return Task.FromResult(new ConditionalResult<T>(result, item));
+            return Task.FromResult(ConditionalResultActivator.Create<T>(result, item));
+
+            //return Task.FromResult(new ConditionalResult<T>(result, item));
         }
 
         public Task<ConditionalResult<T>> TryPeekAsync(ITransaction tx, LockMode lockMode, TimeSpan timeout, CancellationToken cancellationToken)
@@ -52,7 +56,9 @@ namespace Mocks
             T item;
             bool result = this.queue.TryPeek(out item);
 
-            return Task.FromResult(new ConditionalResult<T>(result, item));
+            return Task.FromResult(ConditionalResultActivator.Create<T>(result, item));
+
+            //return Task.FromResult(new ConditionalResult<T>(result, item));
         }
 
         public Task<ConditionalResult<T>> TryPeekAsync(ITransaction tx, LockMode lockMode)
@@ -60,7 +66,9 @@ namespace Mocks
             T item;
             bool result = this.queue.TryPeek(out item);
 
-            return Task.FromResult(new ConditionalResult<T>(result, item));
+            return Task.FromResult(ConditionalResultActivator.Create<T>(result, item));
+
+            //return Task.FromResult(new ConditionalResult<T>(result, item));
         }
 
         public Task<ConditionalResult<T>> TryPeekAsync(ITransaction tx, TimeSpan timeout, CancellationToken cancellationToken)
@@ -68,7 +76,9 @@ namespace Mocks
             T item;
             bool result = this.queue.TryPeek(out item);
 
-            return Task.FromResult(new ConditionalResult<T>(result, item));
+            return Task.FromResult(ConditionalResultActivator.Create<T>(result, item));
+
+            //return Task.FromResult(new ConditionalResult<T>(result, item));
         }
 
         public Task<ConditionalResult<T>> TryPeekAsync(ITransaction tx)
@@ -76,7 +86,9 @@ namespace Mocks
             T item;
             bool result = this.queue.TryPeek(out item);
 
-            return Task.FromResult(new ConditionalResult<T>(result, item));
+            return Task.FromResult(ConditionalResultActivator.Create<T>(result, item));
+
+            //return Task.FromResult(new ConditionalResult<T>(result, item));
         }
 
         public Task ClearAsync()

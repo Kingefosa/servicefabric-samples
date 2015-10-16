@@ -9,34 +9,35 @@ namespace Mocks
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Inventory.Domain;
+    using Common;
 
     public class MockInventoryService : IInventoryService
     {
         public MockInventoryService()
         {
             this.AddStockAsyncFunc = (itemId, quantity) => Task.FromResult(quantity);
-            this.CreateInventoryItemAsyncFunc = item => Task.FromResult(true);
-            this.GetCustomerInventoryAsyncFunc = () => Task.FromResult<IEnumerable<InventoryItemView>>(new List<InventoryItemView>() {new InventoryItemView()});
+            this.RemoveStockAsyncFunc = (itemId, quantity, amId) => Task.FromResult(quantity);
             this.IsItemInInventoryAsyncFunc = (itemId) => Task.FromResult(true);
-            this.RemoveStockAsyncFunc = (itemId, quantity) => Task.FromResult(quantity);
+            this.GetCustomerInventoryAsyncFunc = () => Task.FromResult<IEnumerable<InventoryItemView>>(new List<InventoryItemView>() { new InventoryItemView() });
+            this.CreateInventoryItemAsyncFunc = item => Task.FromResult(true);
         }
 
         public Func<InventoryItemId, int, Task<int>> AddStockAsyncFunc { get; set; }
 
-        public Func<InventoryItem, Task> CreateInventoryItemAsyncFunc { get; set; }
+        public Func<InventoryItem, Task<bool>> CreateInventoryItemAsyncFunc { get; set; }
 
         public Func<Task<IEnumerable<InventoryItemView>>> GetCustomerInventoryAsyncFunc { get; set; }
 
         public Func<InventoryItemId, Task<bool>> IsItemInInventoryAsyncFunc { get; set; }
 
-        public Func<InventoryItemId, int, Task<int>> RemoveStockAsyncFunc { get; set; }
+        public Func<InventoryItemId, int, CustomerOrderActorMessageId, Task<int>> RemoveStockAsyncFunc { get; set; }
 
         public Task<int> AddStockAsync(InventoryItemId itemId, int quantity)
         {
             return this.AddStockAsyncFunc(itemId, quantity);
         }
 
-        public Task CreateInventoryItemAsync(InventoryItem item)
+        public Task<bool> CreateInventoryItemAsync(InventoryItem item)
         {
             return this.CreateInventoryItemAsyncFunc(item);
         }
@@ -51,9 +52,9 @@ namespace Mocks
             return this.IsItemInInventoryAsyncFunc(itemId);
         }
 
-        public Task<int> RemoveStockAsync(InventoryItemId itemId, int quantity)
+        public Task<int> RemoveStockAsync(InventoryItemId itemId, int quantity, CustomerOrderActorMessageId amId)
         {
-            return this.RemoveStockAsyncFunc(itemId, quantity);
+            return this.RemoveStockAsyncFunc(itemId, quantity, amId);
         }
     }
 }

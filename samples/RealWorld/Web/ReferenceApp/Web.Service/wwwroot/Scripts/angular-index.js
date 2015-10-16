@@ -1,5 +1,4 @@
-﻿
-(function (angular) {
+﻿(function (angular) {
     var app = angular.module("fabrikam", ['ngCookies'])
         .controller("testController", function ($scope, $window, $http, $cookies) {
 
@@ -19,9 +18,6 @@
             // Used to keep track of customer's order. Will be undefined until order is placed.
             $scope.orderCompletedCart = $cookies.getObject('orderPlaced');
             $scope.completedTotal = $cookies.get('orderTotal');
-
-
-
 
             /* -----------------------FUNCTIONS---------------------------*/
 
@@ -110,9 +106,7 @@
                 $scope.orderStatus = "";
 
                 var route = '/fabrikam/api/orders/';
-                //var orderId = $cookies.get('orderId');
                 var prodId = $scope.getQueryParameterByName('orderId');
-                //var orderId = $location.search()['orderId'];
                 var address = route.concat(prodId);
 
                 // Retrieve order status based on orderId.
@@ -122,6 +116,41 @@
                     }, function (response) {
                         $window.alert("Error retrieving order status from store.");
                     });
+            }
+
+            $scope.createInventory = function () {
+                //Description
+                //Price
+                //Number
+                //Reorder Threshold
+                //Max
+
+                var text = $scope.itemsToCreate;
+                var itemArrays = text.split('\n');
+
+                for (var i = 0; i < itemArrays.length; i++)
+                {
+                    var route = '/fabrikam/api/inventory/add/';
+                    var propertyArray = itemArrays[i].split(',');
+
+                    for (var x = 0; x < propertyArray.length; x++)
+                    {
+                        var strtemp = encodeURIComponent(propertyArray[x].trim());
+                        strtemp = strtemp.concat("/");
+                        route = route.concat(strtemp)
+                    }
+
+                    $http.post(route).
+                        then(function (response) {
+                            $scope.createResult = createResult = response.data;
+                        }, function (response) {
+                            $window.alert("Error sending request to Inventory Service.");
+                        });
+                }
+
+
+
+
             }
 
             $scope.getQueryParameterByName = function (name) {

@@ -10,6 +10,7 @@ namespace Inventory.UnitTests
     using Inventory.Service;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Mocks;
+    using Common;
 
     [TestClass]
     public class InventoryServiceTests
@@ -60,10 +61,43 @@ namespace Inventory.UnitTests
             InventoryItem item = new InventoryItem("test", 1, expectedQuantity + quantityToRemove, 1, expectedQuantity);
 
             await target.CreateInventoryItemAsync(item);
-            int actualRemoved = await target.RemoveStockAsync(item.Id, quantityToRemove);
+            int actualRemoved = await target.RemoveStockAsync(item.Id, quantityToRemove, CustomerOrderActorMessageId.GetRandom());
 
             Assert.AreEqual(quantityToRemove, actualRemoved);
             Assert.AreEqual(expectedQuantity, item.AvailableStock);
+        }
+
+        [TestMethod]
+        public async Task TestRemoveStockWithDuplicateRequest()
+        {
+            int totalStartingStock = 8;
+            int expectedQuantity = 5;
+            int quantityToRemove = 3;
+            MockReliableStateManager stateManager = new MockReliableStateManager();
+            InventoryService target = new InventoryService(stateManager);
+
+            InventoryItem item = new InventoryItem("test", 1, totalStartingStock, 1, expectedQuantity);
+
+            await target.CreateInventoryItemAsync(item);
+
+            CustomerOrderActorMessageId cmid = CustomerOrderActorMessageId.GetRandom();
+
+            int actualRemoved = await target.RemoveStockAsync(item.Id, quantityToRemove, cmid);
+
+            Assert.AreEqual(quantityToRemove, actualRemoved);
+            Assert.AreEqual(expectedQuantity, item.AvailableStock);
+
+            //save the current availablestock so we can check to be sure it doesn't change
+            int priorAvailableStock = item.AvailableStock;
+            
+            //but now lets say that the reciever didn't get the response and so sends the exact same request again
+            int actualRemoved2 = await target.RemoveStockAsync(item.Id, quantityToRemove, cmid);
+
+            //in this case the response for the amount removed should be the same
+            Assert.AreEqual(actualRemoved, actualRemoved2);
+
+            //also, since the request was a duplicate the remaining invintory should be the same as it was before. 
+            Assert.AreEqual(item.AvailableStock, priorAvailableStock);
         }
     }
 }

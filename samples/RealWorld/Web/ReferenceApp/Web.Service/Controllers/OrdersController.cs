@@ -53,7 +53,7 @@ namespace Web.Service.Controllers
             try
             {
                 await customerOrder.SubmitOrderAsync(cart);
-                ServiceEventSource.Current.Message("Customer order submitted successfully. ID: {0} fulfilled", orderId);
+                ServiceEventSource.Current.Message("Customer order submitted successfully. ActorOrderID: {0} created", orderId);
             }
             catch (InvalidOperationException ex)
             {

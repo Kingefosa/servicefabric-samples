@@ -20,6 +20,9 @@ namespace CustomerOrder.Actor
         [DataMember]
         public CustomerOrderStatus Status { get; set; }
 
+        [DataMember]
+        public long RequestId { get; set; }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();

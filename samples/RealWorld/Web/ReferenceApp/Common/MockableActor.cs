@@ -10,30 +10,28 @@ namespace Common
     using Common.Wrappers;
     using Microsoft.ServiceFabric.Actors;
 
-    public class MockableActor<T> : Actor<T> where T : class
+    public class MockableActor<T> : StatefulActor<T> where T : class
     {
-        public new IStatefulActorHostWrapper Host { get; set; }
-
-        protected new Task<IActorReminder> RegisterReminder(
+        protected new Task<IActorReminder> RegisterReminderAsync(
             string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period, ActorReminderAttributes attribute)
         {
-            return this.Host.RegisterReminder(reminderName, state, dueTime, period, attribute);
+            return base.RegisterReminderAsync(reminderName, state, dueTime, period, attribute);
         }
 
-        protected new Task UnregisterReminder(IActorReminder reminder)
+        protected new Task UnregisterReminderAsync(IActorReminder reminder)
         {
-            return this.Host.UnregisterReminder(reminder);
+            return base.UnregisterReminderAsync(reminder);
         }
 
         internal Task<IActorReminder> RegisterReminderAccessor(
             string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period, ActorReminderAttributes attribute)
         {
-            return base.RegisterReminder(reminderName, state, dueTime, period, attribute);
+            return base.RegisterReminderAsync(reminderName, state, dueTime, period, attribute);
         }
 
         internal Task UnregisterReminderAccessor(IActorReminder reminder)
         {
-            return base.UnregisterReminder(reminder);
+            return base.UnregisterReminderAsync(reminder);
         }
     }
 }

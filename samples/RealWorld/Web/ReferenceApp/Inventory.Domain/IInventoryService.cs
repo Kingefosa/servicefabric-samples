@@ -8,13 +8,14 @@ namespace Inventory.Domain
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.ServiceFabric.Services;
+    using Common;
 
     public interface IInventoryService : IService
     {
         Task<int> AddStockAsync(InventoryItemId itemId, int quantity);
-        Task<int> RemoveStockAsync(InventoryItemId itemId, int quantity);
+        Task<int> RemoveStockAsync(InventoryItemId itemId, int quantity, CustomerOrderActorMessageId messageId);
         Task<bool> IsItemInInventoryAsync(InventoryItemId itemId);
         Task<IEnumerable<InventoryItemView>> GetCustomerInventoryAsync();
-        Task CreateInventoryItemAsync(InventoryItem item);
+        Task<bool> CreateInventoryItemAsync(InventoryItem item);
     }
 }

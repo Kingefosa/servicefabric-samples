@@ -5,6 +5,7 @@
 
 namespace Mocks
 {
+    using System;
     using System.Threading.Tasks;
     using Microsoft.ServiceFabric.Data;
 
@@ -26,6 +27,11 @@ namespace Mocks
 
         public void Dispose()
         {
+        }
+
+        public Task<long> GetVisibilitySeqeuenceNumberAsync()
+        {
+            return Task.FromResult(0L);
         }
     }
 }

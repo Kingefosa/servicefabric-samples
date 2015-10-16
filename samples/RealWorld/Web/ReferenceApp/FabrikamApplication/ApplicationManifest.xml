@@ -1,5 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="FabrikamApplicationType" ApplicationTypeVersion="1.0.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+   <Parameters>
+      <Parameter Name="RestockRequestActorService_PartitionCount" DefaultValue="9" />
+      <Parameter Name="RestockRequestActorService_MinReplicaSetSize" DefaultValue="2" />
+      <Parameter Name="RestockRequestActorService_TargetReplicaSetSize" DefaultValue="3" />
+      <Parameter Name="CustomerOrderActorService_PartitionCount" DefaultValue="9" />
+      <Parameter Name="CustomerOrderActorService_MinReplicaSetSize" DefaultValue="2" />
+      <Parameter Name="CustomerOrderActorService_TargetReplicaSetSize" DefaultValue="3" />
+   </Parameters>
    <ServiceManifestImport>
       <ServiceManifestRef ServiceManifestName="RestockRequest.ActorPkg" ServiceManifestVersion="1.0.0.0" />
    </ServiceManifestImport>

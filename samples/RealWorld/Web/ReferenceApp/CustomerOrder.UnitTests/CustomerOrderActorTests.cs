@@ -12,6 +12,10 @@ namespace CustomerOrder.UnitTests
     using Inventory.Domain;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Mocks;
+    using Common;
+    using System;
+    using System.Reflection;
+    using Microsoft.ServiceFabric.Actors;
 
     [TestClass]
     public class CustomerOrderActorTests
@@ -30,8 +34,13 @@ namespace CustomerOrder.UnitTests
             serviceProxy.Supports<IInventoryService>(serviceUri => inventoryService);
 
             CustomerOrderActor target = new CustomerOrderActor();
+
+            PropertyInfo idProperty = typeof(ActorBase).GetProperty("Id");
+            idProperty.SetValue(target, new ActorId(Guid.NewGuid()));
+
             target.ServiceProxy = serviceProxy;
             target.State = new CustomerOrderActorState();
+
             target.State.Status = CustomerOrderStatus.Submitted;
             target.State.OrderedItems = new List<CustomerOrderItem>()
             {
@@ -51,16 +60,21 @@ namespace CustomerOrder.UnitTests
         public async Task TestFulfillOrderWithBackorder()
         {
             // instruct the mock inventory service to always return less quantity than requested 
-            // so that FulfillOrder always ends up in backordered status.
+            // so that FulfillOrder always ends up in backordered status.            
+
             MockInventoryService inventoryService = new MockInventoryService()
             {
-                RemoveStockAsyncFunc = (itemId, quantity) => Task.FromResult(quantity - 1)
+                RemoveStockAsyncFunc = (itemId, quantity, cmid) => Task.FromResult(quantity - 1)
             };
 
             MockServiceProxy serviceProxy = new MockServiceProxy();
             serviceProxy.Supports<IInventoryService>(serviceUri => inventoryService);
 
             CustomerOrderActor target = new CustomerOrderActor();
+
+            PropertyInfo idProperty = typeof(ActorBase).GetProperty("Id");
+            idProperty.SetValue(target, new ActorId(Guid.NewGuid()));
+
             target.ServiceProxy = serviceProxy;
             target.State = new CustomerOrderActorState();
             target.State.Status = CustomerOrderStatus.Submitted;
@@ -87,13 +101,17 @@ namespace CustomerOrder.UnitTests
             // so that FulfillOrder has to make multiple iterations to complete an order
             MockInventoryService inventoryService = new MockInventoryService()
             {
-                RemoveStockAsyncFunc = (itemId, quantity) => Task.FromResult(1)
+                RemoveStockAsyncFunc = (itemId, quantity, cmid) => Task.FromResult(1)
             };
 
             MockServiceProxy serviceProxy = new MockServiceProxy();
             serviceProxy.Supports<IInventoryService>(serviceUri => inventoryService);
 
             CustomerOrderActor target = new CustomerOrderActor();
+
+            PropertyInfo idProperty = typeof(ActorBase).GetProperty("Id");
+            idProperty.SetValue(target, new ActorId(Guid.NewGuid()));
+
             target.ServiceProxy = serviceProxy;
             target.State = new CustomerOrderActorState();
             target.State.Status = CustomerOrderStatus.Submitted;
@@ -121,13 +139,17 @@ namespace CustomerOrder.UnitTests
             MockInventoryService inventoryService = new MockInventoryService()
             {
                 IsItemInInventoryAsyncFunc = itemId => Task.FromResult(false),
-                RemoveStockAsyncFunc = (itemId, quantity) => Task.FromResult(0)
+                RemoveStockAsyncFunc = (itemId, quantity, cmid) => Task.FromResult(0)
             };
 
             MockServiceProxy serviceProxy = new MockServiceProxy();
             serviceProxy.Supports<IInventoryService>(serviceUri => inventoryService);
 
             CustomerOrderActor target = new CustomerOrderActor();
+
+            PropertyInfo idProperty = typeof(ActorBase).GetProperty("Id");
+            idProperty.SetValue(target, new ActorId(Guid.NewGuid()));
+
             target.ServiceProxy = serviceProxy;
             target.State = new CustomerOrderActorState();
             target.State.Status = CustomerOrderStatus.Submitted;

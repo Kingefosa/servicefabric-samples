@@ -18,7 +18,7 @@ namespace RestockRequest.Actor
             {
                 using (FabricRuntime fabricRuntime = FabricRuntime.Create())
                 {
-                    fabricRuntime.RegisterActor(typeof(RestockRequestActor));
+                    fabricRuntime.RegisterActor<RestockRequestActor>();
 
                     Thread.Sleep(Timeout.Infinite);
                 }

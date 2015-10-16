@@ -96,7 +96,9 @@ namespace Mocks
             TValue value;
             bool result = this.dictionary.TryGetValue(key, out value);
 
-            return Task.FromResult(new ConditionalResult<TValue>(result, value));
+            return Task.FromResult(ConditionalResultActivator.Create<TValue>(result, value));
+            
+            //return Task.FromResult(new ConditionalResult<TValue>(result, value));
         }
 
         public Task<ConditionalResult<TValue>> TryGetValueAsync(ITransaction tx, TKey key, LockMode lockMode)
@@ -104,7 +106,9 @@ namespace Mocks
             TValue value;
             bool result = this.dictionary.TryGetValue(key, out value);
 
-            return Task.FromResult(new ConditionalResult<TValue>(result, value));
+            return Task.FromResult(ConditionalResultActivator.Create<TValue>(result, value));
+
+            //return Task.FromResult(new ConditionalResult<TValue>(result, value));
         }
 
         public Task<ConditionalResult<TValue>> TryGetValueAsync(ITransaction tx, TKey key, TimeSpan timeout, CancellationToken cancellationToken)
@@ -112,7 +116,10 @@ namespace Mocks
             TValue value;
             bool result = this.dictionary.TryGetValue(key, out value);
 
-            return Task.FromResult(new ConditionalResult<TValue>(result, value));
+
+            return Task.FromResult(ConditionalResultActivator.Create<TValue>(result, value));
+
+            //return Task.FromResult(new ConditionalResult<TValue>(result, value));
         }
 
         public Task<ConditionalResult<TValue>> TryGetValueAsync(
@@ -121,7 +128,9 @@ namespace Mocks
             TValue value;
             bool result = this.dictionary.TryGetValue(key, out value);
 
-            return Task.FromResult(new ConditionalResult<TValue>(result, value));
+            return Task.FromResult(ConditionalResultActivator.Create<TValue>(result, value));
+
+            //return Task.FromResult(new ConditionalResult<TValue>(result, value));
         }
 
         public Task SetAsync(ITransaction tx, TKey key, TValue value)

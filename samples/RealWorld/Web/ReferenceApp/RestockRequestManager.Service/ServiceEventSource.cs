@@ -37,7 +37,7 @@ namespace RestockRequestManager.Service
         [NonEvent]
         public void ServiceMessage(StatelessService service, string message, params object[] args)
         {
-            if (this.IsEnabled())
+            if (this.IsEnabled() && service.ServiceInitializationParameters != null)
             {
                 string finalMessage = string.Format(message, args);
                 this.ServiceMessage(
@@ -55,7 +55,7 @@ namespace RestockRequestManager.Service
         [NonEvent]
         public void ServiceMessage(StatefulService service, string message, params object[] args)
         {
-            if (this.IsEnabled())
+            if (this.IsEnabled() && service.ServiceInitializationParameters != null)
             {
                 string finalMessage = string.Format(message, args);
                 this.ServiceMessage(

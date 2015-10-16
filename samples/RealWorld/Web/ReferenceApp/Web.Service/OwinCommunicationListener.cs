@@ -20,29 +20,28 @@ namespace Web.Service
         private readonly string appRoot;
         private IDisposable serverHandle;
         private string listeningAddress;
+        private readonly ServiceInitializationParameters serviceInitializationParameters;
 
-        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup)
+        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup, ServiceInitializationParameters serviceInitializationParameters)
         {
             this.startup = startup;
             this.appRoot = appRoot;
+            this.serviceInitializationParameters = serviceInitializationParameters;
         }
 
-        public void Initialize(ServiceInitializationParameters serviceInitializationParameters)
+        public Task<string> OpenAsync(CancellationToken cancellationToken)
         {
             EndpointResourceDescription serviceEndpoint = serviceInitializationParameters.CodePackageActivationContext.GetEndpoint("ServiceEndpoint");
             int port = serviceEndpoint.Port;
 
             this.listeningAddress = String.Format(
-                CultureInfo.InvariantCulture,
-                "http://+:{0}/{1}",
-                port,
-                String.IsNullOrWhiteSpace(this.appRoot)
-                    ? String.Empty
-                    : this.appRoot.TrimEnd('/') + '/');
-        }
+            CultureInfo.InvariantCulture,
+            "http://+:{0}/{1}",
+            port,
+            String.IsNullOrWhiteSpace(this.appRoot)
+                ? String.Empty
+                : this.appRoot.TrimEnd('/') + '/');
 
-        public Task<string> OpenAsync(CancellationToken cancellationToken)
-        {
             this.serverHandle = WebApp.Start(this.listeningAddress, appBuilder => this.startup.Configuration(appBuilder));
 
             string resultAddress = this.listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);

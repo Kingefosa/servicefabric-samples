@@ -5,6 +5,7 @@
 
 namespace Common.Wrappers
 {
+    using Microsoft.ServiceFabric.Services;
     using System;
 
     /// <summary>
@@ -13,8 +14,8 @@ namespace Common.Wrappers
     /// </summary>
     public interface IServiceProxyWrapper
     {
-        TServiceInterface Create<TServiceInterface>(Uri serviceName);
-        TServiceInterface Create<TServiceInterface>(string partitionKey, Uri serviceName);
-        TServiceInterface Create<TServiceInterface>(long partitionKey, Uri serviceName);
+        TServiceInterface Create<TServiceInterface>(Uri serviceName) where TServiceInterface : IService;
+        TServiceInterface Create<TServiceInterface>(string partitionKey, Uri serviceName) where TServiceInterface : IService;
+        TServiceInterface Create<TServiceInterface>(long partitionKey, Uri serviceName) where TServiceInterface : IService;
     }
 }

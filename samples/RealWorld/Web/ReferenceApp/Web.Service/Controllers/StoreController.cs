@@ -11,6 +11,10 @@ namespace Web.Service.Controllers
     using Common;
     using Inventory.Domain;
     using Microsoft.ServiceFabric.Services;
+    using System.Fabric;
+    using System;
+    using System.Fabric.Description;
+    using System.Fabric.Query;
 
     public class StoreController : ApiController
     {
@@ -25,13 +29,26 @@ namespace Web.Service.Controllers
         /// <returns>Task of type IEnumerable of InventoryItemView objects</returns>
         [HttpGet]
         [Route("api/store")]
-        public Task<IEnumerable<InventoryItemView>> GetStore()
+        public async Task<IEnumerable<InventoryItemView>> GetStore()
         {
+
+
             ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
+            Uri serviceName = builder.ToUri();
 
-            IInventoryService inventoryServiceClient = ServiceProxy.Create<IInventoryService>(0, builder.ToUri());
+            List<InventoryItemView> itemList = new List<InventoryItemView>();
 
-            return inventoryServiceClient.GetCustomerInventoryAsync();
+            FabricClient fc = new FabricClient();
+            ServicePartitionList partitions = await fc.QueryManager.GetPartitionListAsync(serviceName);
+
+            foreach(Partition p in partitions)
+            {
+                long minKey = (p.PartitionInformation as Int64RangePartitionInformation).LowKey;
+                IInventoryService inventoryServiceClient = ServiceProxy.Create<IInventoryService>(minKey, serviceName);
+                itemList.AddRange(await inventoryServiceClient.GetCustomerInventoryAsync());
+            }
+
+            return itemList;
         }
     }
 }

@@ -17,6 +17,7 @@ namespace RestockRequestManager.Service
     using Microsoft.ServiceFabric.Services;
     using RestockRequest.Domain;
     using RestockRequestManager.Domain;
+    using System.Collections.Generic;
 
     internal class RestockRequestManagerService : StatefulService, IRestockRequestManager, IRestockRequestEvents
     {
@@ -104,9 +105,13 @@ namespace RestockRequestManager.Service
             }
         }
 
-        protected override ICommunicationListener CreateCommunicationListener()
+        protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
-            return new ServiceCommunicationListener<IRestockRequestManager>(this);
+            return new List<ServiceReplicaListener>() {
+                new ServiceReplicaListener(
+                    (initParams) =>
+                       new ServiceCommunicationListener<IRestockRequestManager>(initParams, this))
+            };
         }
 
         /// <summary>

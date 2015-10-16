@@ -15,7 +15,7 @@ namespace CustomerOrder.Actor
     using Inventory.Domain;
     using Microsoft.ServiceFabric.Actors;
 
-    internal class CustomerOrderActor : Actor<CustomerOrderActorState>, ICustomerOrderActor, IRemindable
+    internal class CustomerOrderActor : StatefulActor<CustomerOrderActorState>, ICustomerOrderActor, IRemindable
     {
         private const string InventoryServiceName = "InventoryService";
 
@@ -38,7 +38,7 @@ namespace CustomerOrder.Actor
 
             ActorEventSource.Current.ActorMessage(this, this.State.ToString());
 
-            return this.RegisterReminder(
+            return this.RegisterReminderAsync(
                 CustomerOrderReminderNames.FulfillOrderReminder,
                 null,
                 TimeSpan.FromSeconds(10),
@@ -52,7 +52,7 @@ namespace CustomerOrder.Actor
         /// <returns></returns>
         public Task<string> GetStatusAsync()
         {
-            return Task.FromResult(this.State.Status.ToString());
+             return Task.FromResult(this.State.Status.ToString());
         }
 
         public async Task ReceiveReminderAsync(string reminderName, byte[] context, TimeSpan dueTime, TimeSpan period)
@@ -68,7 +68,7 @@ namespace CustomerOrder.Actor
                     {
                         //Remove fulfill order reminder so Actor can be gargabe collected.
                         IActorReminder orderReminder = this.GetReminder(CustomerOrderReminderNames.FulfillOrderReminder);
-                        await this.UnregisterReminder(orderReminder);
+                        await this.UnregisterReminderAsync(orderReminder);
                     }
                     
                     break;
@@ -120,6 +120,11 @@ namespace CustomerOrder.Actor
             this.State.Status = CustomerOrderStatus.InProcess;
             
             ActorEventSource.Current.ActorMessage(this, "Fullfilling customer order. ID: {0}. Items: {1}", this.Id.GetGuidId(), this.State.OrderedItems.Count);
+            
+            foreach (var tempitem in this.State.OrderedItems)
+            {
+                ActorEventSource.Current.Message("OrderContains:{0}", tempitem);
+            }
 
             //We loop through the customer order list. 
             //For every item that cannot be fulfilled, we add to backordered. 
@@ -135,7 +140,7 @@ namespace CustomerOrder.Actor
                     return;
                 }
 
-                int numberItemsRemoved = await inventoryService.RemoveStockAsync(item.ItemId, item.Quantity);
+                int numberItemsRemoved = await inventoryService.RemoveStockAsync(item.ItemId, item.Quantity, new CustomerOrderActorMessageId(new ActorId(this.Id.GetGuidId()), this.State.RequestId));
 
                 item.FulfillmentRemaining -= numberItemsRemoved;
             }
@@ -151,6 +156,8 @@ namespace CustomerOrder.Actor
                 this.State,
                 this.State.OrderedItems.Count(x => x.FulfillmentRemaining == 0),
                 this.State.OrderedItems.Count(x => x.FulfillmentRemaining > 0));
+
+            this.State.RequestId++;
         }
     }
 }

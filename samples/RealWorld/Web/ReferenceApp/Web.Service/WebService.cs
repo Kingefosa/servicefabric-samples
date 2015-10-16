@@ -5,13 +5,19 @@
 
 namespace Web.Service
 {
+    using System.Collections.Generic;
     using Microsoft.ServiceFabric.Services;
 
     internal class WebService : StatelessService
     {
-        protected override ICommunicationListener CreateCommunicationListener()
+        protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
         {
-            return new OwinCommunicationListener("fabrikam", new Startup());
+            return new List<ServiceInstanceListener>() {
+                new ServiceInstanceListener(
+                    (initParams) =>
+                       new OwinCommunicationListener("fabrikam", new Startup(), this.ServiceInitializationParameters))
+                       };
         }
+
     }
 }
