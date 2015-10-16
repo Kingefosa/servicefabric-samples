@@ -15,12 +15,7 @@ namespace SensorActor
     [DataContract]
     public class SensorActorState
     {
-
-        [DataMember]
-        public DateTime LatestMessageTime;
-
         [DataMember]
         public SensorMessage LatestMessageProperties;
-
     }
 }

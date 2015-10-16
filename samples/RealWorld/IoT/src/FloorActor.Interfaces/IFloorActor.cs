@@ -10,6 +10,10 @@ namespace FloorActor.Interfaces
 {
     public interface IFloorActor : IActor
     {
-        Task SendDeviceStateAsync(SensorMessage message);
+        Task ReceiveMessageAsync(SensorMessage m);
+        Task<string> GetFloorIdAsync();
+        Task<double> GetAverageTemperatureForLastMinuteAsync();
+        Task<double> GetAverageHumidityForLastMinuteAsync();
+
     }
 }

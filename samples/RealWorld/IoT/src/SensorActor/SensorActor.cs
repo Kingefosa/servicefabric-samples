@@ -29,14 +29,14 @@ namespace SensorActor
 
         Task ISensorActor.SendDeviceStateAsync(DateTime timeOfEvent, byte[] messageBody)
         {
-            this.State.LatestMessageTime = timeOfEvent;
             this.State.LatestMessageProperties = JsonConvert.DeserializeObject<SensorMessage>(Encoding.UTF8.GetString(messageBody));
+            this.State.LatestMessageProperties.Time = timeOfEvent;
             if (this.State.LatestMessageProperties != null
                 && !string.IsNullOrEmpty(this.State.LatestMessageProperties.FloorId)
                 && !string.IsNullOrEmpty(this.State.LatestMessageProperties.DeviceId))
             {
                 var floor = ActorProxy.Create<IFloorActor>(new ActorId(State.LatestMessageProperties.FloorId));
-                return floor.SendDeviceStateAsync(this.State.LatestMessageProperties);
+                return floor.ReceiveMessageAsync(this.State.LatestMessageProperties);
             }
             return Task.FromResult(true);
         }
@@ -73,7 +73,7 @@ namespace SensorActor
 
         Task<DateTime> ISensorActor.GetLastMessageTimeAsync()
         {
-            return Task.FromResult(this.State.LatestMessageTime);
+            return Task.FromResult(this.State.LatestMessageProperties.Time);
         }
     }
 }

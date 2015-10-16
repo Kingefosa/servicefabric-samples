@@ -14,5 +14,6 @@ namespace SensorActor.Common
         public double Humidity { get; set; }
         public string Motion { get; set; }
         public bool Light { get; set; }
+        public DateTime Time { get; set; }
     }
 }
