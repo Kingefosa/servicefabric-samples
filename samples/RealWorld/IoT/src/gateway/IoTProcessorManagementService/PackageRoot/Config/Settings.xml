@@ -7,6 +7,7 @@
   <!-- This is used for securing StateManager's replication traffic. -->
   <Section Name="ReplicatorSecurityConfig" />
 
+  
   <Section Name="ProcessorDefaults">
     <Parameter Name="AppTypeName" Value="IoTEventHubProcessorApp" />
     <Parameter Name="AppTypeVersion" Value="1.0.0.0" />

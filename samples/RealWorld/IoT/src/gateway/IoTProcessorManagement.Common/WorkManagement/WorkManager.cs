@@ -38,7 +38,7 @@ namespace IoTProcessorManagement.Common
         // defaults
         public static readonly string s_Queue_Names_Dictionary = "_QueueNames_"; // the dictionary that will hold a list (per entry) of each queue created. 
         public static readonly uint s_Default_Yield_Queue_After             = 10; // to ensure fairness, each queue will be de-queued 10 times before moving to the next.
-        public static readonly uint s_Max_Num_OfWorker              = (uint) Environment.ProcessorCount; // default is one task per processor, note: this does not mean affinity or what so ever.
+        public static readonly uint s_Max_Num_OfWorker              = (uint) Environment.ProcessorCount * 2; // default is one task per processor, note: this does not mean affinity or what so ever.
         public static readonly uint s_MaxNumOfBufferedWorkItems     = 1000  * 1000;
         public static readonly uint s_defaultMaxNumOfWorkers        = 2;
 
@@ -64,8 +64,8 @@ namespace IoTProcessorManagement.Common
         private ConcurrentDictionary<string, WorkExecuter<Handler, Wi>> m_Executers = new ConcurrentDictionary<string, WorkExecuter<Handler, Wi>>(); // worker tasks.
         private DeferredTaskExecuter m_DeferedTaskExec = new DeferredTaskExecuter(); // supports limited background processing. 
 
-        private Clicker<WorkManagerClick> m_MinuteClicker = new Clicker<WorkManagerClick>(TimeSpan.FromMinutes(1));
-        private Clicker<WorkManagerClick> m_HourClicker = new Clicker<WorkManagerClick>(TimeSpan.FromHours(1));
+        private Clicker<WorkManagerClick, int> m_MinuteClicker = new Clicker<WorkManagerClick, int>(TimeSpan.FromMinutes(1));
+        private Clicker<WorkManagerClick, int> m_HourClicker = new Clicker<WorkManagerClick, int>(TimeSpan.FromHours(1));
 
         #region Execusion Management 
 
@@ -168,7 +168,7 @@ namespace IoTProcessorManagement.Common
         private void IncreaseBufferedWorkItems()
         {
             Interlocked.Increment(ref m_NumOfBufferedWorkItems);
-            m_MinuteClicker.Click(new WorkManagerClick() { ClickType = WorkerManagerClickType.Added });
+            m_MinuteClicker.Click(new WorkManagerClick() { ClickType = WorkerManagerClickType.Posted });
 
         }
         private void DecreaseBufferedWorkItems()
@@ -186,14 +186,16 @@ namespace IoTProcessorManagement.Common
             var curr = head;
             while (curr != null)
             {
-                if (curr.ClickType == WorkerManagerClickType.Added)
+                if (curr.ClickType == WorkerManagerClickType.Posted)
                     totalAdd++;
                 else
                     totalProcessed++;
+
+                curr = (WorkManagerClick) curr.Next;
             }
 
             // harvest 
-            m_HourClicker.Click(new WorkManagerClick() { ClickType = WorkerManagerClickType.Added, Value = totalAdd });
+            m_HourClicker.Click(new WorkManagerClick() { ClickType = WorkerManagerClickType.Posted, Value = totalAdd });
             m_HourClicker.Click(new WorkManagerClick() { ClickType = WorkerManagerClickType.Processed, Value = totalProcessed});
         }
 
@@ -294,9 +296,11 @@ namespace IoTProcessorManagement.Common
                 {
                     int count = 0;
                     var curr = head;
-                    while (curr != null && curr.ClickType == WorkerManagerClickType.Added)
+                    while (curr != null)
                     {
-                        count++;
+                        if(curr.ClickType == WorkerManagerClickType.Posted)
+                            count++;
+
                         curr = (WorkManagerClick) curr.Next;
                     }
                     return count;
@@ -312,9 +316,11 @@ namespace IoTProcessorManagement.Common
                 {
                     int count = 0;
                     var curr = head;
-                    while (curr != null && curr.ClickType == WorkerManagerClickType.Processed)
+                    while (curr != null )
                     {
-                        count++;
+                        if(curr.ClickType == WorkerManagerClickType.Processed)
+                            count++;
+
                         curr = (WorkManagerClick)curr.Next;
                     }
                     return count;
@@ -330,9 +336,11 @@ namespace IoTProcessorManagement.Common
                 {
                     int count = 0;
                     var curr = head;
-                    while (curr != null && curr.ClickType == WorkerManagerClickType.Added)
+                    while (curr != null )
                     {
-                        count = (int) curr.Value;
+                        if(curr.ClickType == WorkerManagerClickType.Posted)
+                            count +=  curr.Value;
+
                         curr = (WorkManagerClick)curr.Next;
                     }
                     return count;
@@ -348,9 +356,11 @@ namespace IoTProcessorManagement.Common
                 {
                     int count = 0;
                     var curr = head;
-                    while (curr != null && curr.ClickType == WorkerManagerClickType.Processed)
+                    while (curr != null )
                     {
-                        count = (int)curr.Value;
+                        if(curr.ClickType == WorkerManagerClickType.Processed)
+                            count += curr.Value;
+
                         curr = (WorkManagerClick)curr.Next;
                     }
                     return count;
@@ -368,10 +378,13 @@ namespace IoTProcessorManagement.Common
                     int sum = 0;
                     int count = 0;
                     var curr = head;
-                    while (curr != null && curr.ClickType == WorkerManagerClickType.Added)
+                    while (curr != null )
                     {
-                        sum = (int) curr.Value;
-                        count++;
+                        if (curr.ClickType == WorkerManagerClickType.Posted)
+                        { 
+                            sum += (int) curr.Value;
+                            count++;
+                        }
                         curr = (WorkManagerClick)curr.Next;
                     }
                     return count == 0 ? 0 : sum/count ;
@@ -389,10 +402,13 @@ namespace IoTProcessorManagement.Common
                     int sum = 0;
                     int count = 0;
                     var curr = head;
-                    while (curr != null && curr.ClickType == WorkerManagerClickType.Processed)
+                    while (curr != null )
                     {
-                        sum = (int)curr.Value;
-                        count++;
+                        if(curr.ClickType == WorkerManagerClickType.Processed)
+                        { 
+                            sum += (int)curr.Value;
+                            count++;
+                        }
                         curr = (WorkManagerClick)curr.Next;
                     }
                     return count == 0 ? 0 : sum / count;

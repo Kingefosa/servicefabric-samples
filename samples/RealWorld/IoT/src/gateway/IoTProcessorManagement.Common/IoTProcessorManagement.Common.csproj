@@ -118,7 +118,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Clicker\Click.cs" />
+    <Compile Include="Clicker\IClick.cs" />
     <Compile Include="Clicker\Clicker.cs" />
     <Compile Include="CommunicationListeners\Composite\CompositeCommunicationListener.cs" />
     <Compile Include="CommunicationListeners\EventHub\CheckPointManager.cs" />

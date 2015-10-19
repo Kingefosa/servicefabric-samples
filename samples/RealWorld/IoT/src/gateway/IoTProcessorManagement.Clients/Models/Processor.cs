@@ -16,6 +16,7 @@ namespace IoTProcessorManagement.Clients
         public string ServiceFabricAppInstanceName { get; set; }
         public string ServiceFabricServiceName { get; set; }
         public ProcessorStatus ProcessorStatus { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public string ProcessorStatusString
         {
             get
@@ -71,7 +72,7 @@ namespace IoTProcessorManagement.Clients
                      (this.ProcessorStatus & ProcessorStatus.PendingDelete) == ProcessorStatus.PendingDelete
                       ||
                      (this.ProcessorStatus & ProcessorStatus.Deleted) == ProcessorStatus.Deleted
-                    ||
+                     ||
                      (this.ProcessorStatus & ProcessorStatus.ProvisionError) == ProcessorStatus.ProvisionError
 
                      );
@@ -89,7 +90,7 @@ namespace IoTProcessorManagement.Clients
 
 
 
-        public void SafeUpdate(Processor other, bool OverwriteServiceFabricNames = false )
+        public void SafeUpdate(Processor other, bool OverwriteServiceFabricNames = false , bool OverrideHubsConfig = false)
         {
             if (this.Name != other.Name)
                 throw new InvalidOperationException(string.Format("Safe update failed: processor name {0}  != other name {1}", this.Name, other.Name));
@@ -108,6 +109,10 @@ namespace IoTProcessorManagement.Clients
                 if (this.ServiceFabricServiceName != other.ServiceFabricServiceName)
                     this.ServiceFabricServiceName = other.ServiceFabricServiceName;
             }
+
+            if (OverrideHubsConfig)
+                this.Hubs = other.Hubs;
+            
 
 
             this.ProcessorStatus |= other.ProcessorStatus;

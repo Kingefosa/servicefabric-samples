@@ -17,12 +17,13 @@ namespace IoTProcessorManagement.Common
     /// </summary>
     class StateManagerLease : Lease
     {
+        
         public static readonly string DefaultEntryNameFormat = "_LEASE-{0}-{1}-{2}-{3}";
         private IReliableStateManager m_StateManager;
         IReliableDictionary<string, string>  m_StateDictionary;
         private string m_EntryName;
 
-
+        public StateManagerLease() { }
         public static string GetDefaultLeaseEntryName(string ServiceBusNamespace, string ConsumerGroupName, string EventHubName, string PartitionId)
         {
             return string.Format(DefaultEntryNameFormat, ServiceBusNamespace, ConsumerGroupName, EventHubName, PartitionId);
@@ -76,7 +77,7 @@ namespace IoTProcessorManagement.Common
 
         private static StateManagerLease FromJsonString(string sJson)
         {
-            return (StateManagerLease) JsonConvert.DeserializeObject(sJson); 
+            return (StateManagerLease) JsonConvert.DeserializeObject<StateManagerLease>(sJson); 
         }
         private string ToJsonString()
         {

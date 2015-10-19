@@ -8,22 +8,38 @@ namespace IoTProcessorManagement.Common
 {
     public enum WorkerManagerClickType
     {
-        Added,
+        Posted,
         Processed
     }
-    class WorkManagerClick : Click
+    class WorkManagerClick : IClick<int>, ICloneable
     {
         public WorkerManagerClickType ClickType { get; set; }
 
-        public override object Clone()
+        public IClick<int> Next
         {
-            var baseClone =  (Click) base.Clone();
+            get;
+            set;
+        }
 
+        public int Value
+        {
+            get;
+            set;
+        }
+
+        public long When
+        {
+            get;
+            set;
+        }
+
+        public  object Clone()
+        {
             return new WorkManagerClick()
                                         {
                                             ClickType = this.ClickType,
-                                            Value = baseClone.Value,
-                                            When = baseClone.When  
+                                            Value = this.Value,
+                                            When = this.When  
                                         };
  
         }

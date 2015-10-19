@@ -9,11 +9,11 @@ namespace IoTProcessorManagement.Common
 {
     /// <summary>
     /// an memory histogram implementation, supports 
-    /// periodical trim (with Action<Linked List Head> call backs). 
+    /// periodical trim using Action<Linked List Head> delegate. 
     /// counts and external actions (such as sum, average etc) via Func delegats
     /// </summary>
     /// <typeparam name="T">Click Type</typeparam>
-    public class Clicker<T> : IDisposable where T : Click, new()
+    public class Clicker<T,V> : IDisposable where T : class,  IClick<V>, ICloneable,  new()
     {
         private Task m_TrimTask = null;
         private T m_head = new T();
@@ -33,12 +33,12 @@ namespace IoTProcessorManagement.Common
 
             while (cur != null && cur.When >= ticksWhen)
             {
-                head.Next = (T)cur.Clone();
-                head = (T)head.Next;
-                cur = (T)cur.Next;
+                head.Next = (T) cur.Clone();
+                head      = (T) head.Next;
+                cur       = (T) cur.Next;
             }
             head.Next = null;
-            return (T)ret.Next;
+            return (T) ret.Next;
         }
         /// <summary>
         /// Will be called whenever KeepClicksFor elabsed
@@ -76,12 +76,13 @@ namespace IoTProcessorManagement.Common
         }
         public void Click(T newNode)
         {
+            newNode.When = DateTime.UtcNow.Ticks;
             // set new head. 
             do
             {
                 newNode.Next = m_head;
             }
-            while (newNode.Next != Interlocked.CompareExchange<T>(ref m_head, newNode, (T)newNode.Next));
+            while (newNode.Next  != Interlocked.CompareExchange<T>(ref m_head, newNode, (T) newNode.Next));
         }
         public void Click()
         {
@@ -115,7 +116,7 @@ namespace IoTProcessorManagement.Common
 
             long ticksWhen = DateTime.UtcNow.Ticks - ts.Ticks;
             int count = 0;
-            Click cur = m_head;
+            IClick<V> cur = m_head;
 
             while (null != cur && cur.When >= ticksWhen)
             {
@@ -128,8 +129,8 @@ namespace IoTProcessorManagement.Common
         {
             // trim keeps the head. 
             long ticksWhen = DateTime.UtcNow.Ticks - KeepClicksFor.Ticks;
-            Click cur = m_head;
-            Click next = cur.Next;
+            IClick<V> cur = m_head;
+            IClick<V> next = cur.Next;
             while (null != next)
             {
                 if (next.When <= ticksWhen)

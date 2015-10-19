@@ -1,5 +1,5 @@
-﻿// #define _VS_DEPLOY // Used for debugging purposes, where the applicaiton is not created by ManagementService
-//#define _WAIT_FOR_DEBUGGER // if defined the RunAsync() will wait for your debugger to be attached before moving forward
+﻿// #define _VS_DEPLOY         // Used for debugging purposes, where the applicaiton is not created by ManagementService
+// #define _WAIT_FOR_DEBUGGER // if defined the RunAsync() will wait for your debugger to be attached before moving forward
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +25,8 @@ namespace EventHubProcessor
         private Processor m_AssignedProcessor;  // each service will have an assigned Processor which is a list of event hubs to pump data out of
         private CompositeCommunicationListener m_CompositeListener; // one composite listener to rule them all
 
+        private string m_ErrorMessage = string.Empty; // Error messages generated during listener creation.
+        private bool m_IsInErrorState = false; // Error flag set in listener creation.
 
         public TraceWriter TraceWriter { get; private set; } // used to allow components to use Event Source/ServiceMessage
 
@@ -39,12 +41,11 @@ namespace EventHubProcessor
                 // listener should return Owin Listener
                 return addresslist.Single(kvp => kvp.Key == s_OwinListenerName).Value;
             };
-
-
         }
 
         #region Service Control & Telemetery
-        // event hub listeners does not support pause and resume . so we just remove and recreate them.
+        // event hub listeners does not support pause and resume
+        //so we just remove and recreate them.
 
         public Task Pause()
         {
@@ -94,43 +95,42 @@ namespace EventHubProcessor
                 await WorkManager.DrainAndStopAsync();
             });
         }
-
-        public Task<int> GetNumberOfActiveQueues()
+        public Task<int> GetNumberOfActiveQueuesAsync()
         {
             return Task.Run(() =>
             {
                 return WorkManager.NumberOfActiveQueues;
             });
         }
-        public Task<int> GetTotalPostedLastMinute()
+        public Task<int> GetTotalPostedLastMinuteAsync()
         {
            return Task.Run(() =>
            {
                return WorkManager.TotalPostedLastMinute;
            });
         }
-        public Task<int> GetTotalProcessedLastMinute()
+        public Task<int> GetTotalProcessedLastMinuteAsync()
         {
            return Task.Run(() =>
            {
                 return WorkManager.TotalProcessedLastMinute;
            });
         }
-        public Task<int> GetTotalPostedLastHour()
+        public Task<int> GetTotalPostedLastHourAsync()
         {
            return Task.Run(() =>
            {
                 return WorkManager.TotalPostedLastHour;
             });
         }
-        public Task<int> GetTotalProcessedLastHour()
+        public Task<int> GetTotalProcessedLastHourAsync()
         {
            return Task.Run(() =>
            {
                 return WorkManager.TotalProcessedLastHour;
            });
         }
-        public Task<float> GetAveragePostedPerMinLastHour()
+        public Task<float> GetAveragePostedPerMinLastHourAsync()
         {
            return Task.Run(() =>
            {
@@ -138,7 +138,7 @@ namespace EventHubProcessor
            });
 
         }
-        public Task<float> GetAverageProcessedPerMinLastHour()
+        public Task<float> GetAverageProcessedPerMinLastHourAsync()
         {
            return Task.Run(() =>
            {
@@ -146,25 +146,43 @@ namespace EventHubProcessor
             });
 
         }
-        public Task<string> GetStatusString()
+        public Task<string> GetStatusStringAsync()
         {
-            // instead of maintaining a new enum for processor service 
+            // instead of maintaining a new enum for processor service status
             // we are using the work manager status since this service is not 
             // doing anything other than posting and managing work items. 
             return Task.FromResult(WorkManager.WorkManagerStatus.ToString());
         }
 
-        // if you want to support updating assigned processor (while processor is running) 
-        // you can use this method.  make sure to validate workManager status if you refresh listeners 
-        // while work manager is paused then it will start posting Work Items 
-        // to the manager (which will bounce them back). 
-        /*
+        public Task<long> GetNumOfBufferedItemsAsync()
+        {
+            return Task.FromResult(WorkManager.NumberOfBufferedWorkItems);
+        }
+
+        
+        public string ErrorMessage
+        {
+            get { return m_ErrorMessage; }
+        }
+        public bool IsInErrorState
+        {
+            // we maintain a seprate error flag because while worker might be in 
+            // working state, processing buffered items, listener might be in error state.
+            get { return m_IsInErrorState; }
+        } 
+       
+
+        // updates the current assigned processor (the # of event hubs)
         public async Task SetAssignedProcessorAsync(Processor newProcessor)
         {
-            await SaveProcessorToState(newProcessor);
-            await RefreshListenersAsync();
+            // save the processor (replacing whatever we had)
+            m_AssignedProcessor =  await SaveProcessorToState(newProcessor);
+
+            // if we are in working mode, refresh listeners
+            if(WorkManager.WorkManagerStatus == WorkManagerStatus.Working)
+                await RefreshListenersAsync();
         }
-        */
+        
         #endregion
         #region Listeners Management 
 
@@ -174,12 +192,15 @@ namespace EventHubProcessor
             // we clear the event hub as we are not sure if the # of partitions has changed
 
             foreach (var kvp in m_CompositeListener.Listners)
-                if (kvp.Key != s_OwinListenerName)
+                if (kvp.Key != s_OwinListenerName)        
                     await m_CompositeListener.RemoveListenerAsync(kvp.Key);
+            
         }
         private async Task RefreshListenersAsync()
         {
-            
+            m_IsInErrorState = false;
+            m_ErrorMessage = string.Empty;
+
             var processor = await GetAssignedProcessorAsync();
             TraceWriter.TraceMessage(string.Format("Begin Refresh Listeners, creating {0} event hub listeners", processor.Hubs.Count));
 
@@ -199,23 +220,60 @@ namespace EventHubProcessor
 
             foreach (var hub in processor.Hubs)
             {
+                var ListenerName = HubDefToListenerName(hub);
+                var BadListener = false;
+                var sErrorMessage = string.Empty;
 
-                var eventHubListener = new EventHubCommunicationListener(TraceWriter,
-                                                                         StateManager, // state manager used by eh listener for check pointing
-                                                                         LeaseStateDictionary, // which dictionary will it use to save state it uses IReliableDictionary<string, string>
-                                                                         hub.EventHubName, // which event hub will it pump messages out of
-                                                                         hub.ConnectionString, // Service Bus connection string
-                                                                         hub.ConsumerGroupName, // eh consumer group ("" => will use default consumer group).
-                                                                         m_EventHubListenerHandler, // object that implements (IEventDataHandler) to be called by the listener when messages are recieved.
-                                                                         EventHubCommunicationListenerMode.Distribute,  // refer to EventHubCommunicationListenerMode 
-                                                                         string.Empty // no particular event hub partition is assigned to this replica, it will be auto assigned
-                                                                         ); 
+                try
+                {
+                    var eventHubListener = new EventHubCommunicationListener(TraceWriter,
+                                                                             StateManager, // state manager used by eh listener for check pointing
+                                                                             LeaseStateDictionary, // which dictionary will it use to save state it uses IReliableDictionary<string, string>
+                                                                             hub.EventHubName, // which event hub will it pump messages out of
+                                                                             hub.ConnectionString, // Service Bus connection string
+                                                                             hub.ConsumerGroupName, // eh consumer group ("" => will use default consumer group).
+                                                                             m_EventHubListenerHandler, // object that implements (IEventDataHandler) to be called by the listener when messages are recieved.
+                                                                             EventHubCommunicationListenerMode.Distribute,  // refer to EventHubCommunicationListenerMode 
+                                                                             string.Empty // no particular event hub partition is assigned to this replica, it will be auto assigned
+                                                                             );
+
+                    await m_CompositeListener.AddListenerAsync(ListenerName, eventHubListener);
+                }
+                
+                catch (AggregateException ae)
+                {
+                    BadListener = true;
+
+                    ae.Flatten();
+                    sErrorMessage = string.Format("Event Hub Listener for Connection String:{0} Hub:{1} CG:{2} generated an error, other listeners will keep on running and replica will enter error state. E:{3} StackTrace:{4}",
+                                                          hub.ConnectionString, hub.EventHubName, hub.ConsumerGroupName, ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace());
 
 
-                await m_CompositeListener.AddListenerAsync(HubDefToListenerName(hub), eventHubListener);
+                }
+                catch (Exception e)
+                {
+                    BadListener = true;
+                    sErrorMessage = string.Format("Event Hub Listener for Connection String:{0} Hub:{1} CG:{2} generated an error, other listeners will keep on running and replica will enter error state. E:{3} StackTrace:{4}",
+                                      hub.ConnectionString, hub.EventHubName, hub.ConsumerGroupName, e.Message, e.StackTrace);
+                    
+                }
+                finally
+                {
+                    if (BadListener)
+                    {
+                        try { await m_CompositeListener.RemoveListenerAsync(ListenerName); } catch { /* no op*/}
+                        TraceWriter.TraceMessage(sErrorMessage);
+                        m_ErrorMessage = string.Concat(m_ErrorMessage, "\n", sErrorMessage);
+                    }
+
+
+
+
+                }
+
             }
 
-            TraceWriter.TraceMessage("End Refresh Listeners");
+                TraceWriter.TraceMessage("End Refresh Listeners");
         }
 
         #endregion
@@ -235,22 +293,22 @@ namespace EventHubProcessor
             }
             return processor;
         }
-        private async Task SaveProcessorToState(Processor processor)
+        private async Task<Processor> SaveProcessorToState(Processor processor)
         {
             
             var dict = await StateManager.GetOrAddAsync<IReliableDictionary<string, string>>(s_def_dictionary);
 
-            var sValue = m_AssignedProcessor.AsJsonString();
+            var sValue = processor.AsJsonString();
             using (var tx = StateManager.CreateTransaction())
             {
                 await dict.AddOrUpdateAsync(tx, 
-                                                        s_AssignedProcessorEntryName, 
-                                                        sValue,
-                                                        (k,v) => { return sValue; });
+                                            s_AssignedProcessorEntryName, 
+                                            sValue,
+                                            (k,v) => { return sValue; });
                 
                 await tx.CommitAsync();    
             }
-            
+            return processor;
         }
         private string HubDefToListenerName(EventHubDefinition HubDef)
         {
@@ -298,13 +356,14 @@ namespace EventHubProcessor
             if (null != ServiceInitializationParameters.InitializationData)
             {
 
-                m_AssignedProcessor = Processor.FromBytes(ServiceInitializationParameters.InitializationData);
+                var initProcessor = Processor.FromBytes(ServiceInitializationParameters.InitializationData);
                 Trace.WriteLine(string.Format(string.Format("Replica {0} Of Application {1} Got Processor {2}",
                                                             ServiceInitializationParameters.ReplicaId,
                                                             ServiceInitializationParameters.CodePackageActivationContext.ApplicationName,
-                                                            m_AssignedProcessor.Name)));
+                                                            initProcessor.Name)));
 
-                await SaveProcessorToState(m_AssignedProcessor);
+                m_AssignedProcessor = await SaveProcessorToState(initProcessor); // this sets m_assignedprocessor
+
                 return m_AssignedProcessor;
             }        
             
@@ -323,7 +382,8 @@ namespace EventHubProcessor
             /*
                 the listener is created as a member variable of service object. 
                 the listener will get 1..n of Event Hub listeners according to ProcessorDefinition
-                
+                and one -only one - OWIN listener that repsent the control endpoint
+
                 when the we get a request to create commnuication listener we just add to 
                 whatever in the composite listener a new Owin listener
             */
@@ -354,12 +414,19 @@ namespace EventHubProcessor
             // per queue. our work item handling is basically forwarding event hub message to the Actor. 
             // since each Actor will have it is own queue (and a handler). each handler
             // can cache a reference to the actor proxy instead of caching them at a higher level
-            WorkManager.WorkItemHandlerMode = WorkItemHandlerMode.PerQueue; 
+            WorkManager.WorkItemHandlerMode = WorkItemHandlerMode.PerQueue;
 
             // maximum # of worker loops (loops that de-queue from reliable queue)
-            WorkManager.MaxNumOfWorkers = 4; // WorkManager<RoutetoActorWorkItemHandler, RouteToActorWorkItem>.s_Max_Num_OfWorker;
+            WorkManager.MaxNumOfWorkers = WorkManager<RoutetoActorWorkItemHandler, RouteToActorWorkItem>.s_Max_Num_OfWorker;
 
-            // start it
+            WorkManager.YieldQueueAfter = 50; // worker will attempt to process
+                                              // 50 work item per queue before dropping it 
+                                              // and move to the next. 
+
+            // if a queue stays empty more than .. it will be removed
+            WorkManager.RemoveEmptyQueueAfter = TimeSpan.FromSeconds(10);
+            
+                // start it
             await WorkManager.StartAsync();
 
             // this wire up Event hub listeners that uses EventHubListenerDataHandler to 
@@ -370,7 +437,7 @@ namespace EventHubProcessor
             // per every assigned event hub
             await RefreshListenersAsync();
 
-            while (cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
                 await Task.Delay(5000);
 
 

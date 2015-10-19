@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Fabric;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -11,12 +12,10 @@ using System.Threading.Tasks;
 
 namespace IoTProcessorManagement.TestLib
 {
-    public class SendParams
-    {
-       public  int NumOfMessages;
-        public string PublisherName;
-        public string MessageFormat;
-    }
+   
+
+   
+
     public static class IoTManagementTestLib
     {
         private static async Task doPreProcessing(HttpClient client)
@@ -24,9 +23,71 @@ namespace IoTProcessorManagement.TestLib
             // todo: wireup authN headers 
             await Task.Delay(0);
         }
+        #region PowerShell Helpers
+        
+
+        public static async Task<Processor> GetHttpResponseAsProcessor(HttpResponseMessage response)
+        {
+            response.EnsureSuccessStatusCode();
+            var sJson = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<Processor>(sJson);
+        }
+
+        public static async Task<Processor[]> GetHttpResponseAsProcessors(HttpResponseMessage response)
+        {
+            response.EnsureSuccessStatusCode();
+            var sJson = await response.Content.ReadAsStringAsync();
+            
+            return JsonConvert.DeserializeObject<Processor[]>(sJson);
+        }
+        public static async Task<ProcessorRuntimeStatus[]> GetHttpResponseAsRuntimeStatus(HttpResponseMessage response)
+        {
+            response.EnsureSuccessStatusCode();
+            var sJson = await response.Content.ReadAsStringAsync();
+
+            return JsonConvert.DeserializeObject<ProcessorRuntimeStatus[]>(sJson);
+        }
+
+
+        public static async Task<HttpResponseMessage> MgmtUpdateProcessor(string BaseAddress, string processorJson)
+        {
+            var processor = Processor.FromJsonString(processorJson);
+            return await MgmtUpdateProcessor(BaseAddress, processor);
+        }
+
+
+
+
+        public static async Task<HttpResponseMessage> MgmtAddProcessor(string BaseAddress, string processorJson)
+        {
+            var processor = Processor.FromJsonString(processorJson);
+            return await MgmtAddProcessor(BaseAddress, processor);
+        }
+
+
+
+        #endregion
+        public static async Task<string> getMgmtEndPoint(string FabricEndPoint, string sMgmtAppInstanceName)
+        {
+            FabricClient fc = new FabricClient(FabricEndPoint);
+            var partition = await fc.ServiceManager.ResolveServicePartitionAsync(new Uri(sMgmtAppInstanceName));
+
+            return partition.GetEndpoint().Address;
+        }
+
+
 
 
         #region Per Worker Action
+        public static async Task<HttpResponseMessage> MgmtStopProcessor(string BaseAddress, string processorName)
+        {
+            var uri = new Uri(string.Concat(BaseAddress, string.Format("processor/{0}/stop", processorName)));
+            var client = new HttpClient();
+            await doPreProcessing(client);
+
+            var message = new HttpRequestMessage(HttpMethod.Post, uri);
+            return await client.SendAsync(message);
+        }
         public static async Task<HttpResponseMessage> MgmtDrainStopProcessor(string BaseAddress, string processorName)
         {
             var uri = new Uri(string.Concat(BaseAddress, string.Format("processor/{0}/drainstop", processorName)));
@@ -60,7 +121,7 @@ namespace IoTProcessorManagement.TestLib
         }
 
 
-        public static async Task<HttpResponseMessage> MgmtGetWorkerProcessor(string BaseAddress, string processorName)
+        public static async Task<HttpResponseMessage> MgmtGetDetailedProcessorStatus(string BaseAddress, string processorName)
         {
             var uri = new Uri(string.Concat(BaseAddress, string.Format("processor/{0}/detailed", processorName)));
             var client = new HttpClient();
@@ -70,10 +131,23 @@ namespace IoTProcessorManagement.TestLib
             return await client.SendAsync(message);
         }
 
-#endregion
+        #endregion
 
 
 
+        public static async Task<HttpResponseMessage> MgmtUpdateProcessor(string BaseAddress, Processor processor)
+        {
+            var uri = new Uri(string.Concat(BaseAddress, "processor/", processor.Name));
+            var client = new HttpClient();
+            await doPreProcessing(client);
+
+            var message = new HttpRequestMessage(HttpMethod.Put, uri);
+            message.Content = new StringContent(JsonConvert.SerializeObject(processor), Encoding.UTF8, "application/json");
+            return await client.SendAsync(message);
+        }
+
+
+        
 
         public static  async Task<HttpResponseMessage> MgmtAddProcessor(string BaseAddress, Processor processor)
         {
@@ -87,7 +161,19 @@ namespace IoTProcessorManagement.TestLib
         }
 
 
-        public static async Task<HttpResponseMessage> MgmtGetAllPrceossors(string BaseAddress)
+
+        public static async Task<HttpResponseMessage> MgmtGetPrcossor(string BaseAddress, string ProcessorName)
+        {
+            var uri = new Uri(string.Concat(BaseAddress, "processor/", ProcessorName));
+            var client = new HttpClient();
+            await doPreProcessing(client);
+
+            var message = new HttpRequestMessage(HttpMethod.Get, uri);
+            return await client.SendAsync(message);
+        }
+
+
+        public static async Task<HttpResponseMessage> MgmgGetAllProcesseros(string BaseAddress)
         {
             var uri = new Uri(string.Concat(BaseAddress, "processor/"));
             var client = new HttpClient();
@@ -98,15 +184,7 @@ namespace IoTProcessorManagement.TestLib
         }
 
 
-        public static async Task<HttpResponseMessage> MgmtGetProcessor(string BaseAddress, string processorName)
-        {
-            var uri = new Uri(string.Concat(BaseAddress, "processor/", processorName));
-            var client = new HttpClient();
-            await doPreProcessing(client);
-
-            var message = new HttpRequestMessage(HttpMethod.Get, uri);
-            return await client.SendAsync(message);
-        }
+        
 
 
 
@@ -120,45 +198,7 @@ namespace IoTProcessorManagement.TestLib
             return await client.SendAsync(message);
         }
 
-        public static Task sendMessages(string EventHubConnectionString, 
-                                             string EventHubName, 
-                                             string PublisherNameFormat,  
-                                             string Message,
-                                             int NumOfMessages, 
-                                             int NumOfPublishers)
-        {
-            var NumofMessagesPerClients = NumOfMessages / NumOfPublishers;
-            var tasks = new List<Task>();
-
-            for (int i = 1; i <= NumofMessagesPerClients; i++)
-            {
-                var P = new SendParams() {
-                    NumOfMessages = NumofMessagesPerClients,
-                    PublisherName = string.Format(PublisherNameFormat, i),
-                    MessageFormat = Message
-                };
-                tasks.Add(Task.Factory.StartNew(async(p) =>
-                {
-                    var sendParameters = p as SendParams;
-                    var eventHubClient = EventHubClient.CreateFromConnectionString(EventHubConnectionString, EventHubName);
-                    var current = 1;
-
-                    do
-                    {
-                        Trace.WriteLine(string.Format("sending message# {0} of {1} for publisher {2}", current, sendParameters.NumOfMessages, sendParameters.PublisherName));
-                        var ev = new EventData(Encoding.UTF8.GetBytes(sendParameters.MessageFormat));
-                        ev.SystemProperties[EventDataSystemPropertyNames.Publisher] = sendParameters.PublisherName;
-                        await eventHubClient.SendAsync(ev);
-                        current++;
-                    }
-                    while (current <= sendParameters.NumOfMessages);
-                }
-                    , P));
-            }
-
-
-            return Task.WhenAll(tasks);
-        }
+       
         
 
 

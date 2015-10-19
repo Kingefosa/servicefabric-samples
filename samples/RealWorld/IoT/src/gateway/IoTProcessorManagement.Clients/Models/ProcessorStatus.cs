@@ -19,6 +19,9 @@ namespace IoTProcessorManagement.Clients
         Stopped          = 1 << 8,
         PendingResume    = 1 << 9, 
         PendingDrainStop = 1 << 10,
-        ProvisionError   = 1 << 11
+        ProvisionError   = 1 << 11,
+        PendingUpdate    = 1 << 12,
+        Updated          = 1 << 13,
+
     }
 }
