@@ -6,6 +6,7 @@ using Microsoft.ServiceFabric.Services;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Fabric;
 using System.Fabric.Description;
 using System.Fabric.Query;
@@ -94,11 +95,14 @@ namespace IoTProcessorManagementService
                 try
                 {
                     FabricClient fabricClient = new FabricClient();
+                    var serviceUri = new Uri(ServiceName);
+                    
+                    // Get Partition List for the target service name 
+                    ServicePartitionList partitionList = await fabricClient.QueryManager.GetPartitionListAsync(serviceUri);
 
-                    // Get the list of partitions up and running in the service.
-                    ServicePartitionList partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri(ServiceName));
 
-                    // For each partition, build a service partition client used to resolve the low key served by the partition.
+                    // all event processor services may have n partitions, but always using Uniform partitioning. 
+                    // grab all partitions into clients list. 
                     IList<ServicePartitionClient<ProcessorServiceCommunicationClient>> partitionClients =
                         new List<ServicePartitionClient<ProcessorServiceCommunicationClient>>(partitionList.Count);
                     foreach (Partition partition in partitionList)
@@ -120,6 +124,7 @@ namespace IoTProcessorManagementService
                         throw;
                     }
                 }
+                
 
                 await Task.Delay(TimeSpan.FromSeconds(BackOffRetryDelaySec).Milliseconds);
             }
@@ -161,12 +166,14 @@ namespace IoTProcessorManagementService
         } 
         protected async Task<Task<HttpResponseMessage>[]> SendHttpAllServicePartitionAsync(string ServiceName, HttpRequestMessage Message, string requestPath) 
         {
+        
 
-
-            // Get the list of representative service partition clients.
-            IList<ServicePartitionClient<ProcessorServiceCommunicationClient>> partitionClients = await this.GetServicePartitionClientsAsync(ServiceName);
+            IList<ServicePartitionClient<ProcessorServiceCommunicationClient>> partitionClients =null;
+                // Get the list of representative service partition clients.
+                partitionClients = await GetServicePartitionClientsAsync(ServiceName);
 
             IList<Task<HttpResponseMessage>> tasks = new List<Task<HttpResponseMessage>>(partitionClients.Count);
+
             foreach (ServicePartitionClient<ProcessorServiceCommunicationClient> partitionClient in partitionClients)
             {
                 var message = await cloneHttpRequestMesageAsync(Message);
@@ -256,7 +263,7 @@ namespace IoTProcessorManagementService
             await fabricClient.ServiceManager.CreateServiceFromTemplateAsync(
                                         new Uri(processor.ServiceFabricAppInstanceName),
                                         new Uri(processor.ServiceFabricServiceName),
-                                        Svc.DefaultProcessorAppInstanceDefinition.ServiceTypeName,
+                                        Svc.Config.ServiceTypeName,
                                         processor.AsBytes()
                         );
 

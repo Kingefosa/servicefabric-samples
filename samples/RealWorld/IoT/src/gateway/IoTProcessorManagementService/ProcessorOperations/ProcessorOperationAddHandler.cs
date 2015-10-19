@@ -25,19 +25,19 @@ namespace IoTProcessorManagementService
             // if there is no default types names assigned, get defaults
             if (string.IsNullOrEmpty(processor.ServiceFabricAppTypeName))
             {
-                processor.ServiceFabricAppTypeName = Svc.DefaultProcessorAppInstanceDefinition.AppTypeName;
-                processor.ServiceFabricAppTypeVersion = Svc.DefaultProcessorAppInstanceDefinition.AppTypeVersion;
+                processor.ServiceFabricAppTypeName = Svc.Config.AppTypeName;
+                processor.ServiceFabricAppTypeVersion = Svc.Config.AppTypeVersion;
             
                 processor.ServiceFabricAppInstanceName = string.Concat("fabric:/",
-                                                            Svc.DefaultProcessorAppInstanceDefinition.AppInstanceNamePrefix,
-                                                            Svc.DefaultProcessorAppInstanceDefinition.AppTypeName,
+                                                            Svc.Config.AppInstanceNamePrefix,
+                                                            Svc.Config.AppTypeName,
                                                             DateTime.UtcNow.Ticks
                                                             );
 
                 processor.ServiceFabricServiceName = string.Concat(
                                                         processor.ServiceFabricAppInstanceName,
                                                         "/",
-                                                        Svc.DefaultProcessorAppInstanceDefinition.ServiceTypeName);
+                                                        Svc.Config.ServiceTypeName);
 
             }
 

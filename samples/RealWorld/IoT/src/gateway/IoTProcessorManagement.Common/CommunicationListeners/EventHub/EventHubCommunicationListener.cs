@@ -212,12 +212,16 @@ namespace IoTProcessorManagement.Common
 #endregion
         public void Abort()
         {
-            m_MessagingFactory.Close();
+            if(null != m_MessagingFactory && !m_MessagingFactory.IsClosed)
+                m_MessagingFactory.Close();
+
+            
         }
 
         public async Task CloseAsync(CancellationToken cancellationToken)
         {
-            await m_MessagingFactory.CloseAsync();
+            if(null != m_MessagingFactory && !m_MessagingFactory.IsClosed)
+                await m_MessagingFactory.CloseAsync();
 
             m_TraceWriter.TraceMessage(string.Format("Event Hub Listener for {0} on {1} closed", EventHubName, this.Namespace));
 

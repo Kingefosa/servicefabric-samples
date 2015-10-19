@@ -10,6 +10,7 @@ namespace EventHubProcessor
 {
    public class EventHubProcessorController : ApiController, IEventHubProcessorController
     {
+        // this reference is set by dependancy injection built in OWIN pipeline
         public EventHubProcessorService ProcessorService { get; set; }
 
         [HttpPost]
@@ -49,7 +50,15 @@ namespace EventHubProcessor
             ProcessorService.TraceWriter.TraceMessage("Completed Drain/Stop Command");
         }
 
+        [HttpPut]
+        [Route("eventhubprocessor/")]
+        public async Task Update(Processor newProcessor)
+        {
+            await ProcessorService.SetAssignedProcessorAsync(newProcessor);
+        }
+
         [HttpGet]
+        [Route("eventhubprocessor/")]
         public async Task<ProcessorRuntimeStatus> getStatus()
         {
 
@@ -58,37 +67,21 @@ namespace EventHubProcessor
 
             var status = new ProcessorRuntimeStatus();
 
-            var TotalPostedLastMinuteTask = ProcessorService.GetTotalPostedLastMinute();
-            var TotalProcessedLastMinuteTask = ProcessorService.GetTotalProcessedLastMinute();
-            var TotalPostedLastHourTask = ProcessorService.GetTotalPostedLastHour();
-            var TotalProcessedLastHourTask = ProcessorService.GetTotalProcessedLastHour();
-            var AveragePostedPerMinLastHourTask = ProcessorService.GetAveragePostedPerMinLastHour();
-            var AverageProcessedPerMinLastHourTask = ProcessorService.GetAverageProcessedPerMinLastHour();
-            var StatusStringTask = ProcessorService.GetStatusString();
-            var NumOfActiveQueuesTask = ProcessorService.GetNumberOfActiveQueues();
-
-            await Task.WhenAll(
-                                 TotalPostedLastMinuteTask, 
-                                 TotalProcessedLastMinuteTask ,
-                                 TotalPostedLastHourTask, 
-                                 TotalProcessedLastHourTask,
-                                 AveragePostedPerMinLastHourTask, 
-                                 AverageProcessedPerMinLastHourTask,
-                                 StatusStringTask,
-                                 NumOfActiveQueuesTask
-                             );
-                
-            status.TotalPostedLastMinute = TotalPostedLastMinuteTask.Result;
-            status.TotalProcessedLastMinute  = TotalProcessedLastMinuteTask.Result;
-            status.TotalPostedLastHour  = TotalPostedLastHourTask.Result;
-            status.TotalProcessedLastHour = TotalProcessedLastHourTask.Result;
-            status.AveragePostedPerMinLastHour = AveragePostedPerMinLastHourTask.Result;
-            status.AverageProcessedPerMinLastHour = AverageProcessedPerMinLastHourTask.Result;
-            status.StatusString = StatusStringTask.Result;
-            status.NumberOfActiveQueues = NumOfActiveQueuesTask.Result;
+            status.TotalPostedLastMinute  = await ProcessorService.GetTotalPostedLastMinuteAsync();
+            status.TotalProcessedLastMinute = await ProcessorService.GetTotalProcessedLastMinuteAsync();
+            status.TotalPostedLastHour = await ProcessorService.GetTotalPostedLastHourAsync();
+            status.TotalProcessedLastHour= await ProcessorService.GetTotalProcessedLastHourAsync();
+            status.AveragePostedPerMinLastHour = await ProcessorService.GetAveragePostedPerMinLastHourAsync();
+            status.AverageProcessedPerMinLastHour = await ProcessorService.GetAverageProcessedPerMinLastHourAsync();
+            status.StatusString = await ProcessorService.GetStatusStringAsync();
+            status.NumberOfActiveQueues = await ProcessorService.GetNumberOfActiveQueuesAsync();
+            status.NumberOfBufferedItems = await ProcessorService.GetNumOfBufferedItemsAsync();
 
 
-            ProcessorService.TraceWriter.TraceMessage("Completed Pause Command");
+            status.IsInErrorState = ProcessorService.IsInErrorState;
+            status.ErrorMessage = ProcessorService.ErrorMessage;
+            
+            ProcessorService.TraceWriter.TraceMessage("Completed get status Command");
             return status;
         }
     }

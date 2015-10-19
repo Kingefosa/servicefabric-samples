@@ -27,6 +27,7 @@ namespace IoTProcessorManagementService
         Stop, 
         DrainStop, 
         Delete,
+        Update, 
         RuntimeStatusCheck
     }
 }

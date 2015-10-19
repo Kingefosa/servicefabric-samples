@@ -136,24 +136,40 @@ namespace IoTProcessorManagement.Common
         }
         public async Task RemoveListenerAsync(string Name)
         {
+            ICommunicationListener listener = null;
+
             try
             {
                 if (!m_listeners.ContainsKey(Name))
                     throw new InvalidOperationException(string.Format("Listener with the name {0} does not exists", Name));
 
+                listener = m_listeners[Name];
+
 
                 m_listenerLock.WaitOne();
-                var listener = m_listeners[Name];
                 await _CloseListener(Name, listener, CancellationToken.None);
-                m_listeners.Remove(Name);
-                m_Statuses.Remove(Name);
             }
-            catch
+            catch (InvalidOperationException)
             {
                 throw;
             }
+            catch (AggregateException ae)
+            {
+                ae.Flatten();
+                m_TraceWriter.TraceMessage(string.Format("Compsite listen failed to close (for removal) listener:{0} it will be forcefully aborted E:{1} StackTrace:{2}", Name, ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace()));
+
+                // force abkrted
+                if (null != listener)
+                { 
+                    try { listener.Abort(); } catch { /*no op*/}
+                }
+            }
             finally
             {
+
+                m_listeners.Remove(Name);
+                m_Statuses.Remove(Name);
+
                 m_listenerLock.Set();
             }
         }

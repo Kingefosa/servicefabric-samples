@@ -69,7 +69,7 @@ namespace IoTProcessorManagementService
 
         }
 
-        private async Task<Task<HttpResponseMessage>[]> GetStatusAsync(Processor processor)
+        private async Task<Task<HttpResponseMessage>[]> GetProcessorRuntimeStatusAsync(Processor processor)
         {
             var requestMessage = await GetBasicPartitionHttpRequestMessageAsync();
             requestMessage.Method = HttpMethod.Get;
@@ -127,7 +127,7 @@ namespace IoTProcessorManagementService
                 throw new InvalidOperationException("Execute operation for status change handler can not handle anything except runtime status check");
 
                 var processor = await GetProcessorAsync(processorOperation.ProcessorName, tx);
-            return  GetStatusAsync(processor) as T;
+            return  await GetProcessorRuntimeStatusAsync(processor) as T;
         }
     }
 }

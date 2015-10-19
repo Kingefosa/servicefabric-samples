@@ -25,7 +25,7 @@ namespace IoTProcessorManagementService
         public IReliableQueue<ProcessorOperation> ProcessorOperationsQueue { get; private set; }
 
 
-        public ProcessorAppInstanceDefaults DefaultProcessorAppInstanceDefinition { get; private set; }
+        public ProcessorManagementServiceConfig Config { get; private set; }
         public ProcessorOperationHandlerFactory m_ProcessorOperationFactory { get; private set; }
         public ProcessorServiceCommunicationClientFactory m_ProcessorServiceCommunicationClientFactory { get; private set; } 
             = new ProcessorServiceCommunicationClientFactory(ServicePartitionResolver.GetDefault(),
@@ -52,17 +52,17 @@ namespace IoTProcessorManagementService
             /// from and configuration and saves them for later use 
            
             var settingsFile = ServiceInitializationParameters.CodePackageActivationContext.GetConfigurationPackageObject("Config").Settings;
-            var defaultsSection = settingsFile.Sections["ProcessorDefaults"];
-
-            var processorAppInstanceDefaults = new ProcessorAppInstanceDefaults
+            var ProcessorServiceDefaults = settingsFile.Sections["ProcessorDefaults"];
+            
+            var newConfig = new ProcessorManagementServiceConfig
                                                 (
-                                                 defaultsSection.Parameters["AppTypeName"].Value,
-                                                 defaultsSection.Parameters["AppTypeVersion"].Value,
-                                                 defaultsSection.Parameters["ServiceTypeName"].Value,
-                                                 defaultsSection.Parameters["AppInstanceNamePrefix"].Value
+                                                 ProcessorServiceDefaults.Parameters["AppTypeName"].Value,
+                                                 ProcessorServiceDefaults.Parameters["AppTypeVersion"].Value,
+                                                 ProcessorServiceDefaults.Parameters["ServiceTypeName"].Value,
+                                                 ProcessorServiceDefaults.Parameters["AppInstanceNamePrefix"].Value                
                                                 );
 
-            DefaultProcessorAppInstanceDefinition = processorAppInstanceDefaults;
+            Config = newConfig;
         }
 
 #endregion

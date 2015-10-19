@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace IoTProcessorManagementService
 {
-    public class ProcessorAppInstanceDefaults
+    public class ProcessorManagementServiceConfig
     {
-        public ProcessorAppInstanceDefaults(string processorAppTypeName,
+        public ProcessorManagementServiceConfig(string processorAppTypeName,
                                    string processorAppTypeVersion,
                                    string processorServiceTypeName,
                                    string processorAppInstanceNamePrefix)

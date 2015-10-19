@@ -3,7 +3,9 @@ using IoTProcessorManagement.TestLib;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Fabric;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -28,14 +30,15 @@ namespace IoTProcessorManagement.TestHarness
         // added to the management
         private static List<Processor> RuntimeProcessorDefs = new List<Processor>();
 
-
+      
         static void Main(string[] args)
         {
-            SetWorkerDefs();
-            doMgmtAppTests().Wait();
+
+            Console.WriteLine("do management api tests or event processor tests");
 
 
-            Console.Write("Done!");
+
+           
             Console.Read();
 
         }
@@ -49,18 +52,9 @@ namespace IoTProcessorManagement.TestHarness
             processor.Hubs.Add(new EventHubDefinition() { ConnectionString = "//event hub connection string here//", EventHubName = "eh01" });
 
             StaticProcessorsDefs.Add(processor);
-
         }
 
-        public static async Task doSendMessages()
-        {
-            await IoTManagementTestLib.sendMessages("//eventhub connection string here//",
-                                                   "eh01",
-                                                   "device{0}",
-                                                   "Hello World!",
-                                                   100,
-                                                   5);
-        }
+        
 
 
         private static async Task formatResponse(string ActionName, HttpResponseMessage response)
@@ -158,12 +152,13 @@ namespace IoTProcessorManagement.TestHarness
 
         public static async Task doMgmtAppTests()
         {
-            var MgmtAppEndPoint = await getMgmtEndPoint(s_MgmtServicename);
+            var MgmtAppEndPoint = await IoTManagementTestLib.getMgmtEndPoint(s_FabricEndPoint, s_MgmtServicename);
 
             // add all processor defs 
             foreach (var processor in StaticProcessorsDefs)
                 RuntimeProcessorDefs.Add( await AddProcessor(MgmtAppEndPoint, processor));
 
+            
 
             Console.WriteLine("Processor Service Fabric App Assignment:");
 
@@ -171,7 +166,18 @@ namespace IoTProcessorManagement.TestHarness
                 Console.WriteLine(JsonConvert.SerializeObject(processor));
 
 
+          
 
+
+            await Task.Delay(10000);
+            Console.WriteLine("Get Processors Status");
+
+            foreach (var processor in RuntimeProcessorDefs)
+                await GetProcessorStatus(MgmtAppEndPoint, processor.Name);
+
+
+
+            
             Console.WriteLine("Pausing Processors");
 
 
@@ -256,13 +262,7 @@ namespace IoTProcessorManagement.TestHarness
 
         }
 
-        public static async Task<string> getMgmtEndPoint(string sMgmtAppInstanceName)
-        {
-            FabricClient fc = new FabricClient(s_FabricEndPoint);
-            var partition = await fc.ServiceManager.ResolveServicePartitionAsync(new Uri(sMgmtAppInstanceName));
-
-            return partition.GetEndpoint().Address;
-        }
+        
         
         public static async Task<Processor> AddProcessor(string baseAddress, Processor processor)
         {
@@ -270,6 +270,15 @@ namespace IoTProcessorManagement.TestHarness
             await formatResponse("Add", response);
             return JsonConvert.DeserializeObject<Processor>(await response.Content.ReadAsStringAsync());
         }
+        public static async Task<Processor> UpdateProcessor(string baseAddress, Processor processor)
+        {
+            var response = await IoTManagementTestLib.MgmtUpdateProcessor(baseAddress, processor);
+            await formatResponse("Update", response);
+            return JsonConvert.DeserializeObject<Processor>(await response.Content.ReadAsStringAsync());
+        }
+
+
+
         public static async Task DeleteProcessor(string baseAddress, string ProcessorName)
         {
             var response = await IoTManagementTestLib.MgmtDeleteProcessor(baseAddress, ProcessorName);
@@ -278,13 +287,13 @@ namespace IoTProcessorManagement.TestHarness
 
         public static async Task GetProcessor(string baseAddress, string ProcessorName)
         {
-            var response = await IoTManagementTestLib.MgmtGetProcessor(baseAddress, ProcessorName);
+            var response = await IoTManagementTestLib.MgmtGetDetailedProcessorStatus(baseAddress, ProcessorName);
             await formatResponse("GetOne", response);
         }
 
         public static async Task GetAllProcessors(string baseAddress)
         {
-            var response = await IoTManagementTestLib.MgmtGetAllPrceossors(baseAddress);
+            var response = await IoTManagementTestLib.MgmgGetAllProcesseros(baseAddress);
             await formatResponse("Getall", response);
         }
 
@@ -310,7 +319,7 @@ namespace IoTProcessorManagement.TestHarness
 
         public static async Task GetProcessorStatus(string baseAddress, string ProcessorName)
         {
-            var response = await IoTManagementTestLib.MgmtGetWorkerProcessor(baseAddress, ProcessorName); 
+            var response = await IoTManagementTestLib.MgmtGetDetailedProcessorStatus(baseAddress, ProcessorName); 
             await formatResponse("Get Processor Status", response);
         }
 

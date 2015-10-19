@@ -52,9 +52,10 @@ namespace IoTProcessorManagement.Common
                     {
                         var reliableQ = await m_WorkManager.StateManager.GetOrAddAsync<IReliableQueue<W>>(tx, qName);
                         await m_dictListOfQueues.AddAsync(tx, qName, qName, TimeSpan.FromSeconds(5), CancellationToken.None);
+
+                        await tx.CommitAsync();
                         m_QueueRefs.TryAdd(qName, reliableQ);
                         qOfq.Enqueue(qName);
-                        await tx.CommitAsync();
                     }
                 }
 

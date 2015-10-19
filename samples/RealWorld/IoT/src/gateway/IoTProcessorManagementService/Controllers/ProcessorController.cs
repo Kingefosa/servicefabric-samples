@@ -27,12 +27,51 @@ namespace IoTProcessorManagementService
 
 
         [HttpGet]
+        [Route("processor/")]
         public  Task<Processor[]> GetAll()
         {
             //dirty read
             return Task.FromResult(Svc.ProcessorStateStore.Select((kvp) => { return kvp.Value; }).ToArray());            
         }
 
+
+        [HttpGet]
+        [Route("processor/{ProcessorName}/detailed")]
+        public async Task<List<ProcessorRuntimeStatus>> GetDetailedStatus([FromUri] string ProcessorName)
+        {
+            var validationErrors = Processor.ValidateProcessName(ProcessorName);
+            if (null != validationErrors)
+                Utils.ThrowHttpError(validationErrors);
+
+            Processor processor;
+            using (var tx = Svc.StateManager.CreateTransaction())
+            {
+                // do we have it? 
+                var cResults = await Svc.ProcessorStateStore.TryGetValueAsync(tx, ProcessorName);
+                if (!cResults.HasValue)
+                    Utils.ThrowHttpError(string.Format("Processor with the name {0} does not exist", ProcessorName));
+
+                processor = cResults.Value;
+            }
+
+            var factory = new ProcessorOperationHandlerFactory();
+            var operationHandler = factory.CreateHandler(this.Svc, new ProcessorOperation() { OperationType = ProcessorOperationType.RuntimeStatusCheck, ProcessorName = ProcessorName });
+
+            List<ProcessorRuntimeStatus> runtimeStatus = new List<ProcessorRuntimeStatus>();
+            Task<HttpResponseMessage>[] tasks = await operationHandler.ExecuteOperation<Task<HttpResponseMessage>[]>(null);
+
+            await Task.WhenAll(tasks);
+
+            foreach (var completedTask in tasks)
+            {
+                var httpResponse = completedTask.Result;
+                if (!httpResponse.IsSuccessStatusCode)
+                    Utils.ThrowHttpError("error aggregating status from processor partitions");
+
+                runtimeStatus.Add(JsonConvert.DeserializeObject<ProcessorRuntimeStatus>(await httpResponse.Content.ReadAsStringAsync()));
+            }
+            return runtimeStatus;
+        }
 
         [HttpGet]
         [Route("processor/{ProcessorName}")]
@@ -57,44 +96,7 @@ namespace IoTProcessorManagementService
 
 
 
-        [HttpGet]
-        [Route("processor/{ProcessorName}/detailed")]
-        public async Task<List<ProcessorRuntimeStatus>> Getdetails([FromUri] string ProcessorName)
-        {
-            var validationErrors = Processor.ValidateProcessName(ProcessorName);
-            if (null != validationErrors)
-                Utils.ThrowHttpError(validationErrors);
-
-            Processor processor;
-            using (var tx = Svc.StateManager.CreateTransaction())
-            {
-                // do we have it? 
-                var cResults = await Svc.ProcessorStateStore.TryGetValueAsync(tx, ProcessorName);
-                if (!cResults.HasValue)
-                    Utils.ThrowHttpError(string.Format("Processor with the name {0} does not exist", ProcessorName));
-
-                processor = cResults.Value;
-            }
-
-            var operationHandler = (new ProcessorOperationHandlerFactory()).CreateHandler(this.Svc, new ProcessorOperation() { OperationType = ProcessorOperationType.RuntimeStatusCheck });
-
-            List<ProcessorRuntimeStatus> runtimeStatus = new List<ProcessorRuntimeStatus>();
-            Task<HttpResponseMessage>[] tasks  = await operationHandler.ExecuteOperation<Task<HttpResponseMessage>[]>(null);
-
-            await Task.WhenAll(tasks);
-
-            foreach (var completedTask in tasks)
-            {
-                var httpResponse = completedTask.Result;
-                if (!httpResponse.IsSuccessStatusCode)
-                    Utils.ThrowHttpError("error aggregating status from processor partitions");
-
-                runtimeStatus.Add(JsonConvert.DeserializeObject<ProcessorRuntimeStatus>(await httpResponse.Content.ReadAsStringAsync()));
-            }
-            return runtimeStatus;
-        }
-
-
+       
 
         [HttpPost]
         [Route("processor/{ProcessorName}")]
@@ -132,6 +134,7 @@ namespace IoTProcessorManagementService
 
             }
 
+            
             return processor;
         }
 
@@ -159,7 +162,7 @@ namespace IoTProcessorManagementService
                 if(existing.IsOkToDelete())
                     Utils.ThrowHttpError(string.Format("Processor with the name {0} not valid for this operation", ProcessorName, existing.ProcessorStatusString));
 
-                existing.ProcessorStatus = ProcessorStatus.PendingDelete;
+                existing.ProcessorStatus |= ProcessorStatus.PendingDelete;
                 existing = await Svc.ProcessorStateStore.AddOrUpdateAsync(tx, existing.Name, existing, (name, proc) => { proc.SafeUpdate(existing); return proc; });
                 // delete it
                 await Svc.ProcessorOperationsQueue.EnqueueAsync(tx, new ProcessorOperation() { OperationType = ProcessorOperationType.Delete, ProcessorName = ProcessorName });
@@ -171,7 +174,45 @@ namespace IoTProcessorManagementService
 
 
 
-        #region Per Work Actions
+        #region Per Processor  Actions
+
+        [HttpPut]
+        [Route("processor/{ProcessorName}")]
+        public async Task<Processor> Update([FromUri] string ProcessorName, [FromBody] Processor processor)
+        {
+            processor.Name = ProcessorName;
+
+            var validationErrors = processor.Validate();
+            if (null != validationErrors)
+                Utils.ThrowHttpError(validationErrors);
+
+
+            Processor existing;
+            using (var tx = Svc.StateManager.CreateTransaction())
+            {
+                // do we have it? 
+                var cResults = await Svc.ProcessorStateStore.TryGetValueAsync(tx, ProcessorName);
+                if (!cResults.HasValue)
+                    Utils.ThrowHttpError(string.Format("Processor with the name {0} does not exists", ProcessorName));
+
+                existing = cResults.Value;
+
+
+                if (existing.IsOkToQueueOperation())
+                    Utils.ThrowHttpError(string.Format("Processor with the name {0} not valid for this operation", ProcessorName, existing.ProcessorStatusString));
+
+                existing.Hubs = processor.Hubs;
+                existing.ProcessorStatus |= ProcessorStatus.PendingUpdate;
+                existing = await Svc.ProcessorStateStore.AddOrUpdateAsync(tx, existing.Name, existing, (name, proc) => { proc.SafeUpdate(existing, false, true); return proc; });
+
+                await Svc.ProcessorOperationsQueue.EnqueueAsync(tx, new ProcessorOperation() { OperationType = ProcessorOperationType.Update, ProcessorName = ProcessorName });
+                await tx.CommitAsync();
+                ServiceEventSource.Current.Message(string.Format("Queued pause command for Processor {0} ", existing.Name));
+            }
+
+            return existing;
+
+        }
 
 
         [HttpPost]
@@ -200,7 +241,7 @@ namespace IoTProcessorManagementService
                 if (existing.IsOkToQueueOperation())
                     Utils.ThrowHttpError(string.Format("Processor with the name {0} not valid for this operation", ProcessorName, existing.ProcessorStatusString));
 
-                existing.ProcessorStatus = ProcessorStatus.PendingPause;
+                existing.ProcessorStatus |= ProcessorStatus.PendingPause;
                 existing = await Svc.ProcessorStateStore.AddOrUpdateAsync(tx, existing.Name, existing, (name, proc) => { proc.SafeUpdate(existing); return proc; });
                 
                 await Svc.ProcessorOperationsQueue.EnqueueAsync(tx, new ProcessorOperation() { OperationType = ProcessorOperationType.Pause, ProcessorName = ProcessorName });
@@ -237,7 +278,7 @@ namespace IoTProcessorManagementService
                 if (existing.IsOkToQueueOperation())
                     Utils.ThrowHttpError(string.Format("Processor with the name {0} not valid for this operation", ProcessorName, existing.ProcessorStatusString));
 
-                existing.ProcessorStatus = ProcessorStatus.PendingStop;
+                existing.ProcessorStatus |= ProcessorStatus.PendingStop;
 
                 existing = await Svc.ProcessorStateStore.AddOrUpdateAsync(tx, existing.Name, existing, (name, proc) => { proc.SafeUpdate(existing); return proc; });
 
@@ -278,7 +319,7 @@ namespace IoTProcessorManagementService
                 if (existing.IsOkToQueueOperation())
                     Utils.ThrowHttpError(string.Format("Processor with the name {0} not valid for this operation", ProcessorName, existing.ProcessorStatusString));
 
-                existing.ProcessorStatus = ProcessorStatus.PendingResume;
+                existing.ProcessorStatus |= ProcessorStatus.PendingResume;
                 existing = await Svc.ProcessorStateStore.AddOrUpdateAsync(tx, existing.Name, existing, (name, proc) => { proc.SafeUpdate(existing); return proc; });
 
 
@@ -316,7 +357,7 @@ namespace IoTProcessorManagementService
                 if (existing.IsOkToQueueOperation())
                     Utils.ThrowHttpError(string.Format("Processor with the name {0} not valid for this operation", ProcessorName, existing.ProcessorStatusString));
 
-                existing.ProcessorStatus = ProcessorStatus.PendingDrainStop;
+                existing.ProcessorStatus |= ProcessorStatus.PendingDrainStop;
                 existing = await Svc.ProcessorStateStore.AddOrUpdateAsync(tx, existing.Name, existing, (name, proc) => { proc.SafeUpdate(existing); return proc; });
                 await Svc.ProcessorOperationsQueue.EnqueueAsync(tx, new ProcessorOperation() { OperationType = ProcessorOperationType.DrainStop, ProcessorName = ProcessorName });
                 await tx.CommitAsync();

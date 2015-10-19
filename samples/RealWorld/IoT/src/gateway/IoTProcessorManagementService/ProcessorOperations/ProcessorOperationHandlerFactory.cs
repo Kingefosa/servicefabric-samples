@@ -36,6 +36,10 @@ namespace IoTProcessorManagementService
                 case ProcessorOperationType.RuntimeStatusCheck:
                     return new ProcessorOperationStatusChangeHandler(Svc, Operation);
 
+                case ProcessorOperationType.Update:
+                    return new ProcessorOperationUpdateHandler(Svc, Operation);
+
+
                 default:
                    throw new InvalidOperationException("Can not identify Processor Operation");
             }

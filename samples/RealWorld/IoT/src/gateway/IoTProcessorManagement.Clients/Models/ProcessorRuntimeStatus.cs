@@ -16,5 +16,9 @@ namespace IoTProcessorManagement.Clients
         public float AverageProcessedPerMinLastHour { get; set; }
         public string StatusString { get; set; }
         public int NumberOfActiveQueues { get; set; }
+        public bool IsInErrorState { get; set; }
+        public string ErrorMessage { get; set; }
+
+        public long NumberOfBufferedItems { get; set; }
     }
 }

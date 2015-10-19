@@ -100,6 +100,7 @@
     <Compile Include="ProcessorAppInstanceDefaults.cs" />
     <Compile Include="ProcessorOperations\ProcessorOperationHandlerFactory.cs" />
     <Compile Include="ProcessorOperations\ProcessorOperation.cs" />
+    <Compile Include="ProcessorOperations\ProcessorOperationUpdateHandler.cs" />
     <Compile Include="ProcessorOperations\ProcessorOperationStatusChangeHandler.cs" />
     <Compile Include="ProcessorOperations\ProcessorOperationDeleteHandler.cs" />
     <Compile Include="ProcessorOperations\ProcessorOperationAddHandler.cs" />
