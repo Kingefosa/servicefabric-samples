@@ -59,7 +59,7 @@ namespace Inventory.Service
             }
 
             return true;
-            
+
         }
 
         /// <summary>
@@ -304,7 +304,7 @@ namespace Inventory.Service
         {
             return new List<ServiceReplicaListener>() {
                 new ServiceReplicaListener(
-                    (initParams) => 
+                    (initParams) =>
                        new ServiceCommunicationListener<IInventoryService>(initParams, this))
             };
         }
@@ -317,12 +317,47 @@ namespace Inventory.Service
         protected override async Task RunAsync(CancellationToken cancellationToken)
         {
             ServiceEventSource.Current.Message("InventoryService ReliableDictionary successfully created");
-            //ServiceEventSource.Current.Message("Adding dummy items.");
 
-            //await this.CreateInventoryItemAsync(new InventoryItem("Bioluminescent Dress", 14.99M, 2000, 200, 2000));
-            //await this.CreateInventoryItemAsync(new InventoryItem("Electrifying Lightning Skirt", 29.99M, 1500, 150, 1500));
-            //await this.CreateInventoryItemAsync(new InventoryItem("Blacklight Striped Trousers", 34.99M, 3000, 300, 3000));
+            await Task.WhenAll(PeriodicInventoryCheck(cancellationToken), PeriodicOldMessageTrimming(cancellationToken));
+        }
 
+        private async Task PeriodicOldMessageTrimming(CancellationToken cancellationToken)
+        {
+            IReliableDictionary<CustomerOrderActorMessageId, DateTime> recentRequests =
+                await this.stateManager.GetOrAddAsync<IReliableDictionary<CustomerOrderActorMessageId, DateTime>>(ActorMessageDictionaryName);
+
+            IReliableDictionary<CustomerOrderActorMessageId, Tuple<InventoryItemId, int>> requestHistory =
+                await this.stateManager.GetOrAddAsync<IReliableDictionary<CustomerOrderActorMessageId, Tuple<InventoryItemId, int>>>(RequestHistoryDictionaryName);
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                IEnumerator<KeyValuePair<CustomerOrderActorMessageId, DateTime>> requests = recentRequests.GetEnumerator();
+
+                using (ITransaction tx = this.stateManager.CreateTransaction())
+                { 
+                    while (requests.MoveNext())
+                    {
+                        //if we have a record of a message that is older than 2 hours from current time, then remove that record
+                        //from both of the stale message tracking dictionaries.
+                        if (requests.Current.Value < (DateTime.UtcNow.AddHours(-2)))
+                        {
+                            await recentRequests.TryRemoveAsync(tx, requests.Current.Key);
+                            await requestHistory.TryRemoveAsync(tx, requests.Current.Key);
+                        }
+                    }
+
+                    await tx.CommitAsync();
+                }
+
+            }
+
+            //sleep for 5 minutes then scan again
+            await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
+
+        }
+
+        private async Task PeriodicInventoryCheck(CancellationToken cancellationToken)
+        {
             IReliableDictionary<InventoryItemId, InventoryItem> inventoryItems =
                 await this.stateManager.GetOrAddAsync<IReliableDictionary<InventoryItemId, InventoryItem>>(InventoryItemDictionaryName);
 
