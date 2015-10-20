@@ -18,7 +18,7 @@
 3. Go to Build -> Build Solution.
 4. Go to Debug -> Start Debugging to launch the solution.  See [how to use sample](./HowTo.md) for further instructions.
 
-*TODO: Add instructions for creating storage*
+*TODO: Add instructions for creating Azure assets (storage, event hub, etc) used by solution*
 
 ## Resources ##
 - [How to use sample](./HowTo.md) *TODO*
