@@ -7,14 +7,14 @@
       <Parameter Name="ChatWeb_InstanceCount" DefaultValue="1" />
    </Parameters>
    <ServiceManifestImport>
-      <ServiceManifestRef ServiceManifestName="ChatWeb" ServiceManifestVersion="1.0.0.0" />
+      <ServiceManifestRef ServiceManifestName="Chat.WebPkg" ServiceManifestVersion="1.0.0.0" />
    </ServiceManifestImport>
    <ServiceManifestImport>
-      <ServiceManifestRef ServiceManifestName="ChatServicePkg" ServiceManifestVersion="1.0.0.0" />
+      <ServiceManifestRef ServiceManifestName="Chat.ServicePkg" ServiceManifestVersion="1.0.0.0" />
       <ConfigOverrides />
    </ServiceManifestImport>
    <DefaultServices>
-      <Service Name="ChatWebService">
+      <Service Name="ChatWeb">
          <StatelessService ServiceTypeName="ChatWebType" InstanceCount="[ChatWeb_InstanceCount]">
             <SingletonPartition />
          </StatelessService>
