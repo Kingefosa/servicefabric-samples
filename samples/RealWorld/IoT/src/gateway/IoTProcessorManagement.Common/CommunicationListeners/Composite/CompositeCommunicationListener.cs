@@ -153,9 +153,9 @@ namespace IoTProcessorManagement.Common
             {
                 throw;
             }
-            catch (AggregateException ae)
+            catch (AggregateException aex)
             {
-                ae.Flatten();
+                var ae = aex.Flatten();
                 m_TraceWriter.TraceMessage(string.Format("Compsite listen failed to close (for removal) listener:{0} it will be forcefully aborted E:{1} StackTrace:{2}", Name, ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace()));
 
                 // force abkrted

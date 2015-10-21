@@ -72,28 +72,48 @@ namespace EventHubProcessor
         }
         public Task Stop()
         {
-            if (WorkManager.WorkManagerStatus != WorkManagerStatus.Working || WorkManager.WorkManagerStatus != WorkManagerStatus.Paused)
-                throw new InvalidOperationException("can not stop service if its not in working or paused state");
-
-
-
-            return Task.Run(async () =>
+            if (WorkManager.WorkManagerStatus == WorkManagerStatus.Working 
+                || 
+                WorkManager.WorkManagerStatus == WorkManagerStatus.Paused
+                ||
+                WorkManager.WorkManagerStatus == WorkManagerStatus.Draining
+                )
             {
-                await ClearEventHubListeners();
-                await WorkManager.StopAsync();
-            });
+
+
+                return Task.Run(async () =>
+                {
+                    await ClearEventHubListeners();
+                    await WorkManager.StopAsync();
+                });
+            }
+            else
+            {
+                throw new InvalidOperationException("can not stop service if its not in working or paused state");
+            }
+
+
         }
         public Task DrainAndStop()
         {
-            if (WorkManager.WorkManagerStatus != WorkManagerStatus.Working || WorkManager.WorkManagerStatus != WorkManagerStatus.Paused)
-                throw new InvalidOperationException("can not drain stop service if its not in working or paused state");
-
-
-            return Task.Run(async () =>
+            if (WorkManager.WorkManagerStatus == WorkManagerStatus.Working 
+                || 
+                WorkManager.WorkManagerStatus == WorkManagerStatus.Paused)
             {
-                await ClearEventHubListeners();
-                await WorkManager.DrainAndStopAsync();
-            });
+                return Task.Run(async () =>
+                {
+                    if (WorkManager.WorkManagerStatus == WorkManagerStatus.Paused)
+                        await Resume();
+
+
+                    await ClearEventHubListeners();
+                    await WorkManager.DrainAndStopAsync();
+                });
+            }
+            else
+            {
+                throw new InvalidOperationException("can not drain stop service if its not in working or paused state");
+            }            
         }
         public Task<int> GetNumberOfActiveQueuesAsync()
         {
@@ -240,11 +260,11 @@ namespace EventHubProcessor
                     await m_CompositeListener.AddListenerAsync(ListenerName, eventHubListener);
                 }
                 
-                catch (AggregateException ae)
+                catch (AggregateException aex)
                 {
                     BadListener = true;
 
-                    ae.Flatten();
+                    var ae = aex.Flatten();
                     sErrorMessage = string.Format("Event Hub Listener for Connection String:{0} Hub:{1} CG:{2} generated an error, other listeners will keep on running and replica will enter error state. E:{3} StackTrace:{4}",
                                                           hub.ConnectionString, hub.EventHubName, hub.ConsumerGroupName, ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace());
 
@@ -263,6 +283,7 @@ namespace EventHubProcessor
                     {
                         try { await m_CompositeListener.RemoveListenerAsync(ListenerName); } catch { /* no op*/}
                         TraceWriter.TraceMessage(sErrorMessage);
+                        m_IsInErrorState = true;
                         m_ErrorMessage = string.Concat(m_ErrorMessage, "\n", sErrorMessage);
                     }
 
@@ -442,8 +463,17 @@ namespace EventHubProcessor
 
 
             TraceWriter.TraceMessage("Replica is existing, stopping the work manager");
-            await ClearEventHubListeners();
-            await WorkManager.StopAsync();
+
+            try
+            {
+                await ClearEventHubListeners();
+                await WorkManager.StopAsync();
+            }
+            catch (AggregateException aex)
+            {
+                var ae = aex.Flatten();
+                TraceWriter.TraceMessage(string.Format("as the replica unload (run async canceled) the followng errors occured E:{0} StackTrace:{1}", aex.GetCombinedExceptionMessage(), aex.GetCombinedExceptionStackTrace()));
+            }            
         }
 
         

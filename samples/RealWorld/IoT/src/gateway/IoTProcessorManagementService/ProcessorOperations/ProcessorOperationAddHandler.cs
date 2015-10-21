@@ -69,12 +69,12 @@ namespace IoTProcessorManagementService
 
                 ServiceEventSource.Current.Message("Processor creation {0} failed - {1}", processor.Name, processor.ErrorMessage);
             }
-            catch (AggregateException ae)
+            catch (AggregateException aex)
             {
                 // did we try enough?
                 if (!await ReEnqueAsync(tx))
                 {
-                    ae.Flatten();
+                    var ae = aex.Flatten();
                     processor.ProcessorStatus |= ProcessorStatus.ProvisionError;
                     processor.ErrorMessage = string.Format("Failed to create service fabric app {0} [{1}-{2}] Error:{3} \n after{4} times",
                                                         processor.ServiceFabricAppInstanceName,

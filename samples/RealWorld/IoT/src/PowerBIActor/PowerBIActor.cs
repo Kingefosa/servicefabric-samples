@@ -184,9 +184,9 @@ namespace PowerBIActor
 
 
             }
-            catch (AggregateException ae)
+            catch (AggregateException aex)
             {
-                ae.Flatten();
+                var ae = aex.Flatten();
 
                 foreach(var e in ae.InnerExceptions)
                     ActorEventSource.Current.ActorMessage(this, "Error creating dataset E{0} , E:{1}", e.Message, e.StackTrace);

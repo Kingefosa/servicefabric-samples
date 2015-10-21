@@ -109,8 +109,7 @@ namespace IoTProcessorManagementService
                 Utils.ThrowHttpError(validationErrors);
 
 
-            
-
+            processor.ProcessorStatus = ProcessorStatus.New;
 
             using (var tx = Svc.StateManager.CreateTransaction())
             {
@@ -127,6 +126,7 @@ namespace IoTProcessorManagementService
                 await Svc.ProcessorStateStore.AddAsync(tx, processor.Name, processor);
                 // create it it
                 await Svc.ProcessorOperationsQueue.EnqueueAsync(tx, new ProcessorOperation() { OperationType = ProcessorOperationType.Add, ProcessorName = processor.Name });
+                
 
                 await tx.CommitAsync();
 
@@ -217,7 +217,7 @@ namespace IoTProcessorManagementService
 
         [HttpPost]
         [Route("processor/{ProcessorName}/pause")]
-        public async Task Pause([FromUri] string ProcessorName)
+        public async Task<Processor> Pause([FromUri] string ProcessorName)
         {
             var validationErrors = Processor.ValidateProcessName(ProcessorName);
             if (null != validationErrors)
@@ -250,11 +250,12 @@ namespace IoTProcessorManagementService
 
             }
 
+            return existing;
         }
 
         [HttpPost]
         [Route("processor/{ProcessorName}/stop")]
-        public async Task Stop([FromUri] string ProcessorName)
+        public async Task<Processor> Stop([FromUri] string ProcessorName)
         {
             var validationErrors = Processor.ValidateProcessName(ProcessorName);
             if (null != validationErrors)
@@ -291,13 +292,13 @@ namespace IoTProcessorManagementService
 
             }
 
-
+            return existing;
 
         }
 
         [HttpPost]
         [Route("processor/{ProcessorName}/resume")]
-        public async Task Resume([FromUri] string ProcessorName)
+        public async Task<Processor> Resume([FromUri] string ProcessorName)
         {
             var validationErrors = IoTProcessorManagement.Clients.Processor.ValidateProcessName(ProcessorName);
             if (null != validationErrors)
@@ -330,13 +331,13 @@ namespace IoTProcessorManagementService
 
             }
 
-
+            return existing;
         }
 
 
         [HttpPost]
         [Route("processor/{ProcessorName}/drainstop")]
-        public async Task DrainStop([FromUri] string ProcessorName)
+        public async Task<Processor> DrainStop([FromUri] string ProcessorName)
         {
             var validationErrors = Processor.ValidateProcessName(ProcessorName);
             if (null != validationErrors)
@@ -367,7 +368,7 @@ namespace IoTProcessorManagementService
             }
 
 
-
+            return existing;
         }
 
 
