@@ -111,9 +111,9 @@ namespace IoTProcessorManagementService
                     {
                         ServiceEventSource.Current.Message(string.Format("Controller service encountered timeout in a work operations de-queue process {0} and will try again", toe.StackTrace));
                     }
-                    catch (AggregateException ae)
+                    catch (AggregateException aex)
                     {
-                        ae.Flatten();
+                        var ae = aex.Flatten();
 
                         string sError = string.Empty;
                         if (null == wo)

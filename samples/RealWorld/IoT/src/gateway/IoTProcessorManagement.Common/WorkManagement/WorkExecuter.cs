@@ -61,9 +61,9 @@ namespace IoTProcessorManagement.Common
                 {
                     workLoopAsync().Wait();
                 }
-                catch(AggregateException ae)
+                catch(AggregateException aex)
                 {
-                    ae.Flatten();
+                    var ae = aex.Flatten();
                     m_WorkManager.m_TraceWriter.TraceMessage(string.Format("Executer encountered a fatel error and will exit Error:{0} StackTrace{1}", ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace()));
                     throw;
                 }
@@ -95,7 +95,7 @@ namespace IoTProcessorManagement.Common
 
                 if (bMoreMessages || !bEmptyQ) // did we find messages in the queue
                 {
-                    m_WorkManager.m_TraceWriter.TraceMessage(string.Format("queue:{0} pushed back to as queues, queue still have more work", qName));
+                    m_WorkManager.m_TraceWriter.TraceMessage(string.Format("queue:{0} pushed back to queues, queue still have more work", qName));
 
                     leaveQ(qName, true); 
                 }
@@ -211,9 +211,9 @@ namespace IoTProcessorManagement.Common
                         m_WorkManager.m_TraceWriter.TraceMessage(string.Format("Executer Dequeue Timeout after {0}: {1}", nLongDequeueWaitTimeMs, to.Message));
                         break; //-> to finally
                     }
-                    catch (AggregateException ae)
+                    catch (AggregateException aex)
                     {
-                        ae.Flatten();
+                        var ae = aex.Flatten();
                         m_WorkManager.m_TraceWriter.TraceMessage(string.Format("Executer encountered fatel error and will exit E:{0} StackTrace:{1}", ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace()));
 
                         throw;

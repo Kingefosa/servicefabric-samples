@@ -39,7 +39,7 @@ namespace IoTProcessorManagement.Common
         public static readonly string s_Queue_Names_Dictionary = "_QueueNames_"; // the dictionary that will hold a list (per entry) of each queue created. 
         public static readonly uint s_Default_Yield_Queue_After             = 10; // to ensure fairness, each queue will be de-queued 10 times before moving to the next.
         public static readonly uint s_Max_Num_OfWorker              = (uint) Environment.ProcessorCount * 2; // default is one task per processor, note: this does not mean affinity or what so ever.
-        public static readonly uint s_MaxNumOfBufferedWorkItems     = 1000  * 1000;
+        public static readonly uint s_MaxNumOfBufferedWorkItems     = 10  * 1000;
         public static readonly uint s_defaultMaxNumOfWorkers        = 2;
 
 
@@ -511,9 +511,9 @@ namespace IoTProcessorManagement.Common
                 IncreaseBufferedWorkItems();
                 m_DeferedTaskExec.AddWork(TryIncreaseExecuters);
             }
-            catch (AggregateException ae)
+            catch (AggregateException aex)
             {
-                ae.Flatten();
+                var ae = aex.Flatten();
 
                 m_TraceWriter.TraceMessage(string.Format("Post to work manager failed, caller should retry E:{0} StackTrace:{1}" , ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace()));
                 throw;

@@ -17,7 +17,13 @@ namespace EventHubProcessor
         }
         public void TraceMessage(string message)
         {
-            ServiceEventSource.Current.ServiceMessage(Svc, message);
+            var assignedProcessor = Svc.GetAssignedProcessorAsync().Result;
+            var prefix = "";
+
+            if (null != assignedProcessor)
+                prefix = string.Format("Assigned Processor Name:{0}", assignedProcessor.Name);
+
+            ServiceEventSource.Current.ServiceMessage(Svc,  string.Concat(prefix, "\n", message));
         }
     }
 }

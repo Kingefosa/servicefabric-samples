@@ -103,6 +103,9 @@ namespace IoTProcessorManagementService
             { 
                 await Resume(processor);
                 processor.ProcessorStatus &= ~ProcessorStatus.PendingResume;
+                processor.ProcessorStatus &= ~ProcessorStatus.Paused;
+
+
                 processor.ProcessorStatus |= ProcessorStatus.Provisioned ;
                 await UpdateProcessorAsync(processor, tx);
             }

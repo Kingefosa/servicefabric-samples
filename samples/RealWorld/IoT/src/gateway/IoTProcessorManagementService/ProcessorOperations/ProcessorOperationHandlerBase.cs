@@ -203,8 +203,9 @@ namespace IoTProcessorManagementService
             {
                 await DeleteServiceAsync(processor);
             }
-            catch(AggregateException ae)
+            catch(AggregateException aex)
             {
+                var ae = aex.Flatten();
                 ServiceEventSource.Current.ServiceMessage(Svc, "Delete Service for processor:{0} service:{1} failed, will keep working normally E:{2} StackTrace:{3}", processor.Name, processor.ServiceFabricServiceName, ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace());
             }
 
@@ -213,8 +214,9 @@ namespace IoTProcessorManagementService
             {
                 await DeleteAppAsync(processor);
             }
-            catch (AggregateException ae)
+            catch (AggregateException aex)
             {
+                var ae = aex.Flatten();
                 ServiceEventSource.Current.ServiceMessage(Svc, "Delete App for processor:{0} app:{1} failed, will keep working normally E:{2} StackTrace:{3}", processor.Name, processor.ServiceFabricAppInstanceName, ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace());
             }
         }
