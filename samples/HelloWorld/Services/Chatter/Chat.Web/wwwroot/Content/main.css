@@ -59,10 +59,10 @@ a, a:visited, a:hover {
     .button.whatsnew {
         color: #FFF;
         background: #89c402 url('balloons-icon.png') center right no-repeat;
-        font-size: 24px;
+        font-size: 18px;
         line-height: 33px;
-        padding: 6px 55px 9px 20px;
-        margin: 20px 0 0;
+        padding: 0 55px 2px 20px;
+        margin: 20px 0 20px 0;
     }
 
         .button.whatsnew::after {
@@ -83,17 +83,17 @@ a, a:visited, a:hover {
     }
 
 h2.azure-heading {
-    font-size: 36px;
+    font-size: 24px;
     font-weight: 200;
     color: #FFF;
-    margin: 40px 0 0 0;
+    margin: 20px 0 0 0;
 }
 
 h1.chatter-heading {
-    font-size: 64px;
+    font-size: 48px;
     font-weight: 200;
     color: #FF8A00;
-    margin: 0 0 20px 0;
+    margin: 0;
 }
 
 h3.chatter-subheading {
@@ -112,13 +112,14 @@ header {
 }
 
     header .header-content {
-        background: url('partycluster-background.png') center right no-repeat;
-        height: 300px;
+        background: url('cluster-background.png') bottom right no-repeat;
     }
 
 section#main {
-    min-height: 500px;
+    height: 500px;
     margin: 20px auto;
+    overflow-y:scroll;
+	overflow-x:hidden;
 }
 
 ul#messages {
@@ -131,7 +132,21 @@ ul#messages {
         margin: 0;
         padding: 10px;
     }
-
+    ul#messages li .message-time{
+		font-style: italic;
+		font-size:12px;
+		color:#999;
+		margin-right:10px;
+	}
+    ul#messages li .message-from{
+		font-weight:bold;
+		color:#00ABEC;
+		margin-right:2px;
+	}
+    ul#messages li .message-body	{
+		
+		margin-left:5px;
+	}
         ul#messages li:nth-child(odd) {
             background: #eee;
         }

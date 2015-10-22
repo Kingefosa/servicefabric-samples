@@ -63,7 +63,7 @@
                         data: JSON.stringify(message)
                     })
                         .done(function (addMessage) {
-                            $('#inputName').text = Name;
+                            $('#inputMessage').val('');
                         });
                 }
 
@@ -93,7 +93,7 @@
                         });
                 }
 
-                //Take returned messages and contruct list items
+                //Take returned messages and construct list items
                 function bindData(element, data) {
                     $('#messages').empty();
                     $.each(data, function (id, jobject) {
@@ -102,6 +102,7 @@
                                 $('<span class="message-time"/>').text($.time(jobject.Key)))
                             .append(
                                 $('<span class="message-from"/>').text(jobject.Value.Name))
+							.append(': ')
                             .append(
                                  $('<span class="message-body"/>').text(jobject.Value.MessageText))
                             .appendTo(element);
@@ -114,7 +115,7 @@
                     var sec = d.getSeconds();
                     var min = d.getMinutes();
                     var hour = d.getHours();
-                    var time = hour + ":" + min + ":" + sec;;
+                    var time = hour + ":" + min + ":" + sec;
                     return time;
                 };
 
