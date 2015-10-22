@@ -19,7 +19,7 @@ namespace Chat.Service
     public class ChatService : StatefulService, IChatService
     {
         private IReliableDictionary<DateTimeOffset, Message> messageDictionary;
-        private readonly int MessagesToKeep = 5;
+        private readonly int MessagesToKeep = 50;
         private readonly TimeSpan MessageLifetime = TimeSpan.FromSeconds(30);
         
         /// <summary>
