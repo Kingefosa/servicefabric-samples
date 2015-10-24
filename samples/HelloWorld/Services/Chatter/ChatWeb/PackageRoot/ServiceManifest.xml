@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ServiceManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="ChatWeb" Version="1.0.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+<ServiceManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="ChatWeb" Version="1.0.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
    <ServiceTypes>
       <StatelessServiceType ServiceTypeName="ChatWebType">
          <Extensions>
@@ -15,8 +15,8 @@
    <CodePackage Name="C" Version="1.0">
       <EntryPoint>
          <ExeHost>
-            <Program>approot\runtimes\dnx-clr-win-x64.1.0.0-beta5\bin\dnx.exe</Program>
-            <Arguments>--appbase approot\src\ChatWeb Microsoft.Framework.ApplicationHost Microsoft.ServiceFabric.AspNet.Hosting --server Microsoft.AspNet.Server.WebListener</Arguments>
+            <Program>approot\runtimes\dnx-clr-win-x64.1.0.0-beta7\bin\dnx.exe</Program>
+            <Arguments>--appbase approot\src\ChatWeb Microsoft.Dnx.ApplicationHost Microsoft.ServiceFabric.AspNet.Hosting --server Microsoft.AspNet.Server.WebListener</Arguments>
             <WorkingFolder>CodePackage</WorkingFolder>
             <ConsoleRedirection FileRetentionCount="5" FileMaxSizeInKb="2048" />
          </ExeHost>

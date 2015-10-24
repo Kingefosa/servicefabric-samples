@@ -3,11 +3,11 @@
     "version": "1.0.0-*",
 
     "dependencies": {
-        "Microsoft.AspNet.Mvc": "6.0.0-beta5",
-        "Microsoft.AspNet.Server.IIS": "1.0.0-beta5",
-        "Microsoft.AspNet.Server.WebListener": "1.0.0-beta5",
-        "Microsoft.AspNet.StaticFiles": "1.0.0-beta5",
-        "Microsoft.ServiceFabric.AspNet.Hosting": "1.0.0-beta5"
+        "Microsoft.AspNet.Mvc": "6.0.0-beta7",
+        "Microsoft.AspNet.Server.IIS": "1.0.0-beta7",
+        "Microsoft.AspNet.Server.WebListener": "1.0.0-beta7",
+        "Microsoft.AspNet.StaticFiles": "1.0.0-beta7",
+        "Microsoft.ServiceFabric.AspNet.Hosting": "1.0.0-Beta7"
     },
 
     "commands": {

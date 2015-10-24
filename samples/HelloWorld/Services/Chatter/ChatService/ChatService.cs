@@ -53,9 +53,12 @@ namespace ChatWeb
             }
             return this.messageDictionary;
         }
-        protected override ICommunicationListener CreateCommunicationListener()
+
+        protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
-            return new ServiceCommunicationListener<IChatService>(this);
+            return new List<ServiceReplicaListener> {
+                new ServiceReplicaListener(initParams => new ServiceCommunicationListener<IChatService>(initParams, this))
+            };
         }
 
         protected override async Task RunAsync(CancellationToken cancellationToken)
