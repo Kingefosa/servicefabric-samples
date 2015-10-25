@@ -11,7 +11,7 @@ namespace EventHubProcessor
    public class EventHubProcessorController : ApiController, IEventHubProcessorController
     {
         // this reference is set by dependancy injection built in OWIN pipeline
-        public EventHubProcessorService ProcessorService { get; set; }
+        public IoTEventHubProcessorService ProcessorService { get; set; }
 
         [HttpPost]
         [Route("eventhubprocessor/pause")]

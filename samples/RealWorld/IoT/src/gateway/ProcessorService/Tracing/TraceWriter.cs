@@ -9,20 +9,24 @@ namespace EventHubProcessor
 {
     public class TraceWriter : ITraceWriter
     {
-        public EventHubProcessorService Svc { get; private set; }
+        public bool EnablePrefix = false; 
+        public IoTEventHubProcessorService Svc { get; private set; }
 
-        public TraceWriter(EventHubProcessorService svc)
+        public TraceWriter(IoTEventHubProcessorService svc)
         {
             Svc = svc;
         }
         public void TraceMessage(string message)
         {
-            var assignedProcessor = Svc.GetAssignedProcessorAsync().Result;
             var prefix = "";
 
+            if (EnablePrefix)
+            { 
+            var assignedProcessor = Svc.GetAssignedProcessorAsync().Result;
+            
             if (null != assignedProcessor)
                 prefix = string.Format("Assigned Processor Name:{0}", assignedProcessor.Name);
-
+            }
             ServiceEventSource.Current.ServiceMessage(Svc,  string.Concat(prefix, "\n", message));
         }
     }

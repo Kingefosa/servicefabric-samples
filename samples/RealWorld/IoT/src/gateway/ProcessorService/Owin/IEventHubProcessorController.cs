@@ -11,6 +11,6 @@ namespace EventHubProcessor
     // each controller with a service reference. 
     public interface IEventHubProcessorController
     {
-         EventHubProcessorService ProcessorService { get; set; }
+         IoTEventHubProcessorService ProcessorService { get; set; }
     }
 }

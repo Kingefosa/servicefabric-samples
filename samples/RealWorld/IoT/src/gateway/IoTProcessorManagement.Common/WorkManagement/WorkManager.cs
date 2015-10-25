@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace IoTProcessorManagement.Common
 {
     /// <summary>
-    /// CQRS implementation that uses IReliableQueue<WorkItem> as storage.
+    /// CQRS implementation that uses multiple IReliableQueue<WorkItem> as storage.
     /// Work Manager performs:
     /// 0- Posting to work manager
     /// 1- Fan out based on Workitem.QueueName

@@ -5,49 +5,48 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using PowerBIActor.Interfaces;
+
 using Microsoft.ServiceFabric.Actors;
+using IoTActor.Common;
 
 namespace EventHubProcessor
 {
     public class RoutetoActorWorkItemHandler : IWorkItemHandler<RouteToActorWorkItem>
     {
-        //todo: Each handler will a reference to Device Actor Proxy
+      
         // Each handler is assigned to a queue (and queue is assigned to device). 
-
-        private IPowerBIActor m_actor = null;
+        private static string s_DeviceActorServiceName = "fabric:/IoTApplication/DeviceActor";
+        
+        
+        private IIoTActor m_DeviceActor = null;
         private object actor_lock = new object();
-        private IPowerBIActor getActor(RouteToActorWorkItem wi)
+        
+        private IIoTActor getActor(RouteToActorWorkItem wi)
         {
-            if (m_actor != null)
-                return m_actor;
+            
+            if (m_DeviceActor != null)
+                return m_DeviceActor;
 
             lock (actor_lock)
             {
-                if (m_actor != null)
-                    return m_actor;
+                if (m_DeviceActor != null)
+                    return m_DeviceActor;
 
-                
                 ActorId id = new ActorId(wi.QueueName);
-
-
-                m_actor = ActorProxy.Create<IPowerBIActor>(id, new Uri("fabric:/IoTApplication/PowerBIActorService"));
-
-                return m_actor;
+                m_DeviceActor = ActorProxy.Create<IIoTActor>(id, new Uri(s_DeviceActorServiceName));
+                return m_DeviceActor;
             }
 
         }
-
+       
         public async Task<RouteToActorWorkItem> HandleWorkItem(RouteToActorWorkItem wi)
         {
-            await Task.Delay(100);
-            return null;
-            /*
-            IPowerBIActor actor = getActor(wi);
-            await actor.Post(wi.PublisherName, wi.EventHubName, wi.ServiceBusNS, wi.Body);
+                IIoTActor DeviceActor = getActor(wi);
+                await DeviceActor.Post(wi.PublisherName, wi.EventHubName, wi.ServiceBusNS, wi.Body);
 
-            return null; // if a wi is returned, it signals the work manager to re-reenqueu
-        */
-            }
+                
+
+            return null; // if a wi is returned, it signals the work manager to re-enqueu
+        }
     }
 }

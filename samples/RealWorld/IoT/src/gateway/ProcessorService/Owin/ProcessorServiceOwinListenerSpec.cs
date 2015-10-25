@@ -11,7 +11,7 @@ namespace EventHubProcessor
 {
     class ProcessorServiceOwinListenerSpec : IOwinListenerSpec
     {
-        public EventHubProcessorService Svc { get; set; }
+        public IoTEventHubProcessorService Svc { get; set; }
 
 
 

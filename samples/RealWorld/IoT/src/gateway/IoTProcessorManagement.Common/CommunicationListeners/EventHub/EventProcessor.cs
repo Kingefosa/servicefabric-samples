@@ -40,6 +40,7 @@ namespace IoTProcessorManagement.Common
 
         public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
         {
+            // Todo: Improve performance by batching items 
             foreach (var ev in messages)
             {
                 await m_Handler.HandleEventData(m_ServiceBusNamespace, m_EventHubName, m_CounsumerGroupName ,ev);

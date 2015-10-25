@@ -9,9 +9,9 @@ namespace EventHubProcessor
 {
     class ServiceRefInjector : IDependencyResolver, IDependencyScope
     {
-        public EventHubProcessorService Svc { get; set; }
+        public IoTEventHubProcessorService Svc { get; set; }
 
-        public ServiceRefInjector(EventHubProcessorService svc)
+        public ServiceRefInjector(IoTEventHubProcessorService svc)
         {
             Svc = svc;
         }
