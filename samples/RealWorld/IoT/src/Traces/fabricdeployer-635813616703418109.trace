@@ -1,9 +1,0 @@
-2015/10/25-09:21:10.357,Info,14164,ImageStoreClient.ManagedFileLock,Obtained writer lock for D:\ClusterTwo\Data\lock
-2015/10/25-09:21:10.373,Info,14164,FabricDeployer.FabricDeployer,Executing RemoveNodeConfig /fabricBinRoot:C:\Program Files\Microsoft Service Fabric\bin /fabricDataRoot:D:\ClusterTwo\Data /fabricLogRoot: /cm: /oldClusterManifestString: /im: /instanceId: /targetVersion: /nodeName: /nodeTypeName: /runAsType: /runAsAccountName: /runAsPassword: /serviceStartupType: /output: /currentVersion: /error: /bootstrapMSIPath: /machineName: /fabricPackageRootString:
-2015/10/25-09:21:10.373,Info,14164,FabricDeployer.FabricDeployer,Running operation System.Fabric.FabricDeployer.RemoveNodeConfigOperation
-2015/10/25-09:21:10.373,Info,14164,FabricDeployer.FabricDeployer,Checking if fabric host is running
-2015/10/25-09:21:10.373,Info,14164,FabricDeployer.FabricDeployer,Starting fabric host
-2015/10/25-09:21:23.016,Info,14164,FabricDeployer.FabricDeployer,Stopping fabric host
-2015/10/25-09:21:23.284,Info,14164,FabricDeployer.FabricDeployer,Cleaning registry value
-2015/10/25-09:21:23.284,Info,14164,FabricDeployer.FabricDeployer,Done cleaning registry value
-2015/10/25-09:21:25.640,Info,14164,ImageStoreClient.ManagedFileLock,Released writer lock on D:\ClusterTwo\Data\lock
