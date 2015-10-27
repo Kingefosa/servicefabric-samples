@@ -1,4 +1,9 @@
-﻿using IoTProcessorManagement.Common;
+﻿// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+using IoTProcessorManagement.Common;
 using Microsoft.ServiceFabric.Data;
 using System;
 using System.Collections.Generic;

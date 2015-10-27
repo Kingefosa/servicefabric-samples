@@ -1,5 +1,11 @@
 ﻿// #define _VS_DEPLOY         // Used for debugging purposes, where the applicaiton is not created by ManagementService
-//#define _WAIT_FOR_DEBUGGER // if defined the RunAsync() will wait for your debugger to be attached before moving forward
+// #define _WAIT_FOR_DEBUGGER // if defined the RunAsync() will wait for your debugger to be attached before moving forward
+
+// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Linq;

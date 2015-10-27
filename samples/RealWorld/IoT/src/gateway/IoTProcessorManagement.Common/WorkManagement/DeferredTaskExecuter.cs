@@ -1,4 +1,9 @@
-﻿using System;
+﻿// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace IoTProcessorManagement.Common
 {
-    public class DeferredTaskExecuter
+    internal class DeferredTaskExecuter
     {
         private ConcurrentQueue<Func<Task>> m_Tasks = new ConcurrentQueue<Func<Task>>();
         private Task m_ExecutionTask;

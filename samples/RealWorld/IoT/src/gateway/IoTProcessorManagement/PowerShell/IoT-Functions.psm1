@@ -1,4 +1,10 @@
-﻿$_default_ServiceFabricConnection = "localhost:19000"
+﻿<#
+// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+#>
+$_default_ServiceFabricConnection = "localhost:19000"
 $_default_MgmtSvcName= "fabric:/IoTProcessorManagementApp/ProcessorManagementService";
 
 
