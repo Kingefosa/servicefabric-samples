@@ -3,17 +3,13 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Microsoft.ServiceFabric.Actors;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Tracing;
-using System.Fabric;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace BuildingActor
 {
+    using System;
+    using System.Diagnostics.Tracing;
+    using System.Fabric;
+    using Microsoft.ServiceFabric.Actors;
+
     [EventSource(Name = "IoT-BuildingActor")]
     internal sealed class ActorEventSource : EventSource
     {
@@ -25,7 +21,7 @@ namespace BuildingActor
             if (this.IsEnabled())
             {
                 string finalMessage = string.Format(message, args);
-                Message(finalMessage);
+                this.Message(finalMessage);
             }
         }
 
@@ -34,7 +30,7 @@ namespace BuildingActor
         {
             if (this.IsEnabled())
             {
-                WriteEvent(1, message);
+                this.WriteEvent(1, message);
             }
         }
 
@@ -44,7 +40,7 @@ namespace BuildingActor
             if (this.IsEnabled())
             {
                 string finalMessage = string.Format(message, args);
-                ActorMessage(
+                this.ActorMessage(
                     actor.GetType().ToString(),
                     actor.Id.ToString(),
                     actor.Host.ActivationContext.ApplicationTypeName,
@@ -64,7 +60,7 @@ namespace BuildingActor
             if (this.IsEnabled())
             {
                 string finalMessage = string.Format(message, args);
-                ActorMessage(
+                this.ActorMessage(
                     actor.GetType().ToString(),
                     actor.Id.ToString(),
                     actor.Host.ActivationContext.ApplicationTypeName,
@@ -75,6 +71,15 @@ namespace BuildingActor
                     actor.Host.StatefulServiceInitializationParameters.ReplicaId,
                     FabricRuntime.GetNodeContext().NodeName,
                     finalMessage);
+            }
+        }
+
+        [NonEvent]
+        public void ActorHostInitializationFailed(Exception e)
+        {
+            if (this.IsEnabled())
+            {
+                this.ActorHostInitializationFailed(e.ToString());
             }
         }
 
@@ -91,7 +96,7 @@ namespace BuildingActor
             string nodeName,
             string message)
         {
-            WriteEvent(
+            this.WriteEvent(
                 2,
                 actorType,
                 actorId,
@@ -105,19 +110,10 @@ namespace BuildingActor
                 message);
         }
 
-        [NonEvent]
-        public void ActorHostInitializationFailed(Exception e)
-        {
-            if (this.IsEnabled())
-            {
-                ActorHostInitializationFailed(e.ToString());
-            }
-        }
-
         [Event(3, Level = EventLevel.Error, Message = "Actor host initialization failed")]
         private void ActorHostInitializationFailed(string exception)
         {
-            WriteEvent(3, exception);
+            this.WriteEvent(3, exception);
         }
     }
 }

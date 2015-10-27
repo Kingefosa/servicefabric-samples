@@ -3,15 +3,13 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace IoTProcessorManagement.Common
 {
+    using System;
+    using System.IO;
+    using System.Text;
+    using System.Threading.Tasks;
+
     public static class Extentions
     {
         public static Task<Byte[]> ToBytes(this Stream stream)
@@ -21,14 +19,13 @@ namespace IoTProcessorManagement.Common
             while ((read = stream.Read(bytes, current, bytes.Length - current)) > 0)
                 current += read;
 
-            return Task.FromResult( bytes );
+            return Task.FromResult(bytes);
         }
 
         public static string GetCombinedExceptionMessage(this AggregateException ae)
         {
-
             StringBuilder sb = new StringBuilder();
-            foreach (var e in ae.InnerExceptions)
+            foreach (Exception e in ae.InnerExceptions)
                 sb.AppendLine(string.Concat("E: ", e.Message));
 
             return sb.ToString();
@@ -36,9 +33,8 @@ namespace IoTProcessorManagement.Common
 
         public static string GetCombinedExceptionStackTrace(this AggregateException ae)
         {
-
             StringBuilder sb = new StringBuilder();
-            foreach (var e in ae.InnerExceptions)
+            foreach (Exception e in ae.InnerExceptions)
                 sb.AppendLine(string.Concat("StackTrace: ", e.StackTrace));
 
             return sb.ToString();

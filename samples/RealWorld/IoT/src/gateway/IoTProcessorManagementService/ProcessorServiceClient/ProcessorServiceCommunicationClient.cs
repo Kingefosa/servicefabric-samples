@@ -3,20 +3,14 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Microsoft.ServiceFabric.Services;
-using System;
-using System.Collections.Generic;
-using System.Fabric;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace IoTProcessorManagementService
 {
+    using System;
+    using System.Fabric;
+    using Microsoft.ServiceFabric.Services;
+
     public class ProcessorServiceCommunicationClient : ICommunicationClient
     {
-        
-    
         public ProcessorServiceCommunicationClient(Uri baseAddress, TimeSpan operationTimeout, TimeSpan readWriteTimeout)
         {
             this.BaseAddress = baseAddress;
@@ -44,6 +38,4 @@ namespace IoTProcessorManagementService
         /// </summary>
         public ResolvedServicePartition ResolvedServicePartition { get; set; }
     }
-
 }
-

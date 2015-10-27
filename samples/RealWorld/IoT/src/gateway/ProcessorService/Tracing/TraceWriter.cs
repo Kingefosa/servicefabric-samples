@@ -3,36 +3,34 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using IoTProcessorManagement.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace EventHubProcessor
 {
+    using IoTProcessorManagement.Clients;
+    using IoTProcessorManagement.Common;
+
     public class TraceWriter : ITraceWriter
     {
-        public bool EnablePrefix = false; 
-        public IoTEventHubProcessorService Svc { get; private set; }
+        public bool EnablePrefix = false;
 
         public TraceWriter(IoTEventHubProcessorService svc)
         {
-            Svc = svc;
+            this.Svc = svc;
         }
+
+        public IoTEventHubProcessorService Svc { get; private set; }
+
         public void TraceMessage(string message)
         {
-            var prefix = "";
+            string prefix = "";
 
-            if (EnablePrefix)
-            { 
-            var assignedProcessor = Svc.GetAssignedProcessorAsync().Result;
-            
-            if (null != assignedProcessor)
-                prefix = string.Format("Assigned Processor Name:{0}", assignedProcessor.Name);
+            if (this.EnablePrefix)
+            {
+                Processor assignedProcessor = this.Svc.GetAssignedProcessorAsync().Result;
+
+                if (null != assignedProcessor)
+                    prefix = string.Format("Assigned Processor Name:{0}", assignedProcessor.Name);
             }
-            ServiceEventSource.Current.ServiceMessage(Svc,  string.Concat(prefix, "\n", message));
+            ServiceEventSource.Current.ServiceMessage(this.Svc, string.Concat(prefix, "\n", message));
         }
     }
 }

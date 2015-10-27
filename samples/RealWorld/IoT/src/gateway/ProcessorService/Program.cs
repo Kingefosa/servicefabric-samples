@@ -3,13 +3,13 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using System;
-using System.Diagnostics;
-using System.Fabric;
-using System.Threading;
-
 namespace EventHubProcessor
 {
+    using System;
+    using System.Diagnostics;
+    using System.Fabric;
+    using System.Threading;
+
     public class Program
     {
         public static void Main(string[] args)
@@ -22,7 +22,7 @@ namespace EventHubProcessor
                     // This name must match the name defined in the ServiceManifest. If you change
                     // this name, please change the name of the ServiceType in the ServiceManifest.
 
-                                                       
+
                     fabricRuntime.RegisterServiceType("IoTEventHubProcessorService", typeof(IoTEventHubProcessorService));
 
                     ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(IoTEventHubProcessorService).Name);

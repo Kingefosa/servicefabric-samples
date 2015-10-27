@@ -3,50 +3,26 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.ServiceFabric;
-using Microsoft.ServiceFabric.Actors;
-using IoTActor.Common;
-using System.Text;
-using Newtonsoft.Json.Linq;
-
-
 namespace FloorActor
 {
+    using System;
+    using System.Text;
+    using System.Threading.Tasks;
+    using IoTActor.Common;
+    using Microsoft.ServiceFabric.Actors;
+    using Newtonsoft.Json.Linq;
+
     public class FloorActor : Actor<FloorActorState>, IIoTActor
     {
-        static string s_BuildingActorService = "fabric:/IoTApplication/BuildingActor";
-        static string s_BuildingActorIdFormat = "{0}-{1}-{2}";
+        private static string s_BuildingActorService = "fabric:/IoTApplication/BuildingActor";
+        private static string s_BuildingActorIdFormat = "{0}-{1}-{2}";
 
         private IIoTActor m_BuildingActor = null;
 
 
-        private IIoTActor CreateBuildingActor(string BuildingId, string EventHubName, string ServiceBusNS)
+        public async Task Post(string DeviceId, string EventHubName, string ServiceBusNS, byte[] Body)
         {
-            var actorId = new ActorId(string.Format(s_BuildingActorIdFormat, BuildingId, EventHubName, ServiceBusNS));
-            return ActorProxy.Create<IIoTActor>(actorId, new Uri(s_BuildingActorService));
-        }
-        private async Task ForwardToBuildingActor(string DeviceId, string EventHubName, string ServiceBusNS, byte[] Body)
-        {
-            if (null == m_BuildingActor)
-            {
-                var j = JObject.Parse(Encoding.UTF8.GetString(Body));
-                var BuildingId = j["BuildingId"].Value<string>();
-
-                m_BuildingActor = CreateBuildingActor(BuildingId, EventHubName, ServiceBusNS);
-            }
-            await m_BuildingActor.Post(DeviceId, EventHubName, ServiceBusNS, Body);
-        }
-
-
-        public async  Task Post(string DeviceId, string EventHubName, string ServiceBusNS, byte[] Body)
-        {
- 
-            var taskForward = ForwardToBuildingActor(DeviceId, EventHubName, ServiceBusNS, Body);
+            Task taskForward = this.ForwardToBuildingActor(DeviceId, EventHubName, ServiceBusNS, Body);
 
             /*
            The following are the chain in this samples
@@ -66,6 +42,25 @@ namespace FloorActor
             // mean while you can do CEP to generate commands to devices. 
 
             await taskForward;
+        }
+
+
+        private IIoTActor CreateBuildingActor(string BuildingId, string EventHubName, string ServiceBusNS)
+        {
+            ActorId actorId = new ActorId(string.Format(s_BuildingActorIdFormat, BuildingId, EventHubName, ServiceBusNS));
+            return ActorProxy.Create<IIoTActor>(actorId, new Uri(s_BuildingActorService));
+        }
+
+        private async Task ForwardToBuildingActor(string DeviceId, string EventHubName, string ServiceBusNS, byte[] Body)
+        {
+            if (null == this.m_BuildingActor)
+            {
+                JObject j = JObject.Parse(Encoding.UTF8.GetString(Body));
+                string BuildingId = j["BuildingId"].Value<string>();
+
+                this.m_BuildingActor = this.CreateBuildingActor(BuildingId, EventHubName, ServiceBusNS);
+            }
+            await this.m_BuildingActor.Post(DeviceId, EventHubName, ServiceBusNS, Body);
         }
     }
 }

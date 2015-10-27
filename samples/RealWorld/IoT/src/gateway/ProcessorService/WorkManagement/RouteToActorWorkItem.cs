@@ -3,29 +3,42 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using IoTProcessorManagement.Common;
-using Microsoft.ServiceBus.Messaging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace EventHubProcessor
 {
-    
+    using System.Threading.Tasks;
+    using IoTProcessorManagement.Common;
+    using Microsoft.ServiceBus.Messaging;
+
     public class RouteToActorWorkItem : IWorkItem
     {
         private static readonly string s_QueueName_Format = "{0}";
 
         public RouteToActorWorkItem()
         {
+        }
 
+        public string PublisherName { get; set; }
+
+        public string EventHubName { get; set; }
+
+        public string ServiceBusNS { get; set; }
+
+        public byte[] Body { get; set; }
+
+        // TODO: ignore serializable
+        public string QueueName
+        {
+            get
+            {
+                return string.Format(
+                    s_QueueName_Format,
+                    this.PublisherName);
+            }
         }
 
         public static async Task<RouteToActorWorkItem> CreateAsync(EventData ev, string publisherName, string eventHubName, string serviceBusNS)
         {
-            var wi = new RouteToActorWorkItem()
+            RouteToActorWorkItem wi = new RouteToActorWorkItem()
             {
                 Body = await ev.GetBodyStream().ToBytes(),
                 PublisherName = publisherName,
@@ -35,20 +48,5 @@ namespace EventHubProcessor
 
             return wi;
         }
-
-        // TODO: ignore serializable
-        public string QueueName
-        {
-            get
-            {
-                return string.Format(RouteToActorWorkItem.s_QueueName_Format,
-                                     this.PublisherName);
-            }
-        }
-
-        public string PublisherName { get; set; }
-        public string EventHubName { get; set; }
-        public string ServiceBusNS { get; set; }
-        public byte[] Body { get; set; }
     }
 }

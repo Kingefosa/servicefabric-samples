@@ -3,18 +3,12 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using IoTProcessorManagement.Common;
-using Microsoft.ServiceFabric.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Owin;
-using System.Web.Http;
-
 namespace IoTProcessorManagementService
 {
+    using System.Web.Http;
+    using IoTProcessorManagement.Common;
+    using Owin;
+
     /// <summary>
     /// This class helps in building an Owin pipeline specific 
     /// to the need of the controller service. 
@@ -23,11 +17,9 @@ namespace IoTProcessorManagementService
     /// 2- Inject state management in each controller created
     /// 3- TODO: Use ADAL to authenticate requests 
     /// </summary>
-    class ProcessorManagementServiceOwinListenerSpec : IOwinListenerSpec
+    internal class ProcessorManagementServiceOwinListenerSpec : IOwinListenerSpec
     {
         public ProcessorManagementService Svc { get; set; }
-        
-
 
 
         public void CreateOwinPipeline(IAppBuilder app)
@@ -42,10 +34,10 @@ namespace IoTProcessorManagementService
             config.MapHttpAttributeRoutes();
 
             config.Routes.MapHttpRoute(
-                            name: "DefaultApi",
-                            routeTemplate: "{controller}/{id}",
-                            defaults: new { id = RouteParameter.Optional }
-            );
+                name: "DefaultApi",
+                routeTemplate: "{controller}/{id}",
+                defaults: new {id = RouteParameter.Optional}
+                );
 
             // use the Web API
             app.UseWebApi(config);

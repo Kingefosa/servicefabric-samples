@@ -3,25 +3,20 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Microsoft.ServiceFabric.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace IoTProcessorManagementService
 {
+    using System;
+
     public class ProcessorOperationHandlerFactory
     {
-        public ProcessorOperationHandlerBase CreateHandler(ProcessorManagementService Svc,
-                                             ProcessorOperation Operation)
+        public ProcessorOperationHandlerBase CreateHandler(
+            ProcessorManagementService Svc,
+            ProcessorOperation Operation)
         {
-
             switch (Operation.OperationType)
             {
                 case ProcessorOperationType.Add:
-                   return new ProcessorOperationAddHandler(Svc, Operation);
+                    return new ProcessorOperationAddHandler(Svc, Operation);
 
                 case ProcessorOperationType.Delete:
                     return new ProcessorOperationDeleteHandler(Svc, Operation);
@@ -46,9 +41,8 @@ namespace IoTProcessorManagementService
 
 
                 default:
-                   throw new InvalidOperationException("Can not identify Processor Operation");
+                    throw new InvalidOperationException("Can not identify Processor Operation");
             }
-
         }
     }
 }

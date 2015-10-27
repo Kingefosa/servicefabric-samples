@@ -3,15 +3,10 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Owin;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace IoTProcessorManagement.Common
 {
+    using Owin;
+
     /// <summary>
     ///  defines an Owin Listener specification
     /// CreateOwinPipeline method is expected to create the Owin Pipeline

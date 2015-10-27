@@ -3,20 +3,17 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Microsoft.ServiceBus.Messaging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace IoTProcessorManagement.Common
 {
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Microsoft.ServiceBus.Messaging;
+
     /// <summary>
     /// vanila implementation of IEventProcessor (refer to Event Hub SDK).
     /// the only difference, is we presiste lease (the cursor) with ever event data. 
     /// </summary>
-    class EventProcessor : IEventProcessor
+    internal class EventProcessor : IEventProcessor
     {
         private IEventDataHandler m_Handler;
         private string m_EventHubName;
@@ -26,11 +23,12 @@ namespace IoTProcessorManagement.Common
 
         public EventProcessor(IEventDataHandler Handler, string EventHubName, string ServiceBusNamespace, string ConsumerGroupName)
         {
-            m_Handler = Handler;
-            m_EventHubName = EventHubName;
-            m_ServiceBusNamespace = ServiceBusNamespace;
-            m_CounsumerGroupName = ConsumerGroupName;
+            this.m_Handler = Handler;
+            this.m_EventHubName = EventHubName;
+            this.m_ServiceBusNamespace = ServiceBusNamespace;
+            this.m_CounsumerGroupName = ConsumerGroupName;
         }
+
         public Task CloseAsync(PartitionContext context, CloseReason reason)
         {
             // no op
@@ -46,12 +44,11 @@ namespace IoTProcessorManagement.Common
         public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
         {
             // Todo: Improve performance by batching items 
-            foreach (var ev in messages)
+            foreach (EventData ev in messages)
             {
-                await m_Handler.HandleEventData(m_ServiceBusNamespace, m_EventHubName, m_CounsumerGroupName ,ev);
+                await this.m_Handler.HandleEventData(this.m_ServiceBusNamespace, this.m_EventHubName, this.m_CounsumerGroupName, ev);
                 await context.CheckpointAsync();
             }
-            
         }
     }
 }

@@ -3,38 +3,26 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using IoTProcessorManagement.Clients;
-using Microsoft.ServiceBus.Messaging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Fabric;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace IoTProcessorManagement
 {
-   
+    using System;
+    using IoTProcessorManagement.Clients;
 
-   
 
     public static class Functions
     {
-        #if DEBUG
+#if DEBUG
 
         /*
         this sends test events to processor (event hubs) 
         it should be removed from deployment version
         */
+
         public static void SendProcessorTestMessages(Processor processor, int NumOfMessages, int NumOfPublishers)
         {
             try
             {
                 InternalFunctions.SendTestEventsToProcessorHubsAsync(processor, NumOfMessages, NumOfPublishers).Wait();
-
             }
             catch (AggregateException ae)
             {
@@ -46,9 +34,9 @@ namespace IoTProcessorManagement
 
         public static Processor UpdateProcessor(string BaseAddress, string processorJson)
         {
-            var processor = Processor.FromJsonString(processorJson);
+            Processor processor = Processor.FromJsonString(processorJson);
             try
-            {                
+            {
                 return InternalFunctions.UpdateProcessorAsync(BaseAddress, processor).Result;
             }
             catch (AggregateException ae)
@@ -59,11 +47,9 @@ namespace IoTProcessorManagement
         }
 
 
-
-
         public static Processor AddProcessor(string BaseAddress, string processorJson)
         {
-            var processor = Processor.FromJsonString(processorJson);
+            Processor processor = Processor.FromJsonString(processorJson);
             try
             {
                 return InternalFunctions.AddProcessorAsync(BaseAddress, processor).Result;
@@ -76,13 +62,11 @@ namespace IoTProcessorManagement
         }
 
 
-
         public static string GetManagementApiEndPoint(string FabricEndPoint, string sMgmtAppInstanceName)
         {
             try
             {
                 return InternalFunctions.GetManagementApiEndPointAsync(FabricEndPoint, sMgmtAppInstanceName).Result;
-                
             }
             catch (AggregateException ae)
             {
@@ -92,10 +76,76 @@ namespace IoTProcessorManagement
         }
 
 
+        public static Processor UpdateProcessor(string BaseAddress, Processor processor)
+        {
+            try
+            {
+                return InternalFunctions.UpdateProcessorAsync(BaseAddress, processor).Result;
+            }
+            catch (AggregateException ae)
+            {
+                ae.ThrowPowerShell();
+            }
+            return null;
+        }
+
+
+        public static Processor AddProcessor(string BaseAddress, Processor processor)
+        {
+            try
+            {
+                return InternalFunctions.AddProcessorAsync(BaseAddress, processor).Result;
+            }
+            catch (AggregateException ae)
+            {
+                ae.ThrowPowerShell();
+            }
+            return null;
+        }
+
+
+        public static Processor GetPrcossor(string BaseAddress, string ProcessorName)
+        {
+            try
+            {
+                return InternalFunctions.GetProcessorAsync(BaseAddress, ProcessorName).Result;
+            }
+            catch (AggregateException ae)
+            {
+                ae.ThrowPowerShell();
+            }
+            return null;
+        }
+
+
+        public static Processor[] GetAllProcesseros(string BaseAddress)
+        {
+            try
+            {
+                return InternalFunctions.GetAllProcesserosAsync(BaseAddress).Result;
+            }
+            catch (AggregateException ae)
+            {
+                ae.ThrowPowerShell();
+            }
+            return null;
+        }
+
+
+        public static Processor DeleteProcessor(string BaseAddress, string processorName)
+        {
+            try
+            {
+                return InternalFunctions.DeleteProcessorAsync(BaseAddress, processorName).Result;
+            }
+            catch (AggregateException ae)
+            {
+                ae.ThrowPowerShell();
+            }
+            return null;
+        }
 
         #region Per Processor Action
-      
-
 
         public static Processor StopProcessor(string BaseAddress, string processorName)
         {
@@ -108,8 +158,8 @@ namespace IoTProcessorManagement
                 ae.ThrowPowerShell();
             }
             return null;
-
         }
+
         public static Processor DrainStopProcessor(string BaseAddress, string processorName)
         {
             try
@@ -166,77 +216,5 @@ namespace IoTProcessorManagement
         }
 
         #endregion
-
-
-
-        public static Processor UpdateProcessor(string BaseAddress, Processor processor)
-        {
-            try
-            {
-                return InternalFunctions.UpdateProcessorAsync(BaseAddress, processor).Result;
-            }
-            catch (AggregateException ae)
-            {
-                ae.ThrowPowerShell();
-            }
-            return null;
-        }
-
-
-        public static  Processor AddProcessor(string BaseAddress, Processor processor)
-        {
-            try
-            {
-                return InternalFunctions.AddProcessorAsync(BaseAddress, processor).Result;
-            }
-            catch (AggregateException ae)
-            {
-                ae.ThrowPowerShell();
-            }
-            return null;
-        }
-
-
-        public static Processor GetPrcossor(string BaseAddress, string ProcessorName)
-        {
-            try
-            {
-                return InternalFunctions.GetProcessorAsync(BaseAddress, ProcessorName).Result;
-            }
-            catch (AggregateException ae)
-            {
-                ae.ThrowPowerShell();
-            }
-            return null;
-        }
-
-
-        public static Processor[] GetAllProcesseros(string BaseAddress)
-        {
-            try
-            {
-                return InternalFunctions.GetAllProcesserosAsync(BaseAddress).Result;
-            }
-            catch (AggregateException ae)
-            {
-                ae.ThrowPowerShell();
-            }
-            return null;
-        }
-        
-
-        public static Processor DeleteProcessor(string BaseAddress, string processorName)
-        {
-            try
-            {
-                return InternalFunctions.DeleteProcessorAsync(BaseAddress, processorName).Result;
-            }
-            catch (AggregateException ae)
-            {
-                ae.ThrowPowerShell();
-            }
-            return null;
-        }
-        
     }
 }

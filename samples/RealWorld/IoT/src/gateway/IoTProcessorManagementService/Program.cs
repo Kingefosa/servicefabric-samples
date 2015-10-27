@@ -3,13 +3,13 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using System;
-using System.Diagnostics;
-using System.Fabric;
-using System.Threading;
-
 namespace IoTProcessorManagementService
 {
+    using System;
+    using System.Diagnostics;
+    using System.Fabric;
+    using System.Threading;
+
     public class Program
     {
         public static void Main(string[] args)

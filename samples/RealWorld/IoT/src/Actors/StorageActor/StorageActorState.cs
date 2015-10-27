@@ -3,23 +3,15 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Runtime.Serialization;
-using Microsoft.ServiceFabric;
-using Microsoft.ServiceFabric.Actors;
-using IoTActor.Common;
-
 namespace StorageActor
 {
+    using System.Collections.Generic;
+    using System.Runtime.Serialization;
+    using IoTActor.Common;
+
     [DataContract]
     public class StorageActorState
     {
-        [DataMember]
-        public Queue<IoTActorWorkItem> Queue = new Queue<IoTActorWorkItem>();
+        [DataMember] public Queue<IoTActorWorkItem> Queue = new Queue<IoTActorWorkItem>();
     }
 }

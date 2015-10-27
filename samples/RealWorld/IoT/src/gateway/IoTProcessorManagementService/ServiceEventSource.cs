@@ -3,17 +3,13 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Microsoft.ServiceFabric.Services;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Tracing;
-using System.Fabric;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace IoTProcessorManagementService
 {
+    using System;
+    using System.Diagnostics.Tracing;
+    using System.Fabric;
+    using Microsoft.ServiceFabric.Services;
+
     [EventSource(Name = "IoT-Processor-Management-Service")]
     internal sealed class ServiceEventSource : EventSource
     {
@@ -25,7 +21,7 @@ namespace IoTProcessorManagementService
             if (this.IsEnabled())
             {
                 string finalMessage = string.Format(message, args);
-                Message(finalMessage);
+                this.Message(finalMessage);
             }
         }
 
@@ -34,7 +30,7 @@ namespace IoTProcessorManagementService
         {
             if (this.IsEnabled())
             {
-                WriteEvent(1, message);
+                this.WriteEvent(1, message);
             }
         }
 
@@ -44,7 +40,7 @@ namespace IoTProcessorManagementService
             if (this.IsEnabled())
             {
                 string finalMessage = string.Format(message, args);
-                ServiceMessage(
+                this.ServiceMessage(
                     service.ServiceInitializationParameters.ServiceName.ToString(),
                     service.ServiceInitializationParameters.ServiceTypeName,
                     service.ServiceInitializationParameters.InstanceId,
@@ -62,7 +58,7 @@ namespace IoTProcessorManagementService
             if (this.IsEnabled())
             {
                 string finalMessage = string.Format(message, args);
-                ServiceMessage(
+                this.ServiceMessage(
                     service.ServiceInitializationParameters.ServiceName.ToString(),
                     service.ServiceInitializationParameters.ServiceTypeName,
                     service.ServiceInitializationParameters.ReplicaId,
@@ -72,6 +68,18 @@ namespace IoTProcessorManagementService
                     FabricRuntime.GetNodeContext().NodeName,
                     finalMessage);
             }
+        }
+
+        [Event(3, Level = EventLevel.Informational, Message = "Service host process {0} registered service type {1}")]
+        public void ServiceTypeRegistered(int hostProcessId, string serviceType)
+        {
+            this.WriteEvent(3, hostProcessId, serviceType);
+        }
+
+        [NonEvent]
+        public void ServiceHostInitializationFailed(Exception e)
+        {
+            this.ServiceHostInitializationFailed(e.ToString());
         }
 
         [Event(2, Level = EventLevel.Informational, Message = "{7}")]
@@ -87,26 +95,14 @@ namespace IoTProcessorManagementService
         {
             if (this.IsEnabled())
             {
-                WriteEvent(2, serviceName, serviceTypeName, replicaOrInstanceId, partitionId, applicationName, applicationTypeName, nodeName, message);
+                this.WriteEvent(2, serviceName, serviceTypeName, replicaOrInstanceId, partitionId, applicationName, applicationTypeName, nodeName, message);
             }
-        }
-
-        [Event(3, Level = EventLevel.Informational, Message = "Service host process {0} registered service type {1}")]
-        public void ServiceTypeRegistered(int hostProcessId, string serviceType)
-        {
-            WriteEvent(3, hostProcessId, serviceType);
-        }
-
-        [NonEvent]
-        public void ServiceHostInitializationFailed(Exception e)
-        {
-            ServiceHostInitializationFailed(e.ToString());
         }
 
         [Event(4, Level = EventLevel.Error, Message = "Service host initialization failed")]
         private void ServiceHostInitializationFailed(string exception)
         {
-            WriteEvent(4, exception);
+            this.WriteEvent(4, exception);
         }
     }
 }

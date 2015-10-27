@@ -3,17 +3,13 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using IoTProcessorManagement.Clients;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web.Http;
-
 namespace EventHubProcessor
 {
-   public class EventHubProcessorController : ApiController, IEventHubProcessorController
+    using System.Threading.Tasks;
+    using System.Web.Http;
+    using IoTProcessorManagement.Clients;
+
+    public class EventHubProcessorController : ApiController, IEventHubProcessorController
     {
         // this reference is set by dependancy injection built in OWIN pipeline
         public IoTEventHubProcessorService ProcessorService { get; set; }
@@ -22,27 +18,27 @@ namespace EventHubProcessor
         [Route("eventhubprocessor/pause")]
         public async Task Pause()
         {
-            ProcessorService.TraceWriter.TraceMessage("Recevied Pause Command");
-            await ProcessorService.Pause();
-            ProcessorService.TraceWriter.TraceMessage("Completed Pause Command");
+            this.ProcessorService.TraceWriter.TraceMessage("Recevied Pause Command");
+            await this.ProcessorService.Pause();
+            this.ProcessorService.TraceWriter.TraceMessage("Completed Pause Command");
         }
 
         [HttpPost]
         [Route("eventhubprocessor/stop")]
         public async Task Stop()
         {
-            ProcessorService.TraceWriter.TraceMessage("Recevied Stop Command");
-            await ProcessorService.Stop();
-            ProcessorService.TraceWriter.TraceMessage("Completed Stop Command");
+            this.ProcessorService.TraceWriter.TraceMessage("Recevied Stop Command");
+            await this.ProcessorService.Stop();
+            this.ProcessorService.TraceWriter.TraceMessage("Completed Stop Command");
         }
 
         [HttpPost]
         [Route("eventhubprocessor/resume")]
         public async Task Resume()
         {
-            ProcessorService.TraceWriter.TraceMessage("Recevied Resume Command");
-            await ProcessorService.Resume();
-            ProcessorService.TraceWriter.TraceMessage("Completed Resume Command");
+            this.ProcessorService.TraceWriter.TraceMessage("Recevied Resume Command");
+            await this.ProcessorService.Resume();
+            this.ProcessorService.TraceWriter.TraceMessage("Completed Resume Command");
         }
 
 
@@ -50,43 +46,42 @@ namespace EventHubProcessor
         [Route("eventhubprocessor/drainstop")]
         public async Task DrainStop()
         {
-            ProcessorService.TraceWriter.TraceMessage("Recevied Drain/Stop Command");
-            await ProcessorService.DrainAndStop();
-            ProcessorService.TraceWriter.TraceMessage("Completed Drain/Stop Command");
+            this.ProcessorService.TraceWriter.TraceMessage("Recevied Drain/Stop Command");
+            await this.ProcessorService.DrainAndStop();
+            this.ProcessorService.TraceWriter.TraceMessage("Completed Drain/Stop Command");
         }
 
         [HttpPut]
         [Route("eventhubprocessor/")]
         public async Task Update(Processor newProcessor)
         {
-            await ProcessorService.SetAssignedProcessorAsync(newProcessor);
+            await this.ProcessorService.SetAssignedProcessorAsync(newProcessor);
         }
 
         [HttpGet]
         [Route("eventhubprocessor/")]
         public async Task<ProcessorRuntimeStatus> getStatus()
         {
-
-            ProcessorService.TraceWriter.TraceMessage("Recevied GetStatus Command");
+            this.ProcessorService.TraceWriter.TraceMessage("Recevied GetStatus Command");
             //scater gather status for each reading. 
 
-            var status = new ProcessorRuntimeStatus();
+            ProcessorRuntimeStatus status = new ProcessorRuntimeStatus();
 
-            status.TotalPostedLastMinute  = await ProcessorService.GetTotalPostedLastMinuteAsync();
-            status.TotalProcessedLastMinute = await ProcessorService.GetTotalProcessedLastMinuteAsync();
-            status.TotalPostedLastHour = await ProcessorService.GetTotalPostedLastHourAsync();
-            status.TotalProcessedLastHour= await ProcessorService.GetTotalProcessedLastHourAsync();
-            status.AveragePostedPerMinLastHour = await ProcessorService.GetAveragePostedPerMinLastHourAsync();
-            status.AverageProcessedPerMinLastHour = await ProcessorService.GetAverageProcessedPerMinLastHourAsync();
-            status.StatusString = await ProcessorService.GetStatusStringAsync();
-            status.NumberOfActiveQueues = await ProcessorService.GetNumberOfActiveQueuesAsync();
-            status.NumberOfBufferedItems = await ProcessorService.GetNumOfBufferedItemsAsync();
+            status.TotalPostedLastMinute = await this.ProcessorService.GetTotalPostedLastMinuteAsync();
+            status.TotalProcessedLastMinute = await this.ProcessorService.GetTotalProcessedLastMinuteAsync();
+            status.TotalPostedLastHour = await this.ProcessorService.GetTotalPostedLastHourAsync();
+            status.TotalProcessedLastHour = await this.ProcessorService.GetTotalProcessedLastHourAsync();
+            status.AveragePostedPerMinLastHour = await this.ProcessorService.GetAveragePostedPerMinLastHourAsync();
+            status.AverageProcessedPerMinLastHour = await this.ProcessorService.GetAverageProcessedPerMinLastHourAsync();
+            status.StatusString = await this.ProcessorService.GetStatusStringAsync();
+            status.NumberOfActiveQueues = await this.ProcessorService.GetNumberOfActiveQueuesAsync();
+            status.NumberOfBufferedItems = await this.ProcessorService.GetNumOfBufferedItemsAsync();
 
 
-            status.IsInErrorState = ProcessorService.IsInErrorState;
-            status.ErrorMessage = ProcessorService.ErrorMessage;
-            
-            ProcessorService.TraceWriter.TraceMessage("Completed get status Command");
+            status.IsInErrorState = this.ProcessorService.IsInErrorState;
+            status.ErrorMessage = this.ProcessorService.ErrorMessage;
+
+            this.ProcessorService.TraceWriter.TraceMessage("Completed get status Command");
             return status;
         }
     }

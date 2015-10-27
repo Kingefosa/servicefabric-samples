@@ -3,18 +3,12 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Microsoft.ServiceFabric;
-using Microsoft.ServiceFabric.Actors;
-using IoTActor.Common;
-
 namespace BuildingActor
 {
+    using System.Threading.Tasks;
+    using IoTActor.Common;
+    using Microsoft.ServiceFabric.Actors;
+
     public class BuildingActor : Actor<BuildingActorState>, IIoTActor
     {
         public Task Post(string DeviceId, string EventHubName, string ServiceBusNS, byte[] Body)
@@ -35,7 +29,6 @@ namespace BuildingActor
             */
 
             return Task.FromResult(0);
-
         }
     }
 }

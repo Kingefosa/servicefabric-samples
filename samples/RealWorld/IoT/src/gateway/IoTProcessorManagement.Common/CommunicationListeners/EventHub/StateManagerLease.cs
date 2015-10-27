@@ -3,69 +3,70 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Microsoft.ServiceBus.Messaging;
-using Microsoft.ServiceFabric.Data;
-using Microsoft.ServiceFabric.Data.Collections;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace IoTProcessorManagement.Common
 {
+    using System.Threading.Tasks;
+    using Microsoft.ServiceBus.Messaging;
+    using Microsoft.ServiceFabric.Data;
+    using Microsoft.ServiceFabric.Data.Collections;
+    using Newtonsoft.Json;
+
     /// <summary>
     /// Manages Event Hub Leases (where sequence/partition) are maintained. 
     /// each instance represents a cursor maintained by the client.
     /// this lease type uses Reliable State (of Service Fabric) to for storage.
     /// </summary>
-    class StateManagerLease : Lease
+    internal class StateManagerLease : Lease
     {
-        
         public static readonly string DefaultEntryNameFormat = "_LEASE-{0}-{1}-{2}-{3}";
         private IReliableStateManager m_StateManager;
-        IReliableDictionary<string, string>  m_StateDictionary;
+        private IReliableDictionary<string, string> m_StateDictionary;
         private string m_EntryName;
 
-        public StateManagerLease() { }
+        public StateManagerLease()
+        {
+        }
+
+        private StateManagerLease(
+            IReliableStateManager StateManager,
+            IReliableDictionary<string, string> StateDictionary,
+            string EntryName,
+            string partitionId)
+        {
+            this.m_StateManager = StateManager;
+            this.m_StateDictionary = StateDictionary;
+            this.m_EntryName = EntryName;
+            this.PartitionId = partitionId;
+        }
+
         public static string GetDefaultLeaseEntryName(string ServiceBusNamespace, string ConsumerGroupName, string EventHubName, string PartitionId)
         {
             return string.Format(DefaultEntryNameFormat, ServiceBusNamespace, ConsumerGroupName, EventHubName, PartitionId);
         }
-        private StateManagerLease(IReliableStateManager StateManager,
-                                IReliableDictionary<string, string> StateDictionary, 
-                                string EntryName, 
-                                string partitionId) 
-        {
-            m_StateManager = StateManager;
-            m_StateDictionary = StateDictionary;
-            m_EntryName = EntryName;
-            PartitionId = partitionId;
 
-        }
-
-        public static Task<StateManagerLease> GetOrCreateAsync(IReliableStateManager StateManager,
-                                                                     IReliableDictionary<string, string> StateDictionary,
-                                                                     string ServiceBusNamespace, 
-                                                                     string ConsumerGroupName, 
-                                                                     string EventHubName, 
-                                                                     string PartitionId)
+        public static Task<StateManagerLease> GetOrCreateAsync(
+            IReliableStateManager StateManager,
+            IReliableDictionary<string, string> StateDictionary,
+            string ServiceBusNamespace,
+            string ConsumerGroupName,
+            string EventHubName,
+            string PartitionId)
         {
-            var defaultEntryName = GetDefaultLeaseEntryName(ServiceBusNamespace, ConsumerGroupName, EventHubName, PartitionId);
+            string defaultEntryName = GetDefaultLeaseEntryName(ServiceBusNamespace, ConsumerGroupName, EventHubName, PartitionId);
             return GetOrCreateAsync(StateManager, StateDictionary, defaultEntryName, PartitionId);
         }
 
-        public static async Task<StateManagerLease> GetOrCreateAsync(IReliableStateManager StateManager,
-                                                                     IReliableDictionary<string, string> StateDictionary,
-                                                                     string EntryName,
-                                                                     string partitionId)
+        public static async Task<StateManagerLease> GetOrCreateAsync(
+            IReliableStateManager StateManager,
+            IReliableDictionary<string, string> StateDictionary,
+            string EntryName,
+            string partitionId)
         {
-            using (var tx = StateManager.CreateTransaction())
+            using (ITransaction tx = StateManager.CreateTransaction())
             {
                 StateManagerLease lease;
                 // if something has been saved before load it
-                var cResults = await  StateDictionary.TryGetValueAsync(tx, EntryName);
+                ConditionalResult<string> cResults = await StateDictionary.TryGetValueAsync(tx, EntryName);
                 if (cResults.HasValue)
                 {
                     lease = FromJsonString(cResults.Value);
@@ -80,15 +81,6 @@ namespace IoTProcessorManagement.Common
             }
         }
 
-        private static StateManagerLease FromJsonString(string sJson)
-        {
-            return (StateManagerLease) JsonConvert.DeserializeObject<StateManagerLease>(sJson); 
-        }
-        private string ToJsonString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
- 
         public override bool IsExpired()
         {
             return false; // Service fabric lease does not expire
@@ -96,13 +88,23 @@ namespace IoTProcessorManagement.Common
 
         public async Task SaveAsync()
         {
-            using (var tx = m_StateManager.CreateTransaction())
+            using (ITransaction tx = this.m_StateManager.CreateTransaction())
             {
                 // brute force save
-                var json = this.ToJsonString();
-                await m_StateDictionary.AddOrUpdateAsync(tx, this.m_EntryName, json, (key, val) => { return json; });
+                string json = this.ToJsonString();
+                await this.m_StateDictionary.AddOrUpdateAsync(tx, this.m_EntryName, json, (key, val) => { return json; });
                 await tx.CommitAsync();
             }
+        }
+
+        private static StateManagerLease FromJsonString(string sJson)
+        {
+            return (StateManagerLease) JsonConvert.DeserializeObject<StateManagerLease>(sJson);
+        }
+
+        private string ToJsonString()
+        {
+            return JsonConvert.SerializeObject(this);
         }
     }
 }

@@ -3,52 +3,54 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using IoTProcessorManagement.Clients;
-using IoTProcessorManagement.Common;
-using Microsoft.ServiceFabric.Data;
-using Microsoft.ServiceFabric.Data.Collections;
-using Microsoft.ServiceFabric.Services;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Fabric;
-using System.Fabric.Description;
-using System.Fabric.Query;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace IoTProcessorManagementService
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Fabric;
+    using System.Fabric.Description;
+    using System.Fabric.Query;
+    using System.Linq;
+    using System.Net.Http;
+    using System.Threading.Tasks;
+    using IoTProcessorManagement.Clients;
+    using IoTProcessorManagement.Common;
+    using Microsoft.ServiceFabric.Data;
+    using Microsoft.ServiceFabric.Services;
+
     public abstract class ProcessorOperationHandlerBase
     {
         protected ProcessorManagementService Svc;
         protected ProcessorOperation processorOperation;
+
         public ProcessorOperationHandlerBase(ProcessorManagementService svc, ProcessorOperation Operation)
         {
-            Svc = svc;
-            processorOperation = Operation;
+            this.Svc = svc;
+            this.processorOperation = Operation;
         }
 
-        protected async Task UpdateProcessorAsync(Processor processor, ITransaction tx = null, bool CommitInNewTransaction = false, bool OverwriteServiceFabricnames = false)
+        public abstract Task RunOperation(ITransaction tx);
+
+        public abstract Task<T> ExecuteOperation<T>(ITransaction tx) where T : class;
+
+        protected async Task UpdateProcessorAsync(
+            Processor processor, ITransaction tx = null, bool CommitInNewTransaction = false, bool OverwriteServiceFabricnames = false)
         {
-            var _trx = CommitInNewTransaction ? Svc.StateManager.CreateTransaction() : tx;
+            ITransaction _trx = CommitInNewTransaction ? this.Svc.StateManager.CreateTransaction() : tx;
 
             if (null == _trx)
                 throw new InvalidOperationException("Save processor need a transaction to work with if it is not commitable");
 
 
-            await Svc.ProcessorStateStore.AddOrUpdateAsync(_trx,
-                                            processor.Name,
-                                            processor,
-                                            (name, proc) =>
-                                            {
-                                                proc.SafeUpdate(processor, OverwriteServiceFabricnames);
-                                                return proc;
-                                            });
+            await this.Svc.ProcessorStateStore.AddOrUpdateAsync(
+                _trx,
+                processor.Name,
+                processor,
+                (name, proc) =>
+                {
+                    proc.SafeUpdate(processor, OverwriteServiceFabricnames);
+                    return proc;
+                });
 
             if (CommitInNewTransaction)
             {
@@ -57,15 +59,22 @@ namespace IoTProcessorManagementService
             }
 
 
-            ServiceEventSource.Current.Message(string.Format("processor {0} Updated with tx:{1} NewCommit:{2} OverwriteNames:{3}", processor.Name, tx ==null, CommitInNewTransaction, OverwriteServiceFabricnames));
+            ServiceEventSource.Current.Message(
+                string.Format(
+                    "processor {0} Updated with tx:{1} NewCommit:{2} OverwriteNames:{3}",
+                    processor.Name,
+                    tx == null,
+                    CommitInNewTransaction,
+                    OverwriteServiceFabricnames));
         }
+
         protected async Task<Processor> GetProcessorAsync(string ProcessorName, ITransaction tx = null)
         {
-            var _trx = tx ?? Svc.StateManager.CreateTransaction();
+            ITransaction _trx = tx ?? this.Svc.StateManager.CreateTransaction();
 
 
             Processor processor;
-            var cResult = await Svc.ProcessorStateStore.TryGetValueAsync(_trx, ProcessorName);
+            ConditionalResult<Processor> cResult = await this.Svc.ProcessorStateStore.TryGetValueAsync(_trx, ProcessorName);
             if (cResult.HasValue)
                 processor = cResult.Value;
             else
@@ -82,26 +91,61 @@ namespace IoTProcessorManagementService
 
         protected async Task<bool> ReEnqueAsync(ITransaction tx)
         {
-            processorOperation.RetryCount++;
+            this.processorOperation.RetryCount++;
 
-            if (processorOperation.RetryCount > ProcessorManagementService.s_MaxProcessorOpeartionRetry)
+            if (this.processorOperation.RetryCount > ProcessorManagementService.s_MaxProcessorOpeartionRetry)
                 return false;
 
-            await Svc.ProcessorOperationsQueue.EnqueueAsync(tx, processorOperation);
+            await this.Svc.ProcessorOperationsQueue.EnqueueAsync(tx, this.processorOperation);
             return true;
         }
 
-        private async Task<IList<ServicePartitionClient<ProcessorServiceCommunicationClient>>> GetServicePartitionClientsAsync(string ServiceName, 
-                                                                                                                            int MaxQueryRetryCount = 5, 
-                                                                                                                            int BackOffRetryDelaySec = 3)
+        protected Task<HttpRequestMessage> GetBasicPartitionHttpRequestMessageAsync()
+        {
+            // if you want to add default heads such as AuthN, add'em here. 
+
+            return Task.FromResult(new HttpRequestMessage());
+        }
+
+        protected async Task<Task<HttpResponseMessage>[]> SendHttpAllServicePartitionAsync(string ServiceName, HttpRequestMessage Message, string requestPath)
+        {
+            IList<ServicePartitionClient<ProcessorServiceCommunicationClient>> partitionClients = null;
+            // Get the list of representative service partition clients.
+            partitionClients = await this.GetServicePartitionClientsAsync(ServiceName);
+
+            IList<Task<HttpResponseMessage>> tasks = new List<Task<HttpResponseMessage>>(partitionClients.Count);
+
+            foreach (ServicePartitionClient<ProcessorServiceCommunicationClient> partitionClient in partitionClients)
+            {
+                HttpRequestMessage message = await this.cloneHttpRequestMesageAsync(Message);
+
+
+                // partitionClient internally resolves the address and retries on transient errors based on the configured retry policy.
+                tasks.Add(
+                    partitionClient.InvokeWithRetryAsync(
+                        client =>
+                        {
+                            message.RequestUri = new Uri(string.Concat(client.BaseAddress, requestPath));
+                            HttpClient httpclient = new HttpClient();
+                            return httpclient.SendAsync(message);
+                        }));
+            }
+
+            return tasks.ToArray();
+        }
+
+        private async Task<IList<ServicePartitionClient<ProcessorServiceCommunicationClient>>> GetServicePartitionClientsAsync(
+            string ServiceName,
+            int MaxQueryRetryCount = 5,
+            int BackOffRetryDelaySec = 3)
         {
             for (int i = 0; i < MaxQueryRetryCount; i++)
             {
                 try
                 {
                     FabricClient fabricClient = new FabricClient();
-                    var serviceUri = new Uri(ServiceName);
-                    
+                    Uri serviceUri = new Uri(ServiceName);
+
                     // Get Partition List for the target service name 
                     ServicePartitionList partitionList = await fabricClient.QueryManager.GetPartitionListAsync(serviceUri);
 
@@ -114,22 +158,29 @@ namespace IoTProcessorManagementService
                     {
                         Int64RangePartitionInformation partitionInfo = partition.PartitionInformation as Int64RangePartitionInformation;
                         partitionClients.Add(
-                            new ServicePartitionClient<ProcessorServiceCommunicationClient>(Svc.m_ProcessorServiceCommunicationClientFactory, new Uri(ServiceName), partitionInfo.LowKey));
+                            new ServicePartitionClient<ProcessorServiceCommunicationClient>(
+                                this.Svc.m_ProcessorServiceCommunicationClientFactory,
+                                new Uri(ServiceName),
+                                partitionInfo.LowKey));
                     }
 
                     return partitionClients;
                 }
                 catch (FabricTransientException ex)
                 {
-
                     if (i == MaxQueryRetryCount - 1)
                     {
-                        ServiceEventSource.Current.ServiceMessage(Svc, "Processor Operation Handler failed to resolve service partition after:{0} retry with backoff retry:{1} E:{2} Stack Trace:{3}",
-                                                                    MaxQueryRetryCount, BackOffRetryDelaySec, ex.Message, ex.StackTrace);
+                        ServiceEventSource.Current.ServiceMessage(
+                            this.Svc,
+                            "Processor Operation Handler failed to resolve service partition after:{0} retry with backoff retry:{1} E:{2} Stack Trace:{3}",
+                            MaxQueryRetryCount,
+                            BackOffRetryDelaySec,
+                            ex.Message,
+                            ex.StackTrace);
                         throw;
                     }
                 }
-                
+
 
                 await Task.Delay(TimeSpan.FromSeconds(BackOffRetryDelaySec).Milliseconds);
             }
@@ -147,11 +198,11 @@ namespace IoTProcessorManagementService
 
             copy.Version = Source.Version;
 
-            foreach (var p in Source.Properties)
+            foreach (KeyValuePair<string, object> p in Source.Properties)
                 copy.Properties.Add(p);
-            
 
-            foreach (var requestHeader in Source.Headers)
+
+            foreach (KeyValuePair<string, IEnumerable<string>> requestHeader in Source.Headers)
                 copy.Headers.TryAddWithoutValidation(requestHeader.Key, requestHeader.Value);
 
             if (Source.Method != HttpMethod.Get)
@@ -159,130 +210,101 @@ namespace IoTProcessorManagementService
 
 
             return Task.FromResult(copy);
-
         }
-
-        protected Task<HttpRequestMessage> GetBasicPartitionHttpRequestMessageAsync()
-        {
-            // if you want to add default heads such as AuthN, add'em here. 
-
-            return Task.FromResult(new HttpRequestMessage());
-
-        } 
-        protected async Task<Task<HttpResponseMessage>[]> SendHttpAllServicePartitionAsync(string ServiceName, HttpRequestMessage Message, string requestPath) 
-        {
-        
-
-            IList<ServicePartitionClient<ProcessorServiceCommunicationClient>> partitionClients =null;
-                // Get the list of representative service partition clients.
-                partitionClients = await GetServicePartitionClientsAsync(ServiceName);
-
-            IList<Task<HttpResponseMessage>> tasks = new List<Task<HttpResponseMessage>>(partitionClients.Count);
-
-            foreach (ServicePartitionClient<ProcessorServiceCommunicationClient> partitionClient in partitionClients)
-            {
-                var message = await cloneHttpRequestMesageAsync(Message);
-                
-
-                // partitionClient internally resolves the address and retries on transient errors based on the configured retry policy.
-                tasks.Add(
-                    partitionClient.InvokeWithRetryAsync(
-                        client =>
-                        {
-                            message.RequestUri = new Uri(string.Concat(client.BaseAddress, requestPath)); 
-                            HttpClient httpclient = new HttpClient();
-                            return httpclient.SendAsync(message);
-
-                        }));
-
-            }
-
-            return tasks.ToArray();
-        }
-
 
         #region Service Fabric Application & Services Management 
+
         protected async Task CleanUpServiceFabricCluster(Processor processor)
         {
             try
             {
-                await DeleteServiceAsync(processor);
+                await this.DeleteServiceAsync(processor);
             }
-            catch(AggregateException aex)
+            catch (AggregateException aex)
             {
-                var ae = aex.Flatten();
-                ServiceEventSource.Current.ServiceMessage(Svc, "Delete Service for processor:{0} service:{1} failed, will keep working normally E:{2} StackTrace:{3}", processor.Name, processor.ServiceFabricServiceName, ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace());
+                AggregateException ae = aex.Flatten();
+                ServiceEventSource.Current.ServiceMessage(
+                    this.Svc,
+                    "Delete Service for processor:{0} service:{1} failed, will keep working normally E:{2} StackTrace:{3}",
+                    processor.Name,
+                    processor.ServiceFabricServiceName,
+                    ae.GetCombinedExceptionMessage(),
+                    ae.GetCombinedExceptionStackTrace());
             }
 
 
             try
             {
-                await DeleteAppAsync(processor);
+                await this.DeleteAppAsync(processor);
             }
             catch (AggregateException aex)
             {
-                var ae = aex.Flatten();
-                ServiceEventSource.Current.ServiceMessage(Svc, "Delete App for processor:{0} app:{1} failed, will keep working normally E:{2} StackTrace:{3}", processor.Name, processor.ServiceFabricAppInstanceName, ae.GetCombinedExceptionMessage(), ae.GetCombinedExceptionStackTrace());
+                AggregateException ae = aex.Flatten();
+                ServiceEventSource.Current.ServiceMessage(
+                    this.Svc,
+                    "Delete App for processor:{0} app:{1} failed, will keep working normally E:{2} StackTrace:{3}",
+                    processor.Name,
+                    processor.ServiceFabricAppInstanceName,
+                    ae.GetCombinedExceptionMessage(),
+                    ae.GetCombinedExceptionStackTrace());
             }
         }
 
 
         protected async Task DeleteServiceAsync(Processor processor)
         {
-            var sServiceName = new Uri(processor.ServiceFabricServiceName);
+            Uri sServiceName = new Uri(processor.ServiceFabricServiceName);
 
             FabricClient fabricClient = new FabricClient();
             await fabricClient.ServiceManager.DeleteServiceAsync(sServiceName);
 
-            ServiceEventSource.Current.ServiceMessage(Svc, "Service for processor:{0} service:{1} deleted.", processor.Name, processor.ServiceFabricServiceName);
-
-
+            ServiceEventSource.Current.ServiceMessage(
+                this.Svc,
+                "Service for processor:{0} service:{1} deleted.",
+                processor.Name,
+                processor.ServiceFabricServiceName);
         }
 
         protected async Task DeleteAppAsync(Processor processor)
         {
             FabricClient fabricClient = new FabricClient();
             await fabricClient.ApplicationManager.DeleteApplicationAsync(new Uri(processor.ServiceFabricAppInstanceName));
-            ServiceEventSource.Current.ServiceMessage(Svc, "App for processor:{0} app:{1} deleted", processor.Name, processor.ServiceFabricAppInstanceName);
-
+            ServiceEventSource.Current.ServiceMessage(this.Svc, "App for processor:{0} app:{1} deleted", processor.Name, processor.ServiceFabricAppInstanceName);
         }
 
 
         protected async Task CreateAppAsync(Processor processor)
         {
-
             FabricClient fabricClient = new FabricClient();
-            ApplicationDescription appDesc = new ApplicationDescription(new Uri(processor.ServiceFabricAppInstanceName),
-                                                                         processor.ServiceFabricAppTypeName,
-                                                                         processor.ServiceFabricAppTypeVersion);
+            ApplicationDescription appDesc = new ApplicationDescription(
+                new Uri(processor.ServiceFabricAppInstanceName),
+                processor.ServiceFabricAppTypeName,
+                processor.ServiceFabricAppTypeVersion);
 
 
             // create the app
             await fabricClient.ApplicationManager.CreateApplicationAsync(appDesc);
-            ServiceEventSource.Current.ServiceMessage(Svc, "App for processor:{0} app:{1} created", processor.Name, processor.ServiceFabricAppInstanceName);
-
+            ServiceEventSource.Current.ServiceMessage(this.Svc, "App for processor:{0} app:{1} created", processor.Name, processor.ServiceFabricAppInstanceName);
         }
 
         protected async Task CreateServiceAsync(Processor processor)
         {
-
             FabricClient fabricClient = new FabricClient();
             await fabricClient.ServiceManager.CreateServiceFromTemplateAsync(
-                                        new Uri(processor.ServiceFabricAppInstanceName),
-                                        new Uri(processor.ServiceFabricServiceName),
-                                        Svc.Config.ServiceTypeName,
-                                        processor.AsBytes()
-                        );
+                new Uri(processor.ServiceFabricAppInstanceName),
+                new Uri(processor.ServiceFabricServiceName),
+                this.Svc.Config.ServiceTypeName,
+                processor.AsBytes()
+                );
 
 
-            ServiceEventSource.Current.ServiceMessage(Svc, "Service for processor:{0} service:{1} created.", processor.Name, processor.ServiceFabricServiceName);
-
-
+            ServiceEventSource.Current.ServiceMessage(
+                this.Svc,
+                "Service for processor:{0} service:{1} created.",
+                processor.Name,
+                processor.ServiceFabricServiceName);
         }
+
         #endregion
-
-        public abstract Task RunOperation( ITransaction tx);
-
-        public abstract Task<T> ExecuteOperation<T>(ITransaction tx) where T : class;    
     }
 }

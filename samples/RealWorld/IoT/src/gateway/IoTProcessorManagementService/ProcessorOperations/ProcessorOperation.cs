@@ -3,36 +3,31 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace IoTProcessorManagementService
 {
     public class ProcessorOperation
     {
+        public ProcessorOperation()
+        {
+            this.RetryCount = 1;
+        }
+
         public string ProcessorName { get; set; }
+
         public ProcessorOperationType OperationType { get; set; }
 
         public int RetryCount { get; set; }
-
-        public ProcessorOperation()
-        {
-            RetryCount = 1;
-        }
-
     }
+
     public enum ProcessorOperationType
     {
-        Add, 
-        Pause, 
+        Add,
+        Pause,
         Resume,
-        Stop, 
-        DrainStop, 
+        Stop,
+        DrainStop,
         Delete,
-        Update, 
+        Update,
         RuntimeStatusCheck
     }
 }

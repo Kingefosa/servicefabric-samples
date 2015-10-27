@@ -3,25 +3,21 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Microsoft.ServiceFabric.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web.Http.Dependencies;
-
 namespace IoTProcessorManagementService
 {
-    class ProcessorManagementServiceRefInjector : IDependencyResolver, IDependencyScope
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Web.Http.Dependencies;
+
+    internal class ProcessorManagementServiceRefInjector : IDependencyResolver, IDependencyScope
     {
-        public ProcessorManagementService Svc { get; set; }
-
-        public ProcessorManagementServiceRefInjector(ProcessorManagementService svc    )
+        public ProcessorManagementServiceRefInjector(ProcessorManagementService svc)
         {
-            Svc = svc;
-
+            this.Svc = svc;
         }
+
+        public ProcessorManagementService Svc { get; set; }
 
         public IDependencyScope BeginScope()
         {
@@ -35,15 +31,14 @@ namespace IoTProcessorManagementService
 
         public object GetService(Type serviceType)
         {
-            
             if (serviceType.GetInterfaces().Contains(typeof(ProcessorManagementServiceApiController)))
             {
-                var reliableStateCtrl = (ProcessorManagementServiceApiController)Activator.CreateInstance(serviceType);
+                ProcessorManagementServiceApiController reliableStateCtrl = (ProcessorManagementServiceApiController) Activator.CreateInstance(serviceType);
                 reliableStateCtrl.Svc = this.Svc;
                 return reliableStateCtrl;
             }
 
-                return null;
+            return null;
         }
 
         public IEnumerable<object> GetServices(Type serviceType)

@@ -3,22 +3,15 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using IoTProcessorManagement.Common;
-using Owin;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web.Http;
-
 namespace EventHubProcessor
 {
-    class ProcessorServiceOwinListenerSpec : IOwinListenerSpec
+    using System.Web.Http;
+    using IoTProcessorManagement.Common;
+    using Owin;
+
+    internal class ProcessorServiceOwinListenerSpec : IOwinListenerSpec
     {
         public IoTEventHubProcessorService Svc { get; set; }
-
-
 
 
         public void CreateOwinPipeline(IAppBuilder app)
@@ -33,10 +26,10 @@ namespace EventHubProcessor
             config.MapHttpAttributeRoutes();
 
             config.Routes.MapHttpRoute(
-                            name: "DefaultApi",
-                            routeTemplate: "{controller}/{id}",
-                            defaults: new { id = RouteParameter.Optional }
-            );
+                name: "DefaultApi",
+                routeTemplate: "{controller}/{id}",
+                defaults: new {id = RouteParameter.Optional}
+                );
 
             // use the Web API
             app.UseWebApi(config);

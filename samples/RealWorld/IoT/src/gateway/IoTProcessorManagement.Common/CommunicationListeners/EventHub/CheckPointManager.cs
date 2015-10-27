@@ -3,24 +3,20 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using Microsoft.ServiceBus.Messaging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace IoTProcessorManagement.Common
 {
+    using System.Threading.Tasks;
+    using Microsoft.ServiceBus.Messaging;
+
     /// <summary>
     /// vanila implementation of ICheckpointManager (refer to Event Hub SDK).
     /// the check point manager sets the lease and presist it in Service Fabric state.
     /// </summary>
-    class CheckPointManager : ICheckpointManager
+    internal class CheckPointManager : ICheckpointManager
     {
         public async Task CheckpointAsync(Lease lease, string offset, long sequenceNumber)
         {
-            var stateManagerLease = lease as StateManagerLease;
+            StateManagerLease stateManagerLease = lease as StateManagerLease;
 
             stateManagerLease.Offset = offset;
             stateManagerLease.SequenceNumber = sequenceNumber;

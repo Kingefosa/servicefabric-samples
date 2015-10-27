@@ -3,23 +3,21 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web.Http.Dependencies;
-
 namespace EventHubProcessor
 {
-    class ServiceRefInjector : IDependencyResolver, IDependencyScope
-    {
-        public IoTEventHubProcessorService Svc { get; set; }
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Web.Http.Dependencies;
 
+    internal class ServiceRefInjector : IDependencyResolver, IDependencyScope
+    {
         public ServiceRefInjector(IoTEventHubProcessorService svc)
         {
-            Svc = svc;
+            this.Svc = svc;
         }
+
+        public IoTEventHubProcessorService Svc { get; set; }
 
         public IDependencyScope BeginScope()
         {
@@ -33,10 +31,9 @@ namespace EventHubProcessor
 
         public object GetService(Type serviceType)
         {
-
             if (serviceType.GetInterfaces().Contains(typeof(IEventHubProcessorController)))
             {
-                var ctrl = (IEventHubProcessorController)Activator.CreateInstance(serviceType);
+                IEventHubProcessorController ctrl = (IEventHubProcessorController) Activator.CreateInstance(serviceType);
                 ctrl.ProcessorService = this.Svc;
                 return ctrl;
             }
