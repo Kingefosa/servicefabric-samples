@@ -200,6 +200,9 @@ namespace IoTProcessorManagement.Common
                 {
                     Handler handler;
                     this.m_handlers.TryRemove(qName, out handler);
+
+                    // todo: Future phases, check if handler 
+                    // implements IDisposable and dispose it if so.
                 });
         }
 

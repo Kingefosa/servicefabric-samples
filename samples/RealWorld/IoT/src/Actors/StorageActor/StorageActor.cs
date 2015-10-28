@@ -62,8 +62,8 @@ namespace StorageActor
             this.m_DequeueTimer = this.RegisterTimer(
                 this.SaveToStorage,
                 false,
-                TimeSpan.FromMilliseconds(8),
-                TimeSpan.FromMilliseconds(8));
+                TimeSpan.FromMilliseconds(10),
+                TimeSpan.FromMilliseconds(10));
 
             await base.OnActivateAsync();
         }
@@ -95,7 +95,10 @@ namespace StorageActor
             TableBatchOperation batchOperation = new TableBatchOperation();
 
             while ((nCurrent <= s_MaxEntriesPerRound || bFinal) && (0 != this.State.Queue.Count))
+            {
                 batchOperation.InsertOrReplace(this.State.Queue.Dequeue().ToDynamicTableEntity());
+                nCurrent++;
+            }
 
             await table.ExecuteBatchAsync(batchOperation);
         }

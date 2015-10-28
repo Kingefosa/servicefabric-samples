@@ -69,8 +69,8 @@ namespace PowerBIActor
             this.m_DequeueTimer = this.RegisterTimer(
                 this.SendToPowerBIAsync,
                 false,
-                TimeSpan.FromMilliseconds(8),
-                TimeSpan.FromMilliseconds(8));
+                TimeSpan.FromMilliseconds(10),
+                TimeSpan.FromMilliseconds(10));
 
             await base.OnActivateAsync();
         }
