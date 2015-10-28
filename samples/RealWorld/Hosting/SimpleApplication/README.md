@@ -7,14 +7,13 @@ This sample application consists of a single executable, SimpleWebServer.exe, wh
 ## Content of the sample
 
 - SimpleWebServer.exe: The sample application
-- Sources: Contains the sources of SimpleWebServer.exe
-- Service Fabric Package: This folder contains a Service Fabric application package for the SimpleWebServer.exe. You can use this package in case you don't want to package the application and just play with the sample.
+- Service Fabric Package: This folder contains a pre-created Service Fabric application package for the SimpleWebServer.exe. You can use this package in case you don't have the Service Fabric SDK installed and just play with the sample.
 - Scripts: Contains a PowerShell script to deploy the Service Fabric application package to the local and remote Service Fabric cluster
 
 ## How to use the sample
 
 ### Just run it
-Pull down the sample on your local machine and go to the scripts folder. Execute the PowerShell script for either your local development cluster (make sure it is running) or a Service Fabric cluster in Azure. You can check the status of the application running in Service Fabric by using the Service Fabric Explorer as shown below.
+In case you don't have the Service Fabric SDK installed you can still explore this sample by using the pre-created Service Fabric package. Pull down the sample on your local machine and go to the scripts folder. Execute the PowerShell script for either your local development cluster (make sure it is running) or a Service Fabric cluster in Azure. You can check the status of the application running in Service Fabric by using the Service Fabric Explorer as shown below.
 
 ![Existing application in Service Fabric](./appinsfx.png)
 
@@ -26,7 +25,17 @@ The default installation location is C:\Program Files\Microsoft SDKs\Service Fab
 ```
 ServiceFabricAppPackageUtil.exe /source:[directory of SimpleWebServer.exe] /target:[directory that will contain the package] /appname:WebServer /exe:SimpleWebServer.exe
 ```
-Modify the PowerShell script to point to your new Service Fabric application package folder and deploy it
+Next you need to define an endpoint on port 8080. To do this update the ServiceManifest.xml EndPoint element as shown below.
+
+```xml
+<Resources>
+    <Endpoints>
+     <Endpoint Name="WebServerTypeEndpoint" Protocol="http" Port="8080" Type="Input" />
+    </Endpoints>
+</Resources>
+```
+
+Modify the PowerShell script to point to your new Service Fabric application package folder and deploy it the package.
 
 ## Learn more
 
