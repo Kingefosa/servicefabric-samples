@@ -1,26 +1,33 @@
-# Azure Service Fabric Samples [**PREVIEW Branch**]
+# Package and deploy an existing application
 
-This branch contains version of the Service Fabric samples that have been updated to work with the latest private preview release of the Service Fabric SDK. If you are using the public SDK (linked from http://aka.ms/servicefabricsdk), please use the master branch. 
+This sample application consists of a single executable, SimpleWebServer.exe, which listens to port 8080 and returns the machine name based on a query string parameter. You can launch the application by double clicking on SimpleWebServer.exe (you may need to start with elevated privileges). Type http://localhost:8080/?cmd=instance in the address bar of your browser. The image below shows the running application SimpleWebServer.exe
 
-## How the samples are organized
+![Existing application in Service Fabric](./runningapp.png)
 
-### By Programming Model
-The repo is divided into Actor samples and Services samples, corresponding to the two programming models available for Service Fabric, the Reliable Actors API and the Reliable Services API. You may want to read up on [how the two models compare][2] before diving in.
+## Content of the sample
 
-### By Development Environment
+- SimpleWebServer.exe: The sample application
+- Sources: Contains the sources of SimpleWebServer.exe
+- Service Fabric Package: This folder contains a Service Fabric application package for the SimpleWebServer.exe. You can use this package in case you don't want to package the application and just play with the sample.
+- Scripts: Contains a PowerShell script to deploy the Service Fabric application package to the local and remote Service Fabric cluster
 
-The samples are further divided into Visual Studio 2015 and Visual Studio 2013. Only VS 2015 supports the tooling add-in that enables packaging, deployment, and debugging directly from Visual Studio on your local cluster, so that is the preferred approach and offers the greatest number of samples. A subset of the VS 2015 samples are provided for VS 2013 but these require manual deployment from PowerShell and do not offer automatic debugger integration.
+## How to use the sample
 
-To set up your dev environment for use with Visual Studio 2015, simply follow the [getting started guide][3].
+### Just run it
+Pull down the sample on your local machine and go to the scripts folder. Execute the PowerShell script for either your local development cluster (make sure it is running) or a Service Fabric cluster in Azure. You can check the status of the application running in Service Fabric by using the Service Fabric Explorer as shown below.
 
-To use Visual Studio 2013, follow the same instructions but download the core SDK from [here][4] instead of the full SDK linked in the getting started guide. All other instructions remain the same. Each VS 2013 solution contains a Scripts directory that includes Deploy and Remove scripts that you can use to manage the apps in PowerShell.
+![Existing application in Service Fabric](./appinsfx.png)
 
+
+### Package the application and run it
+The easiest way to create an application package is using the Service Fabric packaging tool that ships as part of the Service Fabric SDK.
+The default installation location is C:\Program Files\Microsoft SDKs\Service Fabric\Tools. Browse to the tools folder using command line or PowerShell and execute the following command:
+
+```
+ServiceFabricAppPackageUtil.exe /source:[directory of SimpleWebServer.exe] /target:[directory that will contain the package] /appname:WebServer /exe:SimpleWebServer.exe
+```
+Modify the PowerShell script to point to your new Service Fabric application package folder and deploy it
 
 ## Learn more
 
 To learn more about Service Fabric, check out the [platform documentation](http://aka.ms/servicefabricdocs) on azure.com.
-
-[1]: http://aka.ms/servicefabric "Service Fabric campaign page"
-[2]: http://azure.microsoft.com/en-us/documentation/articles/service-fabric-choose-framework/ "Choose framework article"
-[3]: http://aka.ms/servicefabricsdk "Setup with VS 2015"
-[4]: http://www.microsoft.com/web/handlers/webpi.ashx?command=getinstallerredirect&appid=ServiceFabricSDK "Core SDK download"
