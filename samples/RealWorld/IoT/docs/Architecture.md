@@ -65,7 +65,7 @@ Once a processor is provisioned you can interact with it using the following com
 
 
 ##Telemetry
-The solution provide the following types of telemetry
+The solution provides the following types of telemetry
 
 1. Near real time device events telemetry which can be viewed on PowerBI Dashboard. 
 2. Infrastructure health telemetry via [Service Fabric Health](https://azure.microsoft.com/en-us/documentation/articles/service-fabric-health-introduction/) API.
@@ -118,3 +118,73 @@ The following is the basic process performed inside a Processor:
 4. A de-queue process is responsible for moving the events from the Reliable Queues to the Device Actors. 
 
 This architecture depicts a basic end to end story for devices to cloud.  This architecture can easily be modified to include more complicated scenarios including a web management portal, commands to the devices or mobile app that shows current data.
+
+## Guided Walkthrough
+Follow the below steps for guided walkthrough using the sample
+
+- Check [Configuration, Deployment & Debugging's](./ConfigureDeploy.md) configuration & deployment sections to deploy the solution on your development environment. 
+- Open a new PS console. Change directory to *src/Gateway/IoTProcessorManagement/bin/Debug/PowerShell*. The content of directory is created as part of the build process. 
+- Replace the content of processor.json (after updating it with the correct information) with 
+
+> {
+>  "Name": "P1", 
+>  "Hubs": [
+>    {
+>        "ConnectionString" :"Endpoint=sb://[namespace].servicebus.windows.net;SharedAccessKeyName=[Key Name];SharedAccessKey=[SAS key];TransportType=Amqp",
+>        "EventHubName" : "[Event Hub Name]",
+>       "ConsumerGroupName" : "[Consumer group name or empty string for default group]"
+>    }]}
+
+- Import the solution PS management function using 
+
+> Import-Module .\IoT-Functions.psm1
+
+- Validate that the management component is working correctly by (the following command should result into no errors and empty results since no processors has been activated yet).  
+
+> Get-IoTProcessor
+
+
+- Provision a new processor using. the result will be Processor object with the name *P1* and Status *New*  
+
+> Import-IoTProcessor -FilePath .\Processor.json
+
+
+- Wait few seconds until provisioning is completed (while Service Fabric activates the new application). And execute the below command (the result is one processor with the status *Provisioned*)
+
+> Get-IoTProcessor  
+
+- Send test events to the event hub using the below script (the below sends 100 events, 10 per device).  
+
+> $P = Get-IoTProcessor P1
+> Send-TestEvents -IoTProcessor $P -NumberOfMessages 10 -NumberOfPublishers
+
+- Navigate to your PowerBI dashboard, you should be able to see events coming to your *ServiceFabricIoTDS* dataset. Use Vs.NET clould explorer to view the data in your storage account. 
+
+- Send more test events
+
+- Display the processor runtime telemetry using
+
+> Get-IoTProcessorRuntimeStatus -IoTProcessor P1
+
+- **Tip:** the above command's result gives you an indication on how fast your processor is performing against the expected load. You can optimize by modifying the number of processor partitions, and values used to initialize WorkManager object instance in processor *RunAsync* method 
+
+- Pause the processor using 
+
+> Suspend-IoTProcessor P1 
+> Get-IoTProcessor P1  
+
+- The above will yield results of processor object with *pending pause* status. execute *Get-IoTProcessor P1* again you will see the processor status changed to *paused*
+
+- Recheck the processor runtime telemetry to validate that the processor is paused.
+
+- Resume the processor by executing 
+
+> Resume-IoTProcessor P1 
+> Get-IoTProcessor P1
+
+- Recheck the processor runtime telemetry to validate that the processor is resumed.
+
+- Remove the processor by executing 
+
+> Remove-IoTProcessor P1
+

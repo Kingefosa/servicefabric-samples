@@ -25,7 +25,7 @@
       <ServiceManifestRef ServiceManifestName="BuildingActorPkg" ServiceManifestVersion="1.0.0.0" />
    </ServiceManifestImport>
    <DefaultServices>
-     
+
       <Service Name="StorageActor">
          <StatefulService ServiceTypeName="StorageActorServiceType" TargetReplicaSetSize="[TargetReplicaSetSize]" MinReplicaSetSize="[MinReplicaSetSize]">
             <UniformInt64Partition PartitionCount="[PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
