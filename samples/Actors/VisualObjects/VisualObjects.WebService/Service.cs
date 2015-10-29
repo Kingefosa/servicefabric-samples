@@ -28,7 +28,7 @@ namespace VisualObjects.WebService
             return new[] 
             {
                 new ServiceInstanceListener(
-                    initParams => new WebCommunicationListener(new VisualObjectsBox(new Uri(appName + "/" + serviceName), numObjects), "visualobjects", "data"))
+                    initParams => new WebCommunicationListener(new VisualObjectsBox(new Uri(appName + "/" + serviceName), numObjects), "visualobjects", "data", initParams))
             };
         }
     }
