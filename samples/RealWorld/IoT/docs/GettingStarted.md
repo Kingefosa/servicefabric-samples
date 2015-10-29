@@ -1,8 +1,7 @@
 # Getting Started#
 
 ## Setup Your Machine ##
-1. Install [Visual Studio 2015](http://go.microsoft.com/fwlink/?LinkId=517106)
-2. Install [Service Fabric SDK](https://azure.microsoft.com/en-us/documentation/articles/service-fabric-get-started/)
+Follow [Prepare your development environment](https://azure.microsoft.com/en-us/documentation/articles/service-fabric-get-started/)
 
 ## Get the Source Code ##
 1. Open Visual Studio 2015
