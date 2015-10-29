@@ -21,24 +21,26 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBoxWebService
         private readonly IOwinAppBuilder startup;
         private string listeningAddress;
         private string publishAddress;
+        private ServiceInitializationParameters serviceInitializationParameters;
 
         /// <summary>
         ///     OWIN server handle.
         /// </summary>
         private IDisposable serverHandle;
 
-        public OwinCommunicationListener(IOwinAppBuilder startup)
-            : this(null, startup)
+        public OwinCommunicationListener(IOwinAppBuilder startup, ServiceInitializationParameters serviceInitializationParameters)
+            : this(null, startup, serviceInitializationParameters)
         {
         }
 
-        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup)
+        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup, ServiceInitializationParameters serviceInitializationParameters)
         {
             this.startup = startup;
             this.appRoot = appRoot;
+            this.serviceInitializationParameters = serviceInitializationParameters;
         }
 
-        public void Initialize(ServiceInitializationParameters serviceInitializationParameters)
+        public void Initialize()
         {
             ServiceEventSource.Current.Message("Initialize");
 
@@ -80,6 +82,8 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBoxWebService
         public Task<string> OpenAsync(CancellationToken cancellationToken)
         {
             ServiceEventSource.Current.Message("Opening on {0}", this.publishAddress);
+
+            Initialize();
 
             try
             {

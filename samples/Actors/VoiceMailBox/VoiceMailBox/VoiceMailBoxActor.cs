@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
     using Microsoft.Azure.Service.Fabric.Samples.VoicemailBox.Interfaces;
     using Microsoft.ServiceFabric.Actors;
 
-    public class VoiceMailBoxActor : Actor<VoicemailBox>, IVoicemailBoxActor
+    public class VoiceMailBoxActor : StatefulActor<VoicemailBox>, IVoicemailBoxActor
     {
         public Task<List<Voicemail>> GetMessagesAsync()
         {
@@ -24,7 +24,7 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
         {
             if (string.IsNullOrEmpty(this.State.Greeting))
             {
-                ConfigurationSettings configSettings = this.Host.ActivationContext.GetConfigurationPackageObject("Config").Settings;
+                ConfigurationSettings configSettings = this.ActorService.ServiceInitializationParameters.CodePackageActivationContext.GetConfigurationPackageObject("Config").Settings;
                 ConfigurationSection configSection = configSettings.Sections.FirstOrDefault(s => (s.Name == "GreetingConfig"));
                 if (configSection != null)
                 {
