@@ -25,7 +25,7 @@ namespace VisualObjects.WebService
         private IDisposable webApp;
         // Web Socket listener
         private WebSocketApp webSocketApp;
-        private ServiceInitializationParameters serviceInitializationParameters;
+        private readonly ServiceInitializationParameters serviceInitializationParameters;
 
         public WebCommunicationListener(IVisualObjectsBox visualObjectsBox, string appRoot, string webSocketRoot, ServiceInitializationParameters serviceInitializationParameters)
         {
@@ -33,9 +33,9 @@ namespace VisualObjects.WebService
             this.appRoot = appRoot;
             this.webSocketRoot = webSocketRoot;
             this.serviceInitializationParameters = serviceInitializationParameters;
-        }
+        }        
 
-        public void Initialize()
+        public Task<string> OpenAsync(CancellationToken cancellationToken)
         {
             ServiceEventSource.Current.Message("Initialize");
 
@@ -51,11 +51,6 @@ namespace VisualObjects.WebService
                     : this.appRoot.TrimEnd('/') + '/');
 
             this.publishAddress = this.listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);
-        }
-
-        public Task<string> OpenAsync(CancellationToken cancellationToken)
-        {
-            Initialize();
 
             ServiceEventSource.Current.Message("Starting web server on {0}", this.listeningAddress);
 

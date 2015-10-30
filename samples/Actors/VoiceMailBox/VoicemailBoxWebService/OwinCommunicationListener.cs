@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBoxWebService
         private readonly IOwinAppBuilder startup;
         private string listeningAddress;
         private string publishAddress;
-        private ServiceInitializationParameters serviceInitializationParameters;
+        private readonly ServiceInitializationParameters serviceInitializationParameters;
 
         /// <summary>
         ///     OWIN server handle.
@@ -39,8 +39,8 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBoxWebService
             this.appRoot = appRoot;
             this.serviceInitializationParameters = serviceInitializationParameters;
         }
-
-        public void Initialize()
+                
+        public Task<string> OpenAsync(CancellationToken cancellationToken)
         {
             ServiceEventSource.Current.Message("Initialize");
 
@@ -51,7 +51,7 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBoxWebService
             if (serviceInitializationParameters is StatefulServiceInitializationParameters)
             {
                 StatefulServiceInitializationParameters statefulInitParams =
-                    (StatefulServiceInitializationParameters) serviceInitializationParameters;
+                    (StatefulServiceInitializationParameters)serviceInitializationParameters;
 
                 this.listeningAddress = string.Format(
                     CultureInfo.InvariantCulture,
@@ -77,13 +77,8 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBoxWebService
             }
 
             this.publishAddress = this.listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);
-        }
 
-        public Task<string> OpenAsync(CancellationToken cancellationToken)
-        {
-            ServiceEventSource.Current.Message("Opening on {0}", this.publishAddress);
-
-            Initialize();
+            ServiceEventSource.Current.Message("Opening on {0}", this.publishAddress);                     
 
             try
             {
