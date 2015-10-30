@@ -12,6 +12,7 @@ namespace WordCount.Service
     using Microsoft.ServiceFabric.Data.Collections;
     using Microsoft.ServiceFabric.Services;
     using WordCount.Common;
+    using System.Collections.Generic;
 
     /// <summary>
     /// Sample Service Fabric persistent service for counting words.
@@ -96,11 +97,14 @@ namespace WordCount.Service
             }
         }
 
-        protected override ICommunicationListener CreateCommunicationListener()
+        protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
             ServiceEventSource.Current.CreateCommunicationListener(ServiceEventSourceName);
 
-            return new OwinCommunicationListener("wordcountservice", new Startup(this.StateManager));
-        }
+            return new[]
+            {
+                new ServiceReplicaListener(initParams => new OwinCommunicationListener("wordcountservice", new Startup(this.StateManager), initParams))
+            };
+        }        
     }
 }

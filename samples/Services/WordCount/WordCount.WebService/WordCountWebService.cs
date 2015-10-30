@@ -6,6 +6,7 @@
 namespace WordCount.WebService
 {
     using Microsoft.ServiceFabric.Services;
+    using System.Collections.Generic;
     using WordCount.Common;
 
     /// <summary>
@@ -18,9 +19,12 @@ namespace WordCount.WebService
         /// Creates a listener for Web API with websockets.
         /// </summary>
         /// <returns>The OWIN communication listener.</returns>
-        protected override ICommunicationListener CreateCommunicationListener()
+        protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
         {
-            return new OwinCommunicationListener("wordcount", new Startup());
+            return new[]
+            {
+                new ServiceInstanceListener(initParams => new OwinCommunicationListener("wordcount", new Startup(), initParams))
+            };
         }
     }
 }
