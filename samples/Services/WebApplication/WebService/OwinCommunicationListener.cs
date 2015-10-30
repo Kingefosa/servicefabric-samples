@@ -21,24 +21,26 @@ namespace WebService
         private readonly IOwinAppBuilder startup;
         private string listeningAddress;
         private string publishAddress;
+        private readonly ServiceInitializationParameters serviceInitializationParameters;
 
         /// <summary>
         ///     OWIN server handle.
         /// </summary>
         private IDisposable serverHandle;
 
-        public OwinCommunicationListener(IOwinAppBuilder startup)
-            : this(null, startup)
+        public OwinCommunicationListener(IOwinAppBuilder startup, ServiceInitializationParameters serviceInitializationParameters)
+            : this(null, startup, serviceInitializationParameters)
         {
         }
 
-        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup)
+        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup, ServiceInitializationParameters serviceInitializationParameters)
         {
             this.startup = startup;
             this.appRoot = appRoot;
-        }
+            this.serviceInitializationParameters = serviceInitializationParameters;
+        }        
 
-        public void Initialize(ServiceInitializationParameters serviceInitializationParameters)
+        public Task<string> OpenAsync(CancellationToken cancellationToken)
         {
             ServiceEventSource.Current.Message("Initialize");
 
@@ -49,7 +51,7 @@ namespace WebService
             if (serviceInitializationParameters is StatefulServiceInitializationParameters)
             {
                 StatefulServiceInitializationParameters statefulInitParams =
-                    (StatefulServiceInitializationParameters) serviceInitializationParameters;
+                    (StatefulServiceInitializationParameters)serviceInitializationParameters;
 
                 this.listeningAddress = string.Format(
                     CultureInfo.InvariantCulture,
@@ -75,10 +77,7 @@ namespace WebService
             }
 
             this.publishAddress = this.listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);
-        }
 
-        public Task<string> OpenAsync(CancellationToken cancellationToken)
-        {
             ServiceEventSource.Current.Message("Opening on {0}", this.publishAddress);
 
             try
