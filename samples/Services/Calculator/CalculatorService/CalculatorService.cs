@@ -11,6 +11,7 @@ namespace CalculatorService
     using CalculatorInterfaces;
     using Microsoft.ServiceFabric.Services;
     using Microsoft.ServiceFabric.Services.Wcf;
+    using System.Collections.Generic;
 
     public class CalculatorService : StatelessService, ICalculator
     {
@@ -24,23 +25,27 @@ namespace CalculatorService
             return Task.FromResult(valueOne - valueTwo);
         }
 
-        protected override ICommunicationListener CreateCommunicationListener()
+        protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
         {
-            WcfCommunicationListener communicationListener = new WcfCommunicationListener(typeof(ICalculator), this)
-            {
-                //
-                // The name of the endpoint configured in the ServiceManifest under the Endpoints section
-                // which identifies the endpoint that the wcf servicehost should listen on.
-                //
-                EndpointResourceName = "ServiceEndpoint",
+            ServiceInstanceListener wcfServiceInstanceListener =
+                new ServiceInstanceListener(initParams =>
+                    new WcfCommunicationListener(initParams, typeof(ICalculator), this)
+                    {
+                        //
+                        // The name of the endpoint configured in the ServiceManifest under the Endpoints section
+                        // which identifies the endpoint that the wcf servicehost should listen on.
+                        //
+                        EndpointResourceName = "ServiceEndpoint",
 
-                // 
-                // Populate the binding information that you want the service to use.
-                //
-                Binding = this.CreateListenBinding()
-            };
+                        // 
+                        // Populate the binding information that you want the service to use.
+                        //
+                        Binding = this.CreateListenBinding()
+                    }
+                );
+            
 
-            return communicationListener;
+            return new[] { wcfServiceInstanceListener };
         }
 
         private NetTcpBinding CreateListenBinding()

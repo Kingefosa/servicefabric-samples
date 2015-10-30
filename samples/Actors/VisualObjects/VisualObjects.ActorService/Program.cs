@@ -18,7 +18,7 @@ namespace VisualObjects.ActorService
             {
                 using (FabricRuntime fabricRuntime = FabricRuntime.Create())
                 {
-                    fabricRuntime.RegisterActor(typeof(StatefulVisualObjectActor));
+                    fabricRuntime.RegisterActor<StatefulVisualObjectActor>();                    
 
                     Thread.Sleep(Timeout.Infinite);
                 }

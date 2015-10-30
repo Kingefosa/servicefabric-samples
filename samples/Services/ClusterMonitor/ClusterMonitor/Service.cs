@@ -7,17 +7,21 @@ namespace ClusterMonitor
 {
     using System.Fabric.Description;
     using Microsoft.ServiceFabric.Services;
+    using System.Collections.Generic;
 
     public class Service : StatelessService
     {
         public const string ServiceTypeName = "ClusterMonitorType";
 
-        protected override ICommunicationListener CreateCommunicationListener()
+        protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
         {
             ConfigurationSettings configSettings =
                 this.ServiceInitializationParameters.CodePackageActivationContext.GetConfigurationPackageObject("Config").Settings;
 
-            return new OwinCommunicationListener("cluster", new Startup(configSettings));
+            return new[]
+            {
+                new ServiceInstanceListener(initParams => new OwinCommunicationListener("cluster", new Startup(configSettings), initParams))
+            };                
         }
     }
 }

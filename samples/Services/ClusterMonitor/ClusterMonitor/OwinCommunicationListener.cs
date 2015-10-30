@@ -26,21 +26,23 @@ namespace ClusterMonitor
         private string publishAddress;
         private string listeningAddress;
         private string appRoot;
+        private readonly ServiceInitializationParameters serviceInitializationParameters;
 
-        public OwinCommunicationListener(IOwinAppBuilder startup)
-            : this(null, startup)
+        public OwinCommunicationListener(IOwinAppBuilder startup, ServiceInitializationParameters serviceInitializationParameters)
+            : this(null, startup, serviceInitializationParameters)
         {
         }
 
-        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup)
+        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup, ServiceInitializationParameters serviceInitializationParameters)
         {
             this.startup = startup;
             this.appRoot = appRoot;
+            this.serviceInitializationParameters = serviceInitializationParameters;
         }
 
         public bool ListenOnSecondary { get; set; }
-
-        public void Initialize(ServiceInitializationParameters serviceInitializationParameters)
+                
+        public Task<string> OpenAsync(CancellationToken cancellationToken)
         {
             Trace.WriteLine("Initialize");
 
@@ -75,10 +77,7 @@ namespace ClusterMonitor
             }
 
             this.publishAddress = this.listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);
-        }
 
-        public Task<string> OpenAsync(CancellationToken cancellationToken)
-        {
             Trace.WriteLine("Opening on " + this.listeningAddress);
 
             try

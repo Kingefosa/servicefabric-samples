@@ -34,18 +34,18 @@ namespace VisualObjects.ActorService
                 this.ActorMessage(
                     actor.GetType().ToString(),
                     actor.Id.ToString(),
-                    actor.Host.ActivationContext.ApplicationTypeName,
-                    actor.Host.ActivationContext.ApplicationName,
-                    actor.Host.StatelessServiceInitializationParameters.ServiceTypeName,
-                    actor.Host.StatelessServiceInitializationParameters.ServiceName.ToString(),
-                    actor.Host.StatelessServiceInitializationParameters.PartitionId,
-                    actor.Host.StatelessServiceInitializationParameters.InstanceId,
+                    actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationTypeName,
+                    actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationName,
+                    actor.ActorService.ServiceInitializationParameters.ServiceTypeName,
+                    actor.ActorService.ServiceInitializationParameters.ServiceName.ToString(),
+                    actor.ActorService.ServiceInitializationParameters.PartitionId,
+                    actor.ActorService.ServiceInitializationParameters.InstanceId,
                     finalMessage);
             }
         }
 
         [NonEvent]
-        public void Message<TState>(Actor<TState> actor, string message, params object[] args) where TState : class
+        public void Message<TState>(StatefulActor<TState> actor, string message, params object[] args) where TState : class
         {
             if (this.IsEnabled())
             {
@@ -53,12 +53,12 @@ namespace VisualObjects.ActorService
                 this.ActorMessage(
                     actor.GetType().ToString(),
                     actor.Id.ToString(),
-                    actor.Host.ActivationContext.ApplicationTypeName,
-                    actor.Host.ActivationContext.ApplicationName,
-                    actor.Host.StatefulServiceInitializationParameters.ServiceTypeName,
-                    actor.Host.StatefulServiceInitializationParameters.ServiceName.ToString(),
-                    actor.Host.StatefulServiceInitializationParameters.PartitionId,
-                    actor.Host.StatefulServiceInitializationParameters.ReplicaId,
+                    actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationTypeName,
+                    actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationName,
+                    actor.ActorService.ServiceInitializationParameters.ServiceTypeName,
+                    actor.ActorService.ServiceInitializationParameters.ServiceName.ToString(),
+                    actor.ActorService.ServiceInitializationParameters.PartitionId,
+                    actor.ActorService.ServiceInitializationParameters.ReplicaId,
                     finalMessage);
             }
         }

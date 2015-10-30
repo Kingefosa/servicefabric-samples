@@ -45,49 +45,49 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
         [NonEvent]
         public void ActorActivatedStart(Actor a)
         {
-            this.ActorActivatedStart(a.GetType().ToString(), a.Id.ToString(), a.Host.Partition.PartitionInfo.Id);
+            this.ActorActivatedStart(a.GetType().ToString(), a.Id.ToString(), a.ActorService.ServicePartition.PartitionInfo.Id);
         }
 
         [NonEvent]
-        public void ActorActivatedStart<T>(Actor<T> a) where T : class
+        public void ActorActivatedStart<T>(StatefulActor<T> a) where T : class
         {
-            this.ActorActivatedStart(a.GetType().ToString(), a.Id.ToString(), a.Host.Partition.PartitionInfo.Id);
+            this.ActorActivatedStart(a.GetType().ToString(), a.Id.ToString(), a.ActorService.ServicePartition.PartitionInfo.Id);
         }
 
         [NonEvent]
         public void ActorActivatedStop(Actor a)
         {
-            this.ActorActivatedStop(a.GetType().ToString(), a.Id.ToString(), a.Host.Partition.PartitionInfo.Id);
+            this.ActorActivatedStop(a.GetType().ToString(), a.Id.ToString(), a.ActorService.ServicePartition.PartitionInfo.Id);
         }
 
         [NonEvent]
-        public void ActorActivatedStop<T>(Actor<T> a) where T : class
+        public void ActorActivatedStop<T>(StatefulActor<T> a) where T : class
         {
-            this.ActorActivatedStop(a.GetType().ToString(), a.Id.ToString(), a.Host.Partition.PartitionInfo.Id);
+            this.ActorActivatedStop(a.GetType().ToString(), a.Id.ToString(), a.ActorService.ServicePartition.PartitionInfo.Id);
         }
 
         [NonEvent]
         public void ActorDeactivatedStart(Actor a)
         {
-            this.ActorDeactivatedStart(a.GetType().ToString(), a.Id.ToString(), a.Host.Partition.PartitionInfo.Id);
+            this.ActorDeactivatedStart(a.GetType().ToString(), a.Id.ToString(), a.ActorService.ServicePartition.PartitionInfo.Id);
         }
 
         [NonEvent]
-        public void ActorDeactivatedStart<T>(Actor<T> a) where T : class
+        public void ActorDeactivatedStart<T>(StatefulActor<T> a) where T : class
         {
-            this.ActorDeactivatedStart(a.GetType().ToString(), a.Id.ToString(), a.Host.Partition.PartitionInfo.Id);
+            this.ActorDeactivatedStart(a.GetType().ToString(), a.Id.ToString(), a.ActorService.ServicePartition.PartitionInfo.Id);
         }
 
         [NonEvent]
         public void ActorDeactivatedStop(Actor a)
         {
-            this.ActorActivatedStop(a.GetType().ToString(), a.Id.ToString(), a.Host.Partition.PartitionInfo.Id);
+            this.ActorActivatedStop(a.GetType().ToString(), a.Id.ToString(), a.ActorService.ServicePartition.PartitionInfo.Id);
         }
 
         [NonEvent]
-        public void ActorDeactivatedStop<T>(Actor<T> a) where T : class
+        public void ActorDeactivatedStop<T>(StatefulActor<T> a) where T : class
         {
-            this.ActorActivatedStop(a.GetType().ToString(), a.Id.ToString(), a.Host.Partition.PartitionInfo.Id);
+            this.ActorActivatedStop(a.GetType().ToString(), a.Id.ToString(), a.ActorService.ServicePartition.PartitionInfo.Id);
         }
 
         [NonEvent]

@@ -11,7 +11,7 @@ namespace VisualObjects.ActorService
     using VisualObjects.Common;
 
     [ActorService(Name = "VisualObjects.ActorService")]
-    public class StatefulVisualObjectActor : Actor<VisualObject>, IVisualObjectActor
+    public class StatefulVisualObjectActor : StatefulActor<VisualObject>, IVisualObjectActor
     {
         private IActorTimer updateTimer;
         private string jsonString;

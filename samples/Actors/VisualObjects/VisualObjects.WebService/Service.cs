@@ -9,12 +9,13 @@ namespace VisualObjects.WebService
     using System.Fabric;
     using System.Fabric.Description;
     using Microsoft.ServiceFabric.Services;
+    using System.Collections.Generic;
 
     public class Service : StatelessService
     {
         public const string ServiceTypeName = "VisualObjects.WebServiceType";
 
-        protected override ICommunicationListener CreateCommunicationListener()
+        protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
         {
             // get some configuration values from the service's config package (PackageRoot\Config\Settings.xml)
             ConfigurationPackage config = this.ServiceInitializationParameters.CodePackageActivationContext.GetConfigurationPackageObject("Config");
@@ -24,7 +25,11 @@ namespace VisualObjects.WebService
             string serviceName = section.Parameters["ServiceName"].Value;
             string appName = this.ServiceInitializationParameters.CodePackageActivationContext.ApplicationName;
 
-            return new WebCommunicationListener(new VisualObjectsBox(new Uri(appName + "/" + serviceName), numObjects), "visualobjects", "data");
+            return new[] 
+            {
+                new ServiceInstanceListener(
+                    initParams => new WebCommunicationListener(new VisualObjectsBox(new Uri(appName + "/" + serviceName), numObjects), "visualobjects", "data", initParams))
+            };
         }
     }
 }

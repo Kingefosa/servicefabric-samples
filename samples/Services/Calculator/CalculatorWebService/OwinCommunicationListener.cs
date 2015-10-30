@@ -26,19 +26,21 @@ namespace CalculatorWebService
         private string publishAddress;
         private string listeningAddress;
         private string appRoot;
+        private readonly ServiceInitializationParameters serviceInitializationParameters;
 
-        public OwinCommunicationListener(IOwinAppBuilder startup)
-            : this(null, startup)
+        public OwinCommunicationListener(IOwinAppBuilder startup, ServiceInitializationParameters serviceInitializationParameters)
+            : this(null, startup, serviceInitializationParameters)
         {
         }
 
-        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup)
+        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup, ServiceInitializationParameters serviceInitializationParameters)
         {
             this.startup = startup;
             this.appRoot = appRoot;
+            this.serviceInitializationParameters = serviceInitializationParameters;
         }
-
-        public void Initialize(ServiceInitializationParameters serviceInitializationParameters)
+                
+        public Task<string> OpenAsync(CancellationToken cancellationToken)
         {
             ServiceEventSource.Current.Message("Initialize");
 
@@ -47,7 +49,7 @@ namespace CalculatorWebService
 
             if (serviceInitializationParameters is StatefulServiceInitializationParameters)
             {
-                StatefulServiceInitializationParameters statefulInitParams = (StatefulServiceInitializationParameters) serviceInitializationParameters;
+                StatefulServiceInitializationParameters statefulInitParams = (StatefulServiceInitializationParameters)serviceInitializationParameters;
 
                 this.listeningAddress = String.Format(
                     CultureInfo.InvariantCulture,
@@ -73,10 +75,7 @@ namespace CalculatorWebService
             }
 
             this.publishAddress = this.listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);
-        }
 
-        public Task<string> OpenAsync(CancellationToken cancellationToken)
-        {
             ServiceEventSource.Current.Message("Opening on {0}", this.publishAddress);
 
             try

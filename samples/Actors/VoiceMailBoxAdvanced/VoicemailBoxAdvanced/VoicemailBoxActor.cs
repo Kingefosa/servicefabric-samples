@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
     using Microsoft.Azure.Service.Fabric.Samples.VoicemailBox.Interfaces;
     using Microsoft.ServiceFabric.Actors;
 
-    public class VoiceMailBoxActor : Actor<VoicemailBox>, IVoicemailBoxActor, IRemindable
+    public class VoiceMailBoxActor : StatefulActor<VoicemailBox>, IVoicemailBoxActor, IRemindable
     {
         private const int MessageRetentionTimeInMinutes = 72*60;
         private const int OldMessageDeletionTimerFrequencyInMinutes = 60;
@@ -49,7 +49,7 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
         {
             if (string.IsNullOrEmpty(this.State.Greeting))
             {
-                ConfigurationSettings configSettings = this.Host.ActivationContext.GetConfigurationPackageObject("Config").Settings;
+                ConfigurationSettings configSettings = this.ActorService.ServiceInitializationParameters.CodePackageActivationContext.GetConfigurationPackageObject("Config").Settings;
                 ConfigurationSection configSection = configSettings.Sections.FirstOrDefault(s => (s.Name == "GreetingConfig"));
                 if (configSection != null)
                 {
@@ -93,7 +93,7 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
                 // would not be suitable in this situation because it would be disarmed if the
                 // actor is deactivated for any reason.
                 this.State.HasUnreadMessages = true;
-                return this.RegisterReminder(
+                return this.RegisterReminderAsync(
                     UnreadMessageReminderName,
                     null,
                     TimeSpan.FromMinutes(0),
@@ -217,7 +217,7 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
                 reminder = null;
             }
 
-            return (reminder == null) ? Task.FromResult(true) : this.UnregisterReminder(reminder);
+            return (reminder == null) ? Task.FromResult(true) : this.UnregisterReminderAsync(reminder);
         }
     }
 }

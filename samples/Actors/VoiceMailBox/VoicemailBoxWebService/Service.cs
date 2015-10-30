@@ -5,7 +5,8 @@
 
 namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBoxWebService
 {
-    using Microsoft.ServiceFabric.Services;
+    using Microsoft.ServiceFabric.Services;    
+    using System.Collections.Generic;
 
     /// <summary>
     /// This service handles front-end web requests and acts as a proxy to the back-end data for the UI web page.
@@ -22,9 +23,12 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBoxWebService
         /// Creates a listener for Web API with websockets.
         /// </summary>
         /// <returns></returns>
-        protected override ICommunicationListener CreateCommunicationListener()
+        protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
         {
-            return new OwinCommunicationListener("voicemailbox", new Startup());
+            return new[]
+            {
+                new ServiceInstanceListener(initParams => new OwinCommunicationListener("voicemailbox", new Startup(), initParams))
+            };            
         }
     }
 }

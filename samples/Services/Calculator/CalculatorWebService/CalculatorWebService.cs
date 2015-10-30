@@ -6,12 +6,16 @@
 namespace CalculatorWebService
 {
     using Microsoft.ServiceFabric.Services;
+    using System.Collections.Generic;
 
     public class CalculatorWebService : StatelessService
     {
-        protected override ICommunicationListener CreateCommunicationListener()
+        protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
         {
-            return new OwinCommunicationListener("calculator", new Startup());
+            return new[]
+            {
+                new ServiceInstanceListener(initParams => new OwinCommunicationListener("calculator", new Startup(), initParams))
+            };
         }
     }
 }

@@ -6,12 +6,16 @@
 namespace WebService
 {
     using Microsoft.ServiceFabric.Services;
+    using System.Collections.Generic;
 
     public class WebService : StatelessService
     {
-        protected override ICommunicationListener CreateCommunicationListener()
+        protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
         {
-            return new OwinCommunicationListener("api", new Startup());
+            return new[]
+            {
+                new ServiceInstanceListener(initParams => new OwinCommunicationListener("api", new Startup(), initParams))
+            };
         }
     }
 }

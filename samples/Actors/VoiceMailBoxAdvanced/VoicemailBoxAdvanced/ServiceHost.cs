@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Service.Fabric.Samples.VoicemailBox
             {
                 using (FabricRuntime fabricRuntime = FabricRuntime.Create())
                 {
-                    ActorRegistration.RegisterActor(fabricRuntime, typeof(VoiceMailBoxActor));
+                    fabricRuntime.RegisterActor<VoiceMailBoxActor>();
                     Thread.Sleep(Timeout.Infinite);
                 }
             }

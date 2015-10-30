@@ -43,9 +43,9 @@ namespace WordCount.WebService
             // Http communication doesn't maintain a communication channel, so nothing to abort.
         }
 
-        protected override bool ValidateClient(ResolvedServiceEndpoint endpoint, CommunicationClient client)
+        protected override bool ValidateClient(string endpoint, CommunicationClient client)
         {
-            if (client.BaseAddress.ToString() == endpoint.Address)
+            if (client.BaseAddress.ToString() == endpoint)
             {
                 return true;
             }
@@ -59,26 +59,25 @@ namespace WordCount.WebService
         {
             // Http communication doesn't maintain a communication channel, so nothing to validate.
             return true;
-        }
+        }        
 
         protected override Task<CommunicationClient> CreateClientAsync(
-            ResolvedServiceEndpoint endpoint,
+            string endpoint,
             CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(endpoint.Address) || !endpoint.Address.StartsWith("http"))
+            if (string.IsNullOrEmpty(endpoint) || !endpoint.StartsWith("http"))
             {
                 throw new InvalidOperationException("The endpoint address is not valid. Please resolve again.");
             }
-
-            string endpointAddress = endpoint.Address;
-            if (!endpointAddress.EndsWith("/"))
+                        
+            if (!endpoint.EndsWith("/"))
             {
-                endpointAddress = endpointAddress + "/";
+                endpoint = endpoint + "/";
             }
 
             // Create a communication client. This doesn't establish a session with the server.
-            return Task.FromResult(new CommunicationClient(new Uri(endpointAddress), this.OperationTimeout, this.ReadWriteTimeout));
-        }
+            return Task.FromResult(new CommunicationClient(new Uri(endpoint), this.OperationTimeout, this.ReadWriteTimeout));
+        }        
 
         protected override bool OnHandleException(Exception e, out ExceptionHandlingResult result)
         {
@@ -134,6 +133,6 @@ namespace WordCount.WebService
             };
 
             return true;
-        }
+        }             
     }
 }
