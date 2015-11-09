@@ -19,7 +19,7 @@ Pull down the sample on your local machine and go to the scripts folder. Execute
 
 
 ### Package the application and run it
-The easiest way to create an application package is using the Service Fabric packaging tool. The tool is available as open source on [Github](http://github.com).
+The easiest way to create an application package is using the Service Fabric packaging tool. The tool is currently in preview and is available for download [here](http://aka.ms/servicefabricpacktool).
 
 ```
 ServiceFabricAppPackageUtil.exe /source:[directory of SimpleWebServer.exe] /target:[directory that will contain the package] /appname:WebServer /exe:SimpleWebServer.exe
