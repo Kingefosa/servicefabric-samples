@@ -7,7 +7,6 @@ namespace Inventory.Service
 {
     using System;
     using System.Collections.Generic;
-    using System.Fabric;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -15,8 +14,10 @@ namespace Inventory.Service
     using Inventory.Domain;
     using Microsoft.ServiceFabric.Data;
     using Microsoft.ServiceFabric.Data.Collections;
-    using Microsoft.ServiceFabric.Actors;
-    using Microsoft.ServiceFabric.Services;
+    using Microsoft.ServiceFabric.Services.Communication.Runtime;
+    using Microsoft.ServiceFabric.Services.Remoting.Client;
+    using Microsoft.ServiceFabric.Services.Remoting.Runtime;
+    using Microsoft.ServiceFabric.Services.Runtime;
     using RestockRequest.Domain;
     using RestockRequestManager.Domain;
 
@@ -59,7 +60,6 @@ namespace Inventory.Service
             }
 
             return true;
-
         }
 
         /// <summary>
@@ -117,7 +117,6 @@ namespace Inventory.Service
         /// <returns>int: Returns the quantity removed from stock.</returns>
         public async Task<int> RemoveStockAsync(InventoryItemId itemId, int quantity, CustomerOrderActorMessageId amId)
         {
-
             ServiceEventSource.Current.ServiceMessage(this, "inside remove stock {0}|{1}", amId.GetHashCode(), amId.GetHashCode());
 
             IReliableDictionary<InventoryItemId, InventoryItem> inventoryItems =
@@ -127,7 +126,8 @@ namespace Inventory.Service
                 await this.stateManager.GetOrAddAsync<IReliableDictionary<CustomerOrderActorMessageId, DateTime>>(ActorMessageDictionaryName);
 
             IReliableDictionary<CustomerOrderActorMessageId, Tuple<InventoryItemId, int>> requestHistory =
-                await this.stateManager.GetOrAddAsync<IReliableDictionary<CustomerOrderActorMessageId, Tuple<InventoryItemId, int>>>(RequestHistoryDictionaryName);
+                await
+                    this.stateManager.GetOrAddAsync<IReliableDictionary<CustomerOrderActorMessageId, Tuple<InventoryItemId, int>>>(RequestHistoryDictionaryName);
 
             int removed = 0;
 
@@ -184,7 +184,6 @@ namespace Inventory.Service
                             previousRequest.Value,
                             previousResponse.Value.Item1,
                             previousResponse.Value.Item2);
-
                     }
                     else
                     {
@@ -231,17 +230,6 @@ namespace Inventory.Service
             }
         }
 
-        private static void PrintInventoryItems(IReliableDictionary<InventoryItemId, InventoryItem> inventoryItems)
-        {
-            ServiceEventSource.Current.Message("PRINTING INVENTORY");
-            var items = inventoryItems.ToDictionary(v => v);
-
-            foreach (var tempitem in items)
-            {
-                ServiceEventSource.Current.Message("ID:{0}|Item:{1}", tempitem.Key, tempitem.Value);
-            }
-        }
-
         /// <summary>
         /// Retrieves a customer-specific view (defined in the InventoryItemView class in the Fabrikam Common namespace)
         /// af all items in the IReliableDictionary in InventoryService. Only items with a CustomerAvailableStock greater than
@@ -257,11 +245,11 @@ namespace Inventory.Service
 
             PrintInventoryItems(inventoryItems);
 
-            var results = inventoryItems.Select(x => (InventoryItemView)x.Value).Where(x => x.CustomerAvailableStock > 0);
+            IEnumerable<InventoryItemView> results = inventoryItems.Select(x => (InventoryItemView) x.Value).Where(x => x.CustomerAvailableStock > 0);
 
-            var resultList = results.ToList<InventoryItemView>();
+            List<InventoryItemView> resultList = results.ToList<InventoryItemView>();
 
-            foreach (var tempResult in resultList)
+            foreach (InventoryItemView tempResult in resultList)
             {
                 ServiceEventSource.Current.Message("{0}|{1}", tempResult.Id, tempResult.Description);
             }
@@ -302,10 +290,11 @@ namespace Inventory.Service
         /// <returns></returns>
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
-            return new List<ServiceReplicaListener>() {
+            return new List<ServiceReplicaListener>()
+            {
                 new ServiceReplicaListener(
                     (initParams) =>
-                       new ServiceCommunicationListener<IInventoryService>(initParams, this))
+                        new ServiceRemotingListener<IInventoryService>(initParams, this))
             };
         }
 
@@ -318,7 +307,18 @@ namespace Inventory.Service
         {
             ServiceEventSource.Current.Message("InventoryService ReliableDictionary successfully created");
 
-            await Task.WhenAll(PeriodicInventoryCheck(cancellationToken), PeriodicOldMessageTrimming(cancellationToken));
+            await Task.WhenAll(this.PeriodicInventoryCheck(cancellationToken), this.PeriodicOldMessageTrimming(cancellationToken));
+        }
+
+        private static void PrintInventoryItems(IReliableDictionary<InventoryItemId, InventoryItem> inventoryItems)
+        {
+            ServiceEventSource.Current.Message("PRINTING INVENTORY");
+            Dictionary<KeyValuePair<InventoryItemId, InventoryItem>, KeyValuePair<InventoryItemId, InventoryItem>> items = inventoryItems.ToDictionary(v => v);
+
+            foreach (KeyValuePair<KeyValuePair<InventoryItemId, InventoryItem>, KeyValuePair<InventoryItemId, InventoryItem>> tempitem in items)
+            {
+                ServiceEventSource.Current.Message("ID:{0}|Item:{1}", tempitem.Key, tempitem.Value);
+            }
         }
 
         private async Task PeriodicOldMessageTrimming(CancellationToken cancellationToken)
@@ -327,14 +327,15 @@ namespace Inventory.Service
                 await this.stateManager.GetOrAddAsync<IReliableDictionary<CustomerOrderActorMessageId, DateTime>>(ActorMessageDictionaryName);
 
             IReliableDictionary<CustomerOrderActorMessageId, Tuple<InventoryItemId, int>> requestHistory =
-                await this.stateManager.GetOrAddAsync<IReliableDictionary<CustomerOrderActorMessageId, Tuple<InventoryItemId, int>>>(RequestHistoryDictionaryName);
+                await
+                    this.stateManager.GetOrAddAsync<IReliableDictionary<CustomerOrderActorMessageId, Tuple<InventoryItemId, int>>>(RequestHistoryDictionaryName);
 
             while (!cancellationToken.IsCancellationRequested)
             {
                 IEnumerator<KeyValuePair<CustomerOrderActorMessageId, DateTime>> requests = recentRequests.GetEnumerator();
 
                 using (ITransaction tx = this.stateManager.CreateTransaction())
-                { 
+                {
                     while (requests.MoveNext())
                     {
                         //if we have a record of a message that is older than 2 hours from current time, then remove that record
@@ -348,12 +349,10 @@ namespace Inventory.Service
 
                     await tx.CommitAsync();
                 }
-
             }
 
             //sleep for 5 minutes then scan again
             await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
-
         }
 
         private async Task PeriodicInventoryCheck(CancellationToken cancellationToken)

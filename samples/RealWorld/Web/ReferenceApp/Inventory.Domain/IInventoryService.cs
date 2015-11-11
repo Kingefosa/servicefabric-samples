@@ -7,8 +7,8 @@ namespace Inventory.Domain
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Microsoft.ServiceFabric.Services;
     using Common;
+    using Microsoft.ServiceFabric.Services.Remoting;
 
     public interface IInventoryService : IService
     {

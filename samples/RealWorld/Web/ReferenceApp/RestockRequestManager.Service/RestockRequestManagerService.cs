@@ -6,7 +6,7 @@
 namespace RestockRequestManager.Service
 {
     using System;
-    using System.Fabric;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using Common;
@@ -14,10 +14,12 @@ namespace RestockRequestManager.Service
     using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Data;
     using Microsoft.ServiceFabric.Data.Collections;
-    using Microsoft.ServiceFabric.Services;
+    using Microsoft.ServiceFabric.Services.Communication.Runtime;
+    using Microsoft.ServiceFabric.Services.Remoting.Client;
+    using Microsoft.ServiceFabric.Services.Remoting.Runtime;
+    using Microsoft.ServiceFabric.Services.Runtime;
     using RestockRequest.Domain;
     using RestockRequestManager.Domain;
-    using System.Collections.Generic;
 
     internal class RestockRequestManagerService : StatefulService, IRestockRequestManager, IRestockRequestEvents
     {
@@ -68,7 +70,7 @@ namespace RestockRequestManager.Service
                     await this.StateManager.GetOrAddAsync<IReliableDictionary<InventoryItemId, ActorId>>(ItemIdToActorIdMapName);
 
                 ActorId actorId = ActorId.NewId();
-                
+
                 try
                 {
                     using (ITransaction tx = this.StateManager.CreateTransaction())
@@ -107,10 +109,11 @@ namespace RestockRequestManager.Service
 
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
-            return new List<ServiceReplicaListener>() {
+            return new List<ServiceReplicaListener>()
+            {
                 new ServiceReplicaListener(
                     (initParams) =>
-                       new ServiceCommunicationListener<IRestockRequestManager>(initParams, this))
+                        new ServiceRemotingListener<IRestockRequestManager>(initParams, this))
             };
         }
 
@@ -140,7 +143,7 @@ namespace RestockRequestManager.Service
                             this,
                             "Adding stock to inventory service. ID: {0}. Quantity: {1}",
                             result.Value.ItemId,
-                           result.Value.Quantity);
+                            result.Value.Quantity);
                     }
 
                     // This commits the dequeue operations.

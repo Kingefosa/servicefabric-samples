@@ -8,7 +8,7 @@ namespace Web.Service
     using System;
     using System.Diagnostics.Tracing;
     using System.Fabric;
-    using Microsoft.ServiceFabric.Services;
+    using Microsoft.ServiceFabric.Services.Runtime;
 
     [EventSource(Name = "MyCompany-Web_UIApplication-WebService")]
     internal sealed class ServiceEventSource : EventSource
@@ -51,25 +51,7 @@ namespace Web.Service
                     finalMessage);
             }
         }
-
-        [NonEvent]
-        public void ServiceMessage(StatefulService service, string message, params object[] args)
-        {
-            if (this.IsEnabled())
-            {
-                string finalMessage = string.Format(message, args);
-                this.ServiceMessage(
-                    service.ServiceInitializationParameters.ServiceName.ToString(),
-                    service.ServiceInitializationParameters.ServiceTypeName,
-                    service.ServiceInitializationParameters.ReplicaId,
-                    service.ServiceInitializationParameters.PartitionId,
-                    service.ServiceInitializationParameters.CodePackageActivationContext.ApplicationName,
-                    service.ServiceInitializationParameters.CodePackageActivationContext.ApplicationTypeName,
-                    FabricRuntime.GetNodeContext().NodeName,
-                    finalMessage);
-            }
-        }
-
+        
         [Event(3, Level = EventLevel.Informational, Message = "Service host process {0} registered service type {1}")]
         public void ServiceTypeRegistered(int hostProcessId, string serviceType)
         {

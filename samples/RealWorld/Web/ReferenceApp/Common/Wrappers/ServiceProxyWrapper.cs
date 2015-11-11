@@ -6,7 +6,8 @@
 namespace Common.Wrappers
 {
     using System;
-    using Microsoft.ServiceFabric.Services;
+    using Microsoft.ServiceFabric.Services.Remoting;
+    using Microsoft.ServiceFabric.Services.Remoting.Client;
 
     /// <summary>
     /// Wrapper class for the static ServiceProxy.

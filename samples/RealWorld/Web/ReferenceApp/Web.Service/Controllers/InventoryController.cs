@@ -13,7 +13,7 @@ namespace Web.Service.Controllers
     using CustomerOrder.Domain;
     using Microsoft.ServiceFabric.Services;
     using Inventory.Domain;
-
+    using Microsoft.ServiceFabric.Services.Remoting.Client;
     public class InventoryController : ApiController
     {
         private const string InventoryServiceName = "InventoryService";

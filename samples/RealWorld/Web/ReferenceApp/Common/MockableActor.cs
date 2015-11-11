@@ -7,7 +7,6 @@ namespace Common
 {
     using System;
     using System.Threading.Tasks;
-    using Common.Wrappers;
     using Microsoft.ServiceFabric.Actors;
 
     public class MockableActor<T> : StatefulActor<T> where T : class

@@ -109,8 +109,8 @@ namespace Mocks
             IReliableState result;
             bool success = this.store.TryGetValue(this.ToUri(name), out result);
 
-            return Task.FromResult(ConditionalResultActivator.Create<T>(success, (T)result));
-            
+            return Task.FromResult(ConditionalResultActivator.Create<T>(success, (T) result));
+
             //return Task.FromResult(new ConditionalResult<T>(success, (T) result));
         }
 
@@ -119,7 +119,7 @@ namespace Mocks
             IReliableState result;
             bool success = this.store.TryGetValue(name, out result);
 
-            return Task.FromResult(ConditionalResultActivator.Create<T>(success, (T)result));
+            return Task.FromResult(ConditionalResultActivator.Create<T>(success, (T) result));
 
             //return Task.FromResult(new ConditionalResult<T>(success, (T) result));
         }
@@ -179,6 +179,27 @@ namespace Mocks
             throw new NotImplementedException();
         }
 
+        public Task<BackupInfo> BackupAsync(Func<BackupInfo, Task<bool>> backupCallback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<BackupInfo> BackupAsync(
+            BackupOption option, TimeSpan timeout, CancellationToken cancellationToken, Func<BackupInfo, Task<bool>> backupCallback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task RestoreAsync(string backupFolderPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task RestoreAsync(string backupFolderPath, RestorePolicy restorePolicy, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool TryAddStateSerializer<T>(Uri name, Microsoft.ServiceFabric.Data.IStateSerializer<T> stateSerializer)
         {
             throw new NotImplementedException();
@@ -199,26 +220,6 @@ namespace Mocks
         private Uri ToUri(string name)
         {
             return new Uri("mock://" + name, UriKind.Absolute);
-        }
-
-        public Task<BackupInfo> BackupAsync(Func<BackupInfo, Task<bool>> backupCallback)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<BackupInfo> BackupAsync(BackupOption option, TimeSpan timeout, CancellationToken cancellationToken, Func<BackupInfo, Task<bool>> backupCallback)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task RestoreAsync(string backupFolderPath)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task RestoreAsync(string backupFolderPath, RestorePolicy restorePolicy, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
         }
     }
 }

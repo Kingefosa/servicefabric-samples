@@ -8,7 +8,7 @@ namespace Inventory.Service
     using System;
     using System.Diagnostics.Tracing;
     using System.Fabric;
-    using Microsoft.ServiceFabric.Services;
+    using Microsoft.ServiceFabric.Services.Runtime;
 
     [EventSource(Name = "MyCompany-Web_UIApplication-InventoryService")]
     internal sealed class ServiceEventSource : EventSource
@@ -31,24 +31,6 @@ namespace Inventory.Service
             if (this.IsEnabled())
             {
                 this.WriteEvent(1, message);
-            }
-        }
-
-        [NonEvent]
-        public void ServiceMessage(StatelessService service, string message, params object[] args)
-        {
-            if (this.IsEnabled() && service.ServiceInitializationParameters != null)
-            {
-                string finalMessage = string.Format(message, args);
-                this.ServiceMessage(
-                    service.ServiceInitializationParameters.ServiceName.ToString(),
-                    service.ServiceInitializationParameters.ServiceTypeName,
-                    service.ServiceInitializationParameters.InstanceId,
-                    service.ServiceInitializationParameters.PartitionId,
-                    service.ServiceInitializationParameters.CodePackageActivationContext.ApplicationName,
-                    service.ServiceInitializationParameters.CodePackageActivationContext.ApplicationTypeName,
-                    FabricRuntime.GetNodeContext().NodeName,
-                    finalMessage);
             }
         }
 

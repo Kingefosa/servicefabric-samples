@@ -6,7 +6,7 @@
 namespace RestockRequestManager.Domain
 {
     using System.Threading.Tasks;
-    using Microsoft.ServiceFabric.Services;
+    using Microsoft.ServiceFabric.Services.Remoting;
     using RestockRequest.Domain;
 
     public interface IRestockRequestManager : IService

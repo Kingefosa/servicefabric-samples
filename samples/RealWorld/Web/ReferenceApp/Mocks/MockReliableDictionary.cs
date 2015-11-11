@@ -97,7 +97,7 @@ namespace Mocks
             bool result = this.dictionary.TryGetValue(key, out value);
 
             return Task.FromResult(ConditionalResultActivator.Create<TValue>(result, value));
-            
+
             //return Task.FromResult(new ConditionalResult<TValue>(result, value));
         }
 
@@ -224,6 +224,21 @@ namespace Mocks
         }
 
         public Task<long> GetCountAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<KeyValuePair<TKey, TValue>> CreateEnumerable(ITransaction txn)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<KeyValuePair<TKey, TValue>> CreateEnumerable(ITransaction txn, EnumerationMode enumerationMode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<KeyValuePair<TKey, TValue>> CreateEnumerable(ITransaction txn, Func<TKey, bool> filter, EnumerationMode enumerationMode)
         {
             throw new NotImplementedException();
         }

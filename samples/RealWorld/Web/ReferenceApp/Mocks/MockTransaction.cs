@@ -5,7 +5,6 @@
 
 namespace Mocks
 {
-    using System;
     using System.Threading.Tasks;
     using Microsoft.ServiceFabric.Data;
 

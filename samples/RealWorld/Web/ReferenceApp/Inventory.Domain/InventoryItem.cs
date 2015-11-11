@@ -10,7 +10,9 @@ namespace Inventory.Domain
     [Serializable]
     public sealed class InventoryItem
     {
-        public InventoryItem(string description, decimal price, int availableStock, int restockThreshold, int maxStockThreshold, InventoryItemId id = null, bool onReorder = false)
+        public InventoryItem(
+            string description, decimal price, int availableStock, int restockThreshold, int maxStockThreshold, InventoryItemId id = null,
+            bool onReorder = false)
         {
             this.Id = id ?? new InventoryItemId();
             this.Description = description;

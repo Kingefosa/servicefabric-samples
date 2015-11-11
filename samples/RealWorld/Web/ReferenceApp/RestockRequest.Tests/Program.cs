@@ -10,7 +10,8 @@ namespace RestockRequest.Tests
     using System.Threading;
     using System.Threading.Tasks;
     using Inventory.Domain;
-    using Microsoft.ServiceFabric.Services;
+    using Microsoft.ServiceFabric.Services.Client;
+    using Microsoft.ServiceFabric.Services.Remoting.Client;
     using RestockRequest.Domain;
     using RestockRequestManager.Domain;
 

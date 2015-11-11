@@ -8,7 +8,7 @@ namespace Mocks
     using System;
     using System.Collections.Generic;
     using Common.Wrappers;
-    using Microsoft.ServiceFabric.Services;
+    using Microsoft.ServiceFabric.Services.Remoting;
 
     public class MockServiceProxy : IServiceProxyWrapper
     {

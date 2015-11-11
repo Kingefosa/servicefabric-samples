@@ -35,26 +35,6 @@ namespace RestockRequest.Actor
         }
 
         [NonEvent]
-        public void ActorMessage(Actor actor, string message, params object[] args)
-        {
-            if (this.IsEnabled() && actor.ActorService != null)
-            {
-                string finalMessage = string.Format(message, args);
-                this.ActorMessage(
-                    actor.GetType().ToString(),
-                    actor.Id.ToString(),
-                    actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationTypeName,
-                    actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationName,
-                    actor.ActorService.ServiceInitializationParameters.ServiceTypeName,
-                    actor.ActorService.ActorTypeInformation.ServiceName,
-                    actor.ActorService.ServiceInitializationParameters.PartitionId,
-                    actor.ActorService.ServiceInitializationParameters.InstanceId,
-                    FabricRuntime.GetNodeContext().NodeName,
-                    finalMessage);
-            }
-        }
-
-        [NonEvent]
         public void ActorMessage<TState>(StatefulActor<TState> actor, string message, params object[] args) where TState : class
         {
             if (this.IsEnabled() && actor.ActorService != null)

@@ -5,20 +5,20 @@
 
 namespace Web.Service.Controllers
 {
+    using System;
     using System.Collections.Generic;
+    using System.Fabric;
+    using System.Fabric.Query;
     using System.Threading.Tasks;
     using System.Web.Http;
     using Common;
     using Inventory.Domain;
-    using Microsoft.ServiceFabric.Services;
-    using System.Fabric;
-    using System;
-    using System.Fabric.Description;
-    using System.Fabric.Query;
+    using Microsoft.ServiceFabric.Services.Remoting.Client;
 
     public class StoreController : ApiController
     {
         public const string InventoryServiceName = "InventoryService";
+        private static FabricClient fc = new FabricClient();
 
         /// <summary>
         /// Right now, this method makes an API call via a ServiceProxy to retrieve Inventory Data directly
@@ -31,14 +31,11 @@ namespace Web.Service.Controllers
         [Route("api/store")]
         public async Task<IEnumerable<InventoryItemView>> GetStore()
         {
-
-
             ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
             Uri serviceName = builder.ToUri();
 
             List<InventoryItemView> itemList = new List<InventoryItemView>();
 
-            FabricClient fc = new FabricClient();
             ServicePartitionList partitions = await fc.QueryManager.GetPartitionListAsync(serviceName);
 
             foreach(Partition p in partitions)

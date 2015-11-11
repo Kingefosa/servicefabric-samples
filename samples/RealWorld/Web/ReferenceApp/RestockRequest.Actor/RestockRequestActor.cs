@@ -63,7 +63,7 @@ namespace RestockRequest.Actor
                 ActorReminderAttributes.None);
         }
 
-        public override Task OnActivateAsync()
+        protected override Task OnActivateAsync()
         {
             if (this.State == null)
             {

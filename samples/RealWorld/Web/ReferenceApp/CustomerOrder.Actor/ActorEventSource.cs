@@ -35,33 +35,6 @@ namespace CustomerOrder.Actor
         }
 
         [NonEvent]
-        public void ActorMessage(Actor actor, string message, params object[] args)
-        {
-            try
-            {
-                if (this.IsEnabled())
-                {
-                    string finalMessage = string.Format(message, args);
-                    this.ActorMessage(
-                        actor.GetType().ToString(),
-                        actor.Id.ToString(),
-                        actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationTypeName,
-                        actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationName,
-                        actor.ActorService.ServiceInitializationParameters.ServiceTypeName,
-                        actor.ActorService.ActorTypeInformation.ServiceName,
-                        actor.ActorService.ServiceInitializationParameters.PartitionId,
-                        actor.ActorService.ServiceInitializationParameters.InstanceId,
-                        FabricRuntime.GetNodeContext().NodeName,
-                        finalMessage);
-                }
-            }
-            catch
-            {
-                // We don't want a failure to trace to crash the process. We can improve this handling later.
-            }
-        }
-
-        [NonEvent]
         public void ActorMessage<TState>(StatefulActor<TState> actor, string message, params object[] args) where TState : class
         {
             try

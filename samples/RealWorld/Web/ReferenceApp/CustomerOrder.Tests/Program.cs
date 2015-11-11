@@ -11,7 +11,8 @@ namespace CustomerOrder.Tests
     using CustomerOrder.Domain;
     using Inventory.Domain;
     using Microsoft.ServiceFabric.Actors;
-    using Microsoft.ServiceFabric.Services;
+    using Microsoft.ServiceFabric.Services.Client;
+    using Microsoft.ServiceFabric.Services.Remoting.Client;
 
     internal class Program
     {

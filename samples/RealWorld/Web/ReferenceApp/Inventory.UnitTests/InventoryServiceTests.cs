@@ -6,11 +6,11 @@
 namespace Inventory.UnitTests
 {
     using System.Threading.Tasks;
+    using Common;
     using Inventory.Domain;
     using Inventory.Service;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Mocks;
-    using Common;
 
     [TestClass]
     public class InventoryServiceTests
@@ -89,7 +89,7 @@ namespace Inventory.UnitTests
 
             //save the current availablestock so we can check to be sure it doesn't change
             int priorAvailableStock = item.AvailableStock;
-            
+
             //but now lets say that the reciever didn't get the response and so sends the exact same request again
             int actualRemoved2 = await target.RemoveStockAsync(item.Id, quantityToRemove, cmid);
 

@@ -52,7 +52,7 @@ namespace CustomerOrder.Actor
         /// <returns></returns>
         public Task<string> GetStatusAsync()
         {
-             return Task.FromResult(this.State.Status.ToString());
+            return Task.FromResult(this.State.Status.ToString());
         }
 
         public async Task ReceiveReminderAsync(string reminderName, byte[] context, TimeSpan dueTime, TimeSpan period)
@@ -70,7 +70,7 @@ namespace CustomerOrder.Actor
                         IActorReminder orderReminder = this.GetReminder(CustomerOrderReminderNames.FulfillOrderReminder);
                         await this.UnregisterReminderAsync(orderReminder);
                     }
-                    
+
                     break;
 
                 default:
@@ -86,7 +86,7 @@ namespace CustomerOrder.Actor
         /// change the order's status to "Confirmed," and do not need to check if the actor's 
         /// state was already set to this. 
         /// </summary>
-        public override Task OnActivateAsync()
+        protected override Task OnActivateAsync()
         {
             if (this.State == null)
             {
@@ -118,10 +118,10 @@ namespace CustomerOrder.Actor
             ServiceUriBuilder builder = new ServiceUriBuilder(InventoryServiceName);
 
             this.State.Status = CustomerOrderStatus.InProcess;
-            
+
             ActorEventSource.Current.ActorMessage(this, "Fullfilling customer order. ID: {0}. Items: {1}", this.Id.GetGuidId(), this.State.OrderedItems.Count);
-            
-            foreach (var tempitem in this.State.OrderedItems)
+
+            foreach (CustomerOrderItem tempitem in this.State.OrderedItems)
             {
                 ActorEventSource.Current.Message("OrderContains:{0}", tempitem);
             }
@@ -140,7 +140,12 @@ namespace CustomerOrder.Actor
                     return;
                 }
 
-                int numberItemsRemoved = await inventoryService.RemoveStockAsync(item.ItemId, item.Quantity, new CustomerOrderActorMessageId(new ActorId(this.Id.GetGuidId()), this.State.RequestId));
+                int numberItemsRemoved =
+                    await
+                        inventoryService.RemoveStockAsync(
+                            item.ItemId,
+                            item.Quantity,
+                            new CustomerOrderActorMessageId(new ActorId(this.Id.GetGuidId()), this.State.RequestId));
 
                 item.FulfillmentRemaining -= numberItemsRemoved;
             }

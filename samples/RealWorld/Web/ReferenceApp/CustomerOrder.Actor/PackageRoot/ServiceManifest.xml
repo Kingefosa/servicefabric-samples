@@ -3,7 +3,7 @@
    <ServiceTypes>
       <StatefulServiceType ServiceTypeName="CustomerOrderActorServiceType" HasPersistedState="true">
          <Extensions>
-            <Extension Name="__GeneratedServiceType__">
+            <Extension Name="__GeneratedServiceType__" GeneratedId="b9e98d2e-b3a9-4867-917a-351f449abcfe">
                <GeneratedNames xmlns="http://schemas.microsoft.com/2015/03/fabact-no-schema">
                   <DefaultService Name="CustomerOrderActorService" />
                   <ServiceEndpoint Name="CustomerOrderActorServiceEndpoint" />

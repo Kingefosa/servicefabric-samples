@@ -5,8 +5,8 @@
 
 namespace Common.Wrappers
 {
-    using Microsoft.ServiceFabric.Services;
     using System;
+    using Microsoft.ServiceFabric.Services.Remoting;
 
     /// <summary>
     /// Interface to wrap the static ServiceProxy methods so we can inject any implementation into components that
