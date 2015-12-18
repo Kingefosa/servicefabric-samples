@@ -1,4 +1,4 @@
-# Azure Service Fabric Samples
+# Azure Service Fabric Samples (OBSOLETE)
 
 **NOTE: THIS REPOSITORY IS OBSOLETE AND WILL SOON BE DELETED**
 
